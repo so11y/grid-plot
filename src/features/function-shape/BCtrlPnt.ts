@@ -17,6 +17,7 @@ class BCtrlPnt extends Rect {
         this.className = "BCtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
+        this.isFixedSize = true;
         this.isShowAdsorbLine = false;
         this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
@@ -25,8 +26,8 @@ class BCtrlPnt extends Rect {
         this.isStroke = false;
         this.radius = .2;
         this.isOnlyCenterAdsorb = true;
-        this.ondragend = this.onUpdateParentVct;
-        this.ondraw = this.onUpdatePosByParent;
+        this.dragendEvents.push(this.onUpdateParentVct.bind(this))
+        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
         this.gls.addFeature(this, false);
     }
 
@@ -35,6 +36,7 @@ class BCtrlPnt extends Rect {
         if (this.parent) {
             this.parent.vctX = createVctor(this.parent.pointArr[0], this.parent.pointArr[1]);   // 控制点1,2的向量
             this.parent.vctY = createVctor(this.parent.pointArr[0], this.parent.pointArr[3]);   // 控制点1,2的向量
+            this.parent.updateLastMove();
         }
     }
 

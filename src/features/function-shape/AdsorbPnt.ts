@@ -17,7 +17,7 @@ class AdsorbPnt extends Rect {
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .3;
-        // this.isFixedPos = true;
+        this.isFixedSize = true;
         this.cbAdsorption = cbAdsorption;
         this.cbCrossLine = cbCrossLine;
         this.crossLineStrokeStyle = "#2471A3";

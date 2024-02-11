@@ -14,6 +14,7 @@ class AnchorPnt extends Rect {
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
         this.className = "AnchorPnt";
+        this.isFixedSize = true;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isShowAdsorbLine = false;
@@ -25,7 +26,7 @@ class AnchorPnt extends Rect {
         this.isStroke = false;
         this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
-        this.ondraw = this.onUpdatePosByParent;
+        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }
     
     onUpdatePosByParent() {

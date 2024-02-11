@@ -116,7 +116,7 @@ export default class Bbox extends Rect {
                 })
             }
             bCtrlP1.lastAngle = angle;
-            this.onUpdateLastMove();
+            this.updateLastMove();
         })
 
         // 左边
@@ -151,7 +151,7 @@ export default class Bbox extends Rect {
                 }
             }
             this.lastLenX = lenX;
-            this.onUpdateLastMove();
+            this.updateLastMove();
         })
 
         // 右边
@@ -186,7 +186,7 @@ export default class Bbox extends Rect {
                 }
             }
             this.lastLenX = lenX;
-            this.onUpdateLastMove();
+            this.updateLastMove();
         })
 
         // 上边
@@ -221,7 +221,7 @@ export default class Bbox extends Rect {
                 }
             }
             this.lastLenY = lenY;
-            this.onUpdateLastMove();
+            this.updateLastMove();
         })
 
         // 下边
@@ -256,7 +256,7 @@ export default class Bbox extends Rect {
                 }
             }
             this.lastLenY = lenY;
-            this.onUpdateLastMove();
+            this.updateLastMove();
         })
 
         if (this.parent.className != 'SelectArea') {  // 区域选择不可以锚点
@@ -268,13 +268,13 @@ export default class Bbox extends Rect {
                 return newLeftCenter;
             });
             aCtrlP1.name = "leftAnchor";
-            aCtrlP1.onmousedown = () => {
+            aCtrlP1.mousedownEvents.push(() => {
                 this.gls.initAnchorPnts();
                 let anchorPnts = this.parent.getAnchorPnts();
                 let link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
                 link.name = 'tempLink';
-            }
-            aCtrlP1.onmouseup = () => {
+            })
+            aCtrlP1.mouseupEvents.push(() => {
                 let touchedAnchor: AnchorPnt | undefined;
                 let anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
                 let hasTouch = anchorPnts.some(a => {
@@ -292,7 +292,7 @@ export default class Bbox extends Rect {
                     new Link(startAnchor, touchedAnchor);
                 }
                 this.gls.removeAnchorPnts();
-            }
+            })
         }
     }
 
@@ -476,15 +476,7 @@ export default class Bbox extends Rect {
             default:
                 break;
         }
-        bbox.parent._resize && bbox.parent._resize();
-        bbox.parent.resize && bbox.parent.resize();
-        if (bbox.parent instanceof SelectArea) {
-            bbox.parent.featuresIn.forEach(f => {
-                f._resize && f._resize();
-                f.resize && f.resize();
-            })
-        }
-        bbox.onUpdateLastMove();
+        bbox.updateLastMove();
     }
 
     // 父元素位置变化时实时更新bbox位置
@@ -493,15 +485,33 @@ export default class Bbox extends Rect {
             p.x += this.parent.pointArr[0].x - this.lastMove.x;
             p.y += this.parent.pointArr[0].y - this.lastMove.y;
         })
-        this.onUpdateLastMove();
+        this.updateLastMove();
     }
 
-    onUpdateLastMove() {
+    updateLastMove() {
         this.lastMove.x = this.parent.pointArr[0].x;
         this.lastMove.y = this.parent.pointArr[0].y;
+        this.parent.resize && this.parent.resize();
+        if (this.parent instanceof SelectArea) {
+            this.parent.featuresIn.forEach(f => {
+                f.resize && f.resize();
+            })
+        }
+    }
+
+    getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
 
     destroy() {
         super.destroy();
+        let ctrlPnts = this.getCtrlPnts();
+        let anchorPnts = this.getAnchorPnts();
+        ctrlPnts.forEach(cp => {
+            this.gls.removeFeature(cp);
+        })
+        anchorPnts.forEach(ap => {
+            this.gls.removeFeature(ap);
+        })
     }
 }

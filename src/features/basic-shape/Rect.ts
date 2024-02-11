@@ -5,6 +5,7 @@ import Feature from "../Feature";
 class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
+    isFixedSize: boolean = false; // 是否固定大小
 
     constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
         let points = getRectPoint({x, y}, {width, height})
@@ -32,7 +33,7 @@ class Rect extends Feature {
             this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
         ctx.save()
-        this.isClosePath && path.closePath()
+        this.closePath && path.closePath()
         this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.globalAlpha = this.opacity;
@@ -49,7 +50,7 @@ class Rect extends Feature {
         }
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
-        this.isClosePath && ctx.fill(path);
+        this.closePath && ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.updateChild();
         ctx.restore();
@@ -75,22 +76,12 @@ class Rect extends Feature {
         this.position.x = x;
         this.position.y = y;
         this.pointArr = getRectPoint(this.position, this.size);
-        // this.ontranslate();
-        // this.pointArr[0] = { x: x - this.size.width / 2, y: y - this.size.height / 2 };
-        // this.pointArr[1] = { x: x + this.size.width / 2, y: y - this.size.height / 2 };
-        // this.pointArr[2] = { x: x + this.size.width / 2, y: y + this.size.height / 2 };
-        // this.pointArr[3] = { x: x - this.size.width / 2, y: y + this.size.height / 2 };
-    }
+    } 
 
     setSize = (width: number = this.size.width, height: number = this.size.height) => {
         this.size.width = width;
         this.size.height = height;
         this.pointArr = getRectPoint(this.position, this.size);
-        // this.ontranslate();
-        // this.pointArr[0] = { x: this.position.x - width / 2, y: this.position.y - height / 2 };
-        // this.pointArr[1] = { x: this.position.x + width / 2, y: this.position.y - height / 2 };
-        // this.pointArr[2] = { x: this.position.x + width / 2, y: this.position.y + height / 2 };
-        // this.pointArr[3] = { x: this.position.x - width / 2, y: this.position.y + height / 2 };
     }
 
     // 以左上角去旋转内容， 文字或者图片

@@ -20,9 +20,9 @@
                 <a-button id="moveRight">右移</a-button>
             </div>
             <div class="flex-column">
-                <a-button id="createLineByClick">连续点击创建Line</a-button>
-                <a-button id="createLineByClickMove">按住移动创建Line</a-button>
-                <a-button id="createLineByClickMove2">按住移动创建Line(直线)</a-button>
+                <a-button id="createLineByClick">连续点击Line(折线)</a-button>
+                <a-button id="createLineByClickMove">按住移动Line(自由画笔)</a-button>
+                <a-button id="createLineByClickMove2">按住移动Line(直线)</a-button>
                 <a-button id="createImgByClick">点击创建图片Img</a-button>
                 <a-button id="createRectByClick">点击创建矩形Rect元素</a-button>
                 <a-button id="createCircleByClick">点击创建矩形Cicle元素</a-button>
@@ -164,12 +164,15 @@ onMounted(()=>{
             }
         }
         
-        let feature = new Feature([
+        let feature = new Line([
             { x: 25, y: 0 },
             { x: 50, y: 50 },
             { x: 0, y: 50 },
         ]);
-        feature.fillStyle = "transparent"
+        feature.closePath = true;
+        feature.onTranslate = ()=>{
+            console.log(777);
+        }
         gls.addFeature(feature);
         feature.translate(50);
         // console.log(feature.id, gls.findFeatureById(feature.id), "xunzh");
@@ -179,7 +182,7 @@ onMounted(()=>{
             { x: 100, y: 150 },
             { x: 40, y: 200 },
         ]);
-        line.isClosePath = false;
+        line.closePath = false;
 
         line.lineWidth = .6
         gls.addFeature(line)
@@ -252,7 +255,7 @@ onMounted(()=>{
             //     { x: 100, y: 150 },
             //     { x: 40, y: 200 },
             // ]);
-            // line.isClosePath = false;
+            // line.closePath = false;
             // img.addChildren(line)
 
             // let link = new Link(img.children[0], text);

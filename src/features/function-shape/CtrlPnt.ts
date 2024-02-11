@@ -12,6 +12,7 @@ class CtrlPnt extends Rect {
         this.className = "CtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
+        this.isFixedSize = true;
         this.isShowAdsorbLine = false;
         this.isOnlyCenterAdsorb = true;
         this.index = i;
@@ -22,7 +23,7 @@ class CtrlPnt extends Rect {
         this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
         this.translateEvents.push(this.onUpdateParentPos.bind(this));
-        this.ondraw = this.onUpdatePosByParent;
+        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }
 
     onUpdateParentPos() {  // 拖拽时修改父元素的点位置

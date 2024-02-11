@@ -48,12 +48,12 @@ class Text extends Rect {
         document.addEventListener(MyEvent.DB_CLICK, this.editText);
         document.addEventListener(MyEvent.MOUSE_DOWN, this.stopEditText);
         this.toFitSize();
-        this._resize = () => {  // 控制点改变大小触发的钩子
+        this.resizeEvents.push(() => {  // 控制点改变大小触发的钩子
             if (this.fitSize) {
                 const { width } = this.getSize(this.pointArr)
                 this.toFitWarpSize(width);
             }
-        }
+        })
     }
 
     // 初始化, 文字自适应宽高
@@ -66,7 +66,7 @@ class Text extends Rect {
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         ctx.save();
-        // this.setChildAngle(ctx, pointArr);
+        this.radius == 0 && this.setChildAngle(ctx, pointArr);
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
         ctx.lineWidth = this.fontWeight;

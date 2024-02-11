@@ -10,7 +10,7 @@ export default class Line extends Feature {
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
         this.className = "Line";
-        this.isClosePath = false;
+        this.closePath = false;
         this.lineCap = "round"
         this.lineJoin = "round";
     }
@@ -44,7 +44,7 @@ export default class Line extends Feature {
                     path.lineTo(p.x, p.y)
                 }
             })
-            this.isClosePath && path.closePath()
+            this.closePath && path.closePath()
             if (this.isPointIn) {
                 ctx.strokeStyle = this.hoverStyle;
                 if (this.gls.focusNode === this) {
@@ -60,7 +60,7 @@ export default class Line extends Feature {
             ctx.lineWidth = lineWidth;
             ctx.stroke(path);
             ctx.fillStyle = this.fillStyle
-            this.isClosePath && ctx.fill(path);
+            this.closePath && ctx.fill(path);
         }
         this.setPointIn(ctx, path);
         ctx.restore()

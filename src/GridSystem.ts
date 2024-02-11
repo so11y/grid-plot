@@ -132,7 +132,6 @@ export default class GridSystem {
                 path = f.draw(this.ctx, pointArr, lineWidth);
             }
             f.ondraw && f.ondraw()
-            f._ondraw && f._ondraw()
             f.isOverflowHidden && this.ctx.clip(path);
             this.drawFeatures(f.children);
             this.ctx.restore();
@@ -166,8 +165,8 @@ export default class GridSystem {
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
-        let focusNode = this.focusNode = this.features.find(f => f.isPointIn);
-        focusNode?.onmousedown && focusNode.onmousedown(ev);
+        let focusNode = this.focusNode = this.features.reverse().find(f => f.isPointIn);
+        focusNode?.onmousedown && focusNode.onmousedown();
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
         var mousemove = (e: any) => { };
         if (focusNode && this.cbSlectFeatures && ev.buttons == 1) {  // 拖拽元素
@@ -223,9 +222,8 @@ export default class GridSystem {
             if (focusNode) {
                 focusNode.isFocused = false;
                 focusNode._orientations = null;
-                focusNode.onmouseup && focusNode.onmouseup(event);
-                focusNode.ondragend && focusNode.ondragend(event);
-                focusNode._ondragend && focusNode._ondragend(event);
+                focusNode.onmouseup && focusNode.onmouseup();
+                focusNode.ondragend && focusNode.ondragend();
                 GridSystem.Stack && GridSystem.Stack.record();
             }
             document.removeEventListener("mousemove", mousemove)
@@ -499,7 +497,7 @@ export default class GridSystem {
             feature = this.features.find(f => f.id === String(f))
         }
         feature && feature.destroy();
-        feature && feature.ondelete && feature.ondelete();
+        feature && feature.ondelete();
         this.features = this.features.filter(f => f != feature)
         feature = null;
         isRecord && GridSystem.Stack && GridSystem.Stack.record();
@@ -677,9 +675,9 @@ export default class GridSystem {
         }
         var click2draw = (e: any) => {
             if (e.detail.button === 0) {
-                line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y });
+                line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 if (line.pointArr.length == 1) {
-                    line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y });
+                    line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
                 this.addFeature(line);
                 this.dom.addEventListener('mousemove', move2draw);
@@ -1039,7 +1037,7 @@ export default class GridSystem {
         props.lineDashArr && (feature.lineDashArr = props.lineDashArr)
         props.lineDashOffset && (feature.lineDashOffset = props.lineDashOffset)
 
-        props.isClosePath && (feature.isClosePath = props.isClosePath)
+        props.closePath && (feature.closePath = props.closePath)
         props.isPointIn && (feature.isPointIn = props.isPointIn)
         props.isFixedPos && (feature.isFixedPos = props.isFixedPos)
         props.isOutScreen && (feature.isOutScreen = props.isOutScreen)
@@ -1086,7 +1084,7 @@ export default class GridSystem {
             lineDashArr: f.lineDashArr,
             lineDashOffset: f.lineDashOffset,
 
-            isClosePath: f.isClosePath,  // 是否闭合
+            closePath: f.closePath,  // 是否闭合
             isPointIn: f.isPointIn, //鼠标是否悬浮在元素上
             isFixedPos: f.isFixedPos,  // 是否绝对位置.不跟随网格移动
             isOutScreen: f.isOutScreen,  // 是否在屏幕外
