@@ -180,6 +180,7 @@ class Text extends Rect {
 
     // 元素删除时需要做的事情
     destroy() {
+        super.destroy();
         document.removeEventListener(MyEvent.DB_CLICK, this.editText);
         document.removeEventListener(MyEvent.MOUSE_DOWN, this.stopEditText);
     }

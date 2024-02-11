@@ -48,7 +48,7 @@ type Props = Partial<Feature & Text & Img & Link> & {
     id: string
 }
 
-type BasicFeature = Img | Line | Rect | Text | Circle
+type BasicFeature = Line | Rect | Circle
 
 type Vector = [number, number]
 

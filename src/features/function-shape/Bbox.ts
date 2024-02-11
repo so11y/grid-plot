@@ -17,9 +17,9 @@ export default class Bbox extends Rect {
     lastAngle: number = 0;
     vctX: Vector = [100, 0];
     vctY: Vector = [0, 100];
-    bctrlPnts: (BCtrlPnt | CtrlPnt)[] = [];
     lastLenX = 0;
     lastLenY = 0;
+    parent: BasicFeature | SelectArea;
 
     constructor(parent: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
         let [minX, maxX, minY, maxY] = parent.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
@@ -28,22 +28,22 @@ export default class Bbox extends Rect {
         this.className = 'Bbox';
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.angle = 0;
         this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
-        this.isStroke = false;
-        this.strokeStyle = "red"
+        this.isStroke = true;
+        this.strokeStyle = "#55585A";
+        this.lineDashArr = [8, 8]
         this.lineWidth = .1;
         this.cbSelect = false;
         this.zIndex = Infinity;
         this.keepRatio = false;
         this.lastMove = { x: this.parent.pointArr[0].x, y: this.parent.pointArr[0].y };
         this.ratio = this.getRatio();
-        this.gls.addFeature(this, false);
         this.parent.translateEvents.push(this.onMoveByParent.bind(this))
         this.initBCtrlPnt();
         this.setVct();
         this.setParentPointArrPer(this.parent);
+        this.gls.addFeature(this, false);
         // document.addEventListener('pointArr' + this.id, this.onMoveByParent.bind(this));
     }
 
@@ -73,7 +73,7 @@ export default class Bbox extends Rect {
         }
     }
 
-    // 设置 包围盒 水平方向 与 垂直方向 向量
+    // 初始化设置包围盒水平方向与垂直方向的向量
     setVct() {
         this.vctX = createVctor(this.pointArr[0], this.pointArr[1]);   // 控制点1,2的向量
         this.vctY = createVctor(this.pointArr[0], this.pointArr[3]);   // 控制点1,2的向量
@@ -86,10 +86,10 @@ export default class Bbox extends Rect {
             let ctrlP = new CtrlPnt(this, i);
             ctrlP.name = 'ctrl' + i;
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
-            this.addBCtrlPnt(ctrlP);
         })
         // 旋转点
         let bCtrlP1 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
@@ -103,23 +103,17 @@ export default class Bbox extends Rect {
             let vct2 = createVctor(centerPos, pos);
             let angle = getRotateAng(vct1, vct2);
             let offsetAngle = angle - bCtrlP1.lastAngle;
-            console.log(offsetAngle, "offsetAngle");
             // if (this.parent) {
-            //         if (Math.floor(this.parent.angle + offsetAngle) >= 43 && Math.floor(this.parent.angle + offsetAngle) <= 47 && this.parent.angle != 45) {
+            //         if (Math.floor(this.parent.angle + offsetAngle) >= 43 && Math.floor(this.parent.angle + offsetAngle) <= 47.angle != 45) {
             //         offsetAngle = 45 - this.parent.angle;
             //     }
             // }
-            this.rotate(offsetAngle)
-            if (this.parent) {
-                this.parent.rotate(offsetAngle, this.getCenterPos());
-                if (this.parent instanceof SelectArea) {
-                    this.parent.featuresIn.forEach(f => {
-                        f.rotate(offsetAngle, this.getCenterPos());
-                    })
-                }
-                this.lastMove.x = this.parent.pointArr[0].x;
-                this.lastMove.y = this.parent.pointArr[0].y;
-
+            this.rotate(offsetAngle, centerPos);
+            this.parent.rotate(offsetAngle, centerPos);
+            if (this.parent instanceof SelectArea) {
+                this.parent.featuresIn.forEach(f => {
+                    f.rotate(offsetAngle, centerPos);
+                })
             }
             bCtrlP1.lastAngle = angle;
             this.onUpdateLastMove();
@@ -127,10 +121,12 @@ export default class Bbox extends Rect {
 
         // 左边
         let bCtrlP2 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
         });
         bCtrlP2.translateEvents.push(() => {
+            const pointArr = this.pointArr;
             const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
             const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[1], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
@@ -139,7 +135,7 @@ export default class Bbox extends Rect {
             pointArr[0].y = pnt.y;
             pointArr[3].x = pnt2.x;
             pointArr[3].y = pnt2.y;
-            if (this.lastLenX && this.parent) {
+            if (this.lastLenX) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
@@ -158,40 +154,14 @@ export default class Bbox extends Rect {
             this.onUpdateLastMove();
         })
 
-        // 左边 锚点
-        let aCtrlP1 = new AnchorPnt(this, () => {
-            const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-            let newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
-            return newLeftCenter;
-        });
-        aCtrlP1.name = "leftAnchor";
-        aCtrlP1.onmousedown = () => {
-            if (this.parent) {
-                let link = new Link(this.parent.anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
-                link.name = 'tempLink';
-            }
-        }
-        aCtrlP1.onmouseup = () => {
-            let touchAnchor = null;
-            let anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1)
-            let hasTouch = anchorPnts.some(a => {
-                let touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
-                if (touched) touchAnchor = a;
-                return touched
-            })
-            let tempLink = this.gls.features.find(f => f.name === 'tempLink');
-            this.gls.removeFeature(tempLink);
-            if (hasTouch && touchAnchor && this.parent) {
-                new Link(this.parent.anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, touchAnchor);
-            }
-        }
-
         // 右边
         let bCtrlP3 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
         });
         bCtrlP3.translateEvents.push(() => {
+            const pointArr = this.pointArr;
             const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
             const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[0], this.vctX, lenX)  // 关联点长度同步移动
@@ -200,7 +170,7 @@ export default class Bbox extends Rect {
             pointArr[1].y = pnt.y;
             pointArr[2].x = pnt2.x;
             pointArr[2].y = pnt2.y;
-            if (this.lastLenX && this.parent) {
+            if (this.lastLenX) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
@@ -221,10 +191,12 @@ export default class Bbox extends Rect {
 
         // 上边
         let bCtrlP4 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
         });
         bCtrlP4.translateEvents.push(() => {
+            const pointArr = this.pointArr;
             const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
             const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[2], this.vctY, -lenY)  // 关联点长度同步移动
@@ -233,7 +205,7 @@ export default class Bbox extends Rect {
             pointArr[1].y = pnt.y;
             pointArr[0].x = pnt2.x;
             pointArr[0].y = pnt2.y;
-            if (this.lastLenY && this.parent) {
+            if (this.lastLenY) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
@@ -252,13 +224,14 @@ export default class Bbox extends Rect {
             this.onUpdateLastMove();
         })
 
-
         // 下边
         let bCtrlP5 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
         });
         bCtrlP5.translateEvents.push(() => {
+            const pointArr = this.pointArr;
             const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
             const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
@@ -267,7 +240,7 @@ export default class Bbox extends Rect {
             pointArr[3].y = pnt.y;
             pointArr[2].x = pnt2.x;
             pointArr[2].y = pnt2.y;
-            if (this.lastLenY && this.parent) {
+            if (this.lastLenY) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
@@ -285,12 +258,42 @@ export default class Bbox extends Rect {
             this.lastLenY = lenY;
             this.onUpdateLastMove();
         })
-        // bCtrlP1._ontranslate = this.onRotateChange;
-        this.addBCtrlPnt(bCtrlP1);
-        this.addBCtrlPnt(bCtrlP2);
-        this.addBCtrlPnt(bCtrlP3);
-        this.addBCtrlPnt(bCtrlP4);
-        this.addBCtrlPnt(bCtrlP5);
+
+        if (this.parent.className != 'SelectArea') {  // 区域选择不可以锚点
+            // 左边 锚点
+            let aCtrlP1 = new AnchorPnt(this, () => {
+                const pointArr = this.pointArr;
+                const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
+                let newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
+                return newLeftCenter;
+            });
+            aCtrlP1.name = "leftAnchor";
+            aCtrlP1.onmousedown = () => {
+                this.gls.initAnchorPnts();
+                let anchorPnts = this.parent.getAnchorPnts();
+                let link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
+                link.name = 'tempLink';
+            }
+            aCtrlP1.onmouseup = () => {
+                let touchedAnchor: AnchorPnt | undefined;
+                let anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
+                let hasTouch = anchorPnts.some(a => {
+                    let touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
+                    if (touched) touchedAnchor = a;
+                    return touched
+                })
+                let tempLink = this.gls.features.find(f => f.name === 'tempLink');
+                this.gls.removeFeature(tempLink);
+                if (hasTouch && touchedAnchor) {
+                    let anchorPnts = this.parent.getAnchorPnts();
+                    let startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
+                    startAnchor.isBinding = true;
+                    touchedAnchor.isBinding = true;
+                    new Link(startAnchor, touchedAnchor);
+                }
+                this.gls.removeAnchorPnts();
+            }
+        }
     }
 
     onSizeChange() {
@@ -319,7 +322,7 @@ export default class Bbox extends Rect {
                     pointArr[1].x = pnt2.x;
                     pointArr[1].y = pnt2.y;
 
-                    if (bbox.lastLenX && bbox.lastLenY && bbox.parent) {
+                    if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
                                 let newPntX = getPntInVct(p, getRotateVct(bbox.vctX, 180), (lenX - bbox.lastLenX) * feature.pntExtentPer.right[i].x);
@@ -362,7 +365,7 @@ export default class Bbox extends Rect {
                     pointArr[0].x = pnt2.x;
                     pointArr[0].y = pnt2.y;
 
-                    if (bbox.lastLenX && bbox.lastLenY && bbox.parent) {
+                    if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
                                 let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
@@ -405,7 +408,7 @@ export default class Bbox extends Rect {
                         this.setPos(pnt3.x, pnt3.y)
                     }
 
-                    if (bbox.lastLenX && bbox.lastLenY && bbox.parent) {
+                    if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
                                 let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
@@ -448,7 +451,7 @@ export default class Bbox extends Rect {
                     pointArr[2].x = pnt2.x;
                     pointArr[2].y = pnt2.y;
 
-                    if (bbox.lastLenX && bbox.lastLenY && bbox.parent) {
+                    if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
                                 let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * -feature.pntExtentPer.right[i].x);
@@ -473,8 +476,8 @@ export default class Bbox extends Rect {
             default:
                 break;
         }
-        bbox.parent && bbox.parent._resize && bbox.parent._resize();
-        bbox.parent && bbox.parent.resize && bbox.parent.resize();
+        bbox.parent._resize && bbox.parent._resize();
+        bbox.parent.resize && bbox.parent.resize();
         if (bbox.parent instanceof SelectArea) {
             bbox.parent.featuresIn.forEach(f => {
                 f._resize && f._resize();
@@ -484,38 +487,21 @@ export default class Bbox extends Rect {
         bbox.onUpdateLastMove();
     }
 
-    addBCtrlPnt(feature: CtrlPnt | BCtrlPnt) {
-        this.bctrlPnts.push(feature);
-        feature.parent = this;
-        feature.angle = feature.parent.angle;
-    }
-    // 删除指定子元素
-    removeBCtrlPnt(feature: (CtrlPnt | BCtrlPnt)) {
-        feature.parent = null;
-        this.bctrlPnts.splice(this.bctrlPnts.findIndex(cf => cf == feature), 1);
-    }
-
     // 父元素位置变化时实时更新bbox位置
     onMoveByParent() {
         this.pointArr.forEach(p => {
-            if (this.parent) {
-                p.x += this.parent.pointArr[0].x - this.lastMove.x;
-                p.y += this.parent.pointArr[0].y - this.lastMove.y;
-            }
+            p.x += this.parent.pointArr[0].x - this.lastMove.x;
+            p.y += this.parent.pointArr[0].y - this.lastMove.y;
         })
         this.onUpdateLastMove();
     }
 
     onUpdateLastMove() {
-        if (this.parent) {
-            this.lastMove.x = this.parent.pointArr[0].x;
-            this.lastMove.y = this.parent.pointArr[0].y;
-        }
+        this.lastMove.x = this.parent.pointArr[0].x;
+        this.lastMove.y = this.parent.pointArr[0].y;
     }
 
     destroy() {
-        this.bctrlPnts.forEach(cp => {
-            this.gls.removeFeature(cp);
-        })
+        super.destroy();
     }
 }

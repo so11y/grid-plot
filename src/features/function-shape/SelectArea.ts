@@ -112,6 +112,7 @@ class SelectArea extends Feature {
     }
 
     destroy() {
+        super.destroy();
     }
 
     // 顶部对齐

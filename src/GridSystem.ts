@@ -136,7 +136,6 @@ export default class GridSystem {
             f.isOverflowHidden && this.ctx.clip(path);
             this.drawFeatures(f.children);
             this.ctx.restore();
-            this.drawFeatures(f.ctrlPnts);
         })
     }
 
@@ -162,30 +161,12 @@ export default class GridSystem {
         document.dispatchEvent(new CustomEvent(MyEvent.MOUSE_MOVE, { detail: e }));
     }
 
-    private findHoverNode(features: Feature[]): Feature | null {
-        for (let index = features.length - 1; index >= 0; index--) {
-            const f = features[index];
-            let hoverNode = null
-            if (f.ctrlPnts) {
-                hoverNode = this.findHoverNode(f.ctrlPnts);
-                if (hoverNode) {
-                    return hoverNode
-                } else if (f.cbSelect && f.isPointIn && !f.hidden) {
-                    return f;
-                }
-            } else if (f.cbSelect && f.isPointIn && !f.hidden) {
-                return f;
-            }
-        }
-        return null;
-    }
-
     private mouseDown = (ev: any) => {
         document.dispatchEvent(new CustomEvent(MyEvent.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
-        let focusNode = this.focusNode = this.findHoverNode(this.features);
+        let focusNode = this.focusNode = this.features.find(f => f.isPointIn);
         focusNode?.onmousedown && focusNode.onmousedown(ev);
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
         var mousemove = (e: any) => { };
@@ -508,7 +489,7 @@ export default class GridSystem {
     // --------------------以下是暴露的方法----------------------------
 
     // --------------------画布内元素的增删查API----------------------------
-    removeFeature(f: Feature | string | undefined, isRecord = true) {
+    removeFeature(f: Feature | string | undefined | null, isRecord = true) {
         let feature: Feature | null | undefined = null;
         if (!f && this.focusNode) {
             feature = this.focusNode as Feature;
@@ -540,25 +521,60 @@ export default class GridSystem {
         return undefined;
     }
 
-    initAnchorPnts(feature: Feature) {
-        if (this.isBasicFeature(feature)) {
-            let bCtrlP = new AnchorPnt(feature, () => {
-                const [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(feature.pointArr);
-                const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
-                return leftCenter;
-            });
-            bCtrlP.name = 'leftAnchor';
-            bCtrlP.fillStyle = bCtrlP.focusStyle = bCtrlP.hoverStyle = "#C8D5DE"
-            bCtrlP.cbSelect = false;
-            feature.anchorPnts.push(bCtrlP);
-        }
+    initAnchorPnts() {
+        this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
+            let anchorPnts = f.getAnchorPnts();
+            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
+                let lAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
+                    return leftCenter;
+                });
+                lAnchorPnt.name = 'leftAnchor';
+                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
+                lAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
+                let rAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
+                    return rightCenter;
+                });
+                rAnchorPnt.name = 'rightAnchor';
+                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
+                rAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
+                let tAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
+                    return rightCenter;
+                });
+                tAnchorPnt.name = 'tAnchorPnt';
+                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
+                tAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
+                let bAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
+                    return rightCenter;
+                });
+                bAnchorPnt.name = 'bottomAnchor';
+                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
+                bAnchorPnt.cbSelect = false;
+            }
+        })
+    }
+
+    removeAnchorPnts() {
+        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
     }
 
     addFeature(feature: Feature, isRecord = true) {
         // this.focusNode = feature;
         this.features.push(feature);
         this.toMaxIndex(feature);
-        this.initAnchorPnts(feature);   // 添加锚点位置
         isRecord && GridSystem.Stack && GridSystem.Stack.record();
     }
     // 将元素置顶，在画布最上层显示
@@ -572,7 +588,6 @@ export default class GridSystem {
             }
             return fa.zIndex - fb.zIndex
         });
-        // console.log(this.features, "maxIndex");
     }
     getMaxIndex() {
         var maxIndex = 0
@@ -936,7 +951,7 @@ export default class GridSystem {
         }
     }
 
-    setCtrlPnts(feature: Feature) {
+    setCtrlPnts(feature: Line) {
         feature.pointArr.forEach((p, i) => {
             new CtrlPnt(feature, i);
         })
@@ -1115,7 +1130,8 @@ export default class GridSystem {
 
     // 判断是否时基础元素
     isBasicFeature(f: Feature) {
-        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Feature'
+        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle'
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {

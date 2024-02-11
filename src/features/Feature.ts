@@ -9,6 +9,7 @@ import CtrlPnt from "./function-shape/CtrlPnt";
 class Feature {
 
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
+    static isAnchor = false;
 
     pointArr: IPoint[] = [];
     fillStyle: string = '#999';
@@ -37,8 +38,6 @@ class Feature {
     gridPos: IPoint = { x: 0, y: 0 };  // 网格坐标系下的坐标
     parent: Feature | null = null;  // 父元素
     children: Feature[] = [];  // 子节点
-    ctrlPnts: CtrlPnt[] = [];
-    anchorPnts: AnchorPnt[] = [];  // 锚点
     gls: GridSystem = GridSystem.Gls;
     lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
     adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
@@ -80,14 +79,12 @@ class Feature {
     onmouseup: Function | null = null;  // 如果有，鼠标点击后就会被调用
     onmouseleave: Function | null = null;  // 如果有，鼠标离开后就会被调用
     ondbclick: Function | null = null;  // 如果有，鼠标双击后就会被调用
-    // ontranslate: Function | null = null;  // 拖拽中的事件
     ondragend: Function | null = null;  // 拖拽中的事件
     resize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
     ondraw: Function | null = null;  // 每次绘制触发
     onrotate: Function | null = null;
     ondelete: Function | null = null;
 
-    onTranslate: Function | null = null;
     translateEvents: Function[] = [];
 
     // 节点事件, 内部使用
@@ -112,23 +109,19 @@ class Feature {
         this.id = getUuid();
     }
 
-    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(this.pointArr)) {
+    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos()) {
         this.angle += angle;
-        this.pointArr.forEach(p => {
-            let rp = getRotatePnt(O, p, angle);
-            p.x = rp.x;
-            p.y = rp.y;
+        this.pointArr = this.pointArr.map(p => {
+            return getRotatePnt(O, p, angle)
         })
         this.onrotate && this.onrotate()
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {
-        this.pointArr.forEach(p => {
-            if (!this.isOnlyVerticalDrag) {
-                p.x += offsetX;
-            }
-            if (!this.isOnlyHorizonalDrag) {
-                p.y += offsetY;
+        this.pointArr = this.pointArr.map(p => {
+            return {
+                x: !this.isOnlyVerticalDrag ? p.x += offsetX : p.x,
+                y: !this.isOnlyHorizonalDrag ? p.y += offsetY : p.y
             }
         })
         this.ontranslate();
@@ -209,22 +202,22 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            let isPointIn = false;
-            if (this.isClosePath) {
-                isPointIn = path ? ctx.isPointInPath(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInPath(GridSystem.MousePos.x, GridSystem.MousePos.y)
-            } else {
-                isPointIn = path ? ctx.isPointInStroke(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInStroke(GridSystem.MousePos.x, GridSystem.MousePos.y)
-            }
-            // if(isPointIn){
-            //     this.gls.hoverNode = this;
-            // }
-
-            if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
-                this.onmouseover && this.onmouseover(this);
-            } else if (this.isPointIn && !isPointIn) {
-                this.onmouseleave && this.onmouseleave(this);
-            }
             if (this.cbSelect) {
+                let isPointIn = false;
+                if (this.isClosePath) {
+                    isPointIn = path ? ctx.isPointInPath(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInPath(GridSystem.MousePos.x, GridSystem.MousePos.y)
+                } else {
+                    isPointIn = path ? ctx.isPointInStroke(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInStroke(GridSystem.MousePos.x, GridSystem.MousePos.y)
+                }
+                // if(isPointIn){
+                //     this.gls.hoverNode = this;
+                // }
+
+                if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
+                    this.onmouseover && this.onmouseover(this);
+                } else if (this.isPointIn && !isPointIn) {
+                    this.onmouseleave && this.onmouseleave(this);
+                }
                 this.isPointIn = isPointIn;
                 this.isPointIn && this.onmousemove && this.onmousemove(this);
             }
@@ -297,7 +290,7 @@ class Feature {
             let leftTop = this.pointArr[0];  // 左上角
             // this.gls.test = this.gls.getPixelPos(leftTop)
             this.children.forEach(cf => {
-                cf.translate(leftTop.x - this.lastRelativePnt.x, leftTop.y - this.lastRelativePnt.y);
+                // cf.translate(leftTop.x - this.lastRelativePnt.x, leftTop.y - this.lastRelativePnt.y);
                 // cf.angle = this.angle
                 // this.gls.test = this.gls.getPixelPos(O)
                 // this.children.forEach(cf => {
@@ -311,18 +304,6 @@ class Feature {
             })
             this.lastRelativePnt = { x: leftTop.x, y: leftTop.y };
         }
-    }
-
-    addCtrlPnt(feature: CtrlPnt) {
-        // new CtrlPnt();
-        this.ctrlPnts.push(feature);
-        feature.parent = this;
-        feature.angle = feature.parent.angle;
-    }
-    // 删除指定子元素
-    removeCtrlPnt(feature: CtrlPnt) {
-        feature.parent = null;
-        this.ctrlPnts.splice(this.ctrlPnts.findIndex(cf => cf == feature), 1);
     }
 
     toFixedPos() {
@@ -352,12 +333,22 @@ class Feature {
         }
     }
 
+    getAnchorPnts(): AnchorPnt[] {
+        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
+    }
+
+    onTranslate() {};
+
     ontranslate() {
         this.translateEvents.forEach(f => { f() })
         this.onTranslate && this.onTranslate();
     }
 
-    destroy() { };
+    destroy() {
+        this.children.forEach(cf => {
+            this.gls.removeFeature(cf);
+        })
+    };
 }
 
 export default Feature;

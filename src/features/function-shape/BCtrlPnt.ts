@@ -25,9 +25,9 @@ class BCtrlPnt extends Rect {
         this.isStroke = false;
         this.radius = .2;
         this.isOnlyCenterAdsorb = true;
-        this.gls.addFeature(this, false);
         this.ondragend = this.onUpdateParentVct;
         this.ondraw = this.onUpdatePosByParent;
+        this.gls.addFeature(this, false);
     }
 
     // 更新bbox的水平与垂直向量
@@ -38,8 +38,9 @@ class BCtrlPnt extends Rect {
         }
     }
 
+    // 更新自己的位置, 除了自己正在被操控时
     onUpdatePosByParent() {
-        if(this.isFocused) return;
+        if (this.isFocused) return;
         let pos = this.getPoint();
         this.setPos(pos.x, pos.y);
     }

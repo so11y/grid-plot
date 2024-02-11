@@ -1,8 +1,9 @@
 import { CoordinateSystem, LinkStyle } from "../../Constants";
 import GridSystem from "../../GridSystem";
-import { IPoint, Vector } from "../../Interface";
+import { BasicFeature, IPoint, Vector } from "../../Interface";
 import { createVctor, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPointInPolygon } from "../../utils";
 import Feature from "../Feature";
+import AnchorPnt from "../function-shape/AnchorPnt";
 import Line from "./Line";
 let startIndex = 0;
 
@@ -73,14 +74,16 @@ export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
     linkStyle: LinkStyle = LinkStyle.BROKEN;
-    targets: [Feature, Feature];
+    targets: [AnchorPnt, AnchorPnt];
 
-    constructor(startFeature: Feature, endFeature: Feature) {
+    constructor(startFeature: AnchorPnt, endFeature: AnchorPnt) {
         super([startFeature.getCenterPos(), endFeature.getCenterPos()]);
         this.targets = [startFeature, endFeature];
         this.className = "Link"
         this.cbSelect = false;
         this.strokeStyle = "rgba(220, 233, 126, 1)";
+        this.targets[0].parent.translateEvents.push(() => { this.pointArr[0] = this.targets[0].getCenterPos() })
+        this.targets[1].parent.translateEvents.push(() => { this.pointArr[1] = this.targets[1].getCenterPos() })
         this.targets[0].translateEvents.push(() => { this.pointArr[0] = this.targets[0].getCenterPos() })
         this.targets[1].translateEvents.push(() => { this.pointArr[1] = this.targets[1].getCenterPos() })
         this.gls.addFeature(this, false)
@@ -137,7 +140,7 @@ export default class Link extends Line {
                 coordList.push({ x: minFNode.x, y: minFNode.y });
                 startPos = minFNode;
                 if (isPointInPolygon(minFNode, getRectPoint(endPos, { width: unitLen, height: unitLen }))) {
-                    coordList.push({ x: endPos.x, y: endPos.y });
+                    coordList.push({ x: Math.ceil(endPos.x), y: Math.ceil(endPos.y) });
                     return coordList;
                 } else {
                     return getCoordList();

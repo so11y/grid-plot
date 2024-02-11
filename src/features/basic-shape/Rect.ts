@@ -75,7 +75,7 @@ class Rect extends Feature {
         this.position.x = x;
         this.position.y = y;
         this.pointArr = getRectPoint(this.position, this.size);
-        this.ontranslate();
+        // this.ontranslate();
         // this.pointArr[0] = { x: x - this.size.width / 2, y: y - this.size.height / 2 };
         // this.pointArr[1] = { x: x + this.size.width / 2, y: y - this.size.height / 2 };
         // this.pointArr[2] = { x: x + this.size.width / 2, y: y + this.size.height / 2 };
@@ -86,7 +86,7 @@ class Rect extends Feature {
         this.size.width = width;
         this.size.height = height;
         this.pointArr = getRectPoint(this.position, this.size);
-        this.ontranslate();
+        // this.ontranslate();
         // this.pointArr[0] = { x: this.position.x - width / 2, y: this.position.y - height / 2 };
         // this.pointArr[1] = { x: this.position.x + width / 2, y: this.position.y - height / 2 };
         // this.pointArr[2] = { x: this.position.x + width / 2, y: this.position.y + height / 2 };

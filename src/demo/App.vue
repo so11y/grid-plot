@@ -30,9 +30,9 @@
                 <a-button id="copyFocusNode">复制当前元素</a-button>
             </div>
             <div class="flex-column">
-                <a-button id="addCtrlPnt">添加控制点</a-button>
+                <a-button id="addCtrlPnt">添加单个控制点</a-button>
                 <a-button id="clearCtrlPnt">清除控制点</a-button>
-                <a-button id="addBbox">添加包围盒</a-button>
+                <a-button id="addBbox">添加包围盒形变</a-button>
             </div>
             <div class="flex-column">
                 <a-button id="selectArea">框选区域</a-button>
@@ -79,6 +79,7 @@ import MiniMap from "../MiniMap";
 import Stack from "../Stack";
 import { onMounted, ref, reactive, toRef } from "vue";
 import ScaleRuler from "../ScaleRule";
+import { message } from "ant-design-vue";
 
     // var tagArr = ref<string[]>(['LOL', 'Code', 'Computer', '宅']);
 
@@ -184,23 +185,22 @@ onMounted(()=>{
         gls.addFeature(line)
         // 5 gridSize  380
 
-        console.log(gls.getRatioSize(5/2), "gls.getRatioSize(5)");
-        // 75 一个单位    scale 10   gridSzie 5
-        // let rect = new Rect(1/4 * gls.getRatioSize(5), 1/4 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
-        let rect = new Rect(50,50, 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
-        rect.fillStyle = "rgba(0,0,0,.1)"
-        rect.radius = .5
-        gls.addFeature(rect);
-        let rect2 = new Rect(100,100, 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
-        gls.addFeature(rect2);
+        // console.log(gls.getRatioSize(5/2), "gls.getRatioSize(5)");
+        // // 75 一个单位    scale 10   gridSzie 5
+        // // let rect = new Rect(1/4 * gls.getRatioSize(5), 1/4 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
+        // let rect = new Rect(50,50, 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
+        // rect.fillStyle = "rgba(0,0,0,.1)"
+        // rect.radius = .5
+        // gls.addFeature(rect);
+        // let rect2 = new Rect(100,100, 1/2 * gls.getRatioSize(5), 1/2 * gls.getRatioSize(5))   // 5个单位长度
+        // gls.addFeature(rect2);
 
-        let link = new Link(rect, rect2);
+        // let link = new Link(rect, rect2);
         // let rp = gls.getRelativePosByGridPos(2,2);
         // rect.setPos(rp.x, rp.y)
-        console.log(rect.position.x, rect.position.y, "rect.position.x, rect.position.y");
         
-        let rp = gls.getGridPosByRelativePos(rect.position.x, rect.position.y);
-        console.log(rp, "");
+        // let rp = gls.getGridPosByRelativePos(rect.position.x, rect.position.y);
+        // console.log(rp, "");
         
 
         // let searchPath = new AutoSearchPath({x: 2,y: 2}, {x: 10, y: 10});
@@ -312,9 +312,11 @@ onMounted(()=>{
         }
 
         addCtrlPnt.onclick = () => {
-            if (gls.focusNode) {
+            if (gls.focusNode && gls.focusNode instanceof Line) {
                 gls.setCtrlPnts(gls.focusNode);
                 // gls.clearCtrlPos(feature);
+            }else {
+                message.info("单个控制点只能给线性元素添加")
             }
         }
 
@@ -395,7 +397,7 @@ onMounted(()=>{
         }
 
         addBbox.onclick = ()=>{
-            if (gls.focusNode && gls.focusNode) {
+            if (gls.focusNode) {
                 gls.enableTranform(true, gls.focusNode)
             }
         }
