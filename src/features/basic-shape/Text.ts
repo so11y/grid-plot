@@ -1,6 +1,6 @@
 // 绘制自定义文字
 
-import { FontFamily, MyEvent } from "../../Constants";
+import { FontFamily, Events } from "../../Constants";
 import { IPoint } from "../../Interface";
 import gsap from "gsap";
 import Rect from "./Rect";
@@ -45,8 +45,8 @@ class Text extends Rect {
         this.inputDom = null;
         this.onChange = null;
         this.rows = 1;
-        document.addEventListener(MyEvent.DB_CLICK, this.editText);
-        document.addEventListener(MyEvent.MOUSE_DOWN, this.stopEditText);
+        document.addEventListener(Events.DB_CLICK, this.editText);
+        document.addEventListener(Events.MOUSE_DOWN, this.stopEditText);
         this.toFitSize();
         this.resizeEvents.push(() => {  // 控制点改变大小触发的钩子
             if (this.fitSize) {
@@ -75,6 +75,7 @@ class Text extends Rect {
             const { width, leftTop } = this.getSize(pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
+            ctx.globalAlpha = this.opacity;
             this.rows = this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y, lineHeight);
             ctx.restore();
         }
@@ -181,8 +182,8 @@ class Text extends Rect {
     // 元素删除时需要做的事情
     destroy() {
         super.destroy();
-        document.removeEventListener(MyEvent.DB_CLICK, this.editText);
-        document.removeEventListener(MyEvent.MOUSE_DOWN, this.stopEditText);
+        document.removeEventListener(Events.DB_CLICK, this.editText);
+        document.removeEventListener(Events.MOUSE_DOWN, this.stopEditText);
     }
 
 }

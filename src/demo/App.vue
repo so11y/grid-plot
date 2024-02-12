@@ -183,7 +183,6 @@ onMounted(()=>{
             { x: 40, y: 200 },
         ]);
         line.closePath = false;
-
         line.lineWidth = .6
         gls.addFeature(line)
         // 5 gridSize  380
@@ -276,7 +275,6 @@ onMounted(()=>{
             let line = new Line();
             gls.click2DrawByContinuousClick(line, true, true)
         }
-
 
         function click2DrawByMove() {
             let line = new Line();
@@ -401,7 +399,7 @@ onMounted(()=>{
 
         addBbox.onclick = ()=>{
             if (gls.focusNode) {
-                gls.enableTranform(true, gls.focusNode)
+                gls.enableTranform(gls.focusNode, true)
             }
         }
 

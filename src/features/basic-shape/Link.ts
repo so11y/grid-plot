@@ -1,8 +1,7 @@
 import { CoordinateSystem, LinkStyle } from "../../Constants";
 import GridSystem from "../../GridSystem";
-import { BasicFeature, IPoint, Vector } from "../../Interface";
-import { createVctor, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPointInPolygon } from "../../utils";
-import Feature from "../Feature";
+import { IPoint, Vector } from "../../Interface";
+import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPointInPolygon } from "../../utils";
 import AnchorPnt from "../function-shape/AnchorPnt";
 import Line from "./Line";
 let startIndex = 0;
@@ -119,11 +118,11 @@ export default class Link extends Line {
     }
 
     getBezierPoints(startPos: IPoint, endPos: IPoint): IPoint[] {
-        let divide = Math.abs(startPos.x - endPos.x) / GridSystem.Gls.scale / 2;
+        let divide = Math.abs(startPos.x - endPos.x) / this.gls.scale / 2;
         let dirct = startPos.x > endPos.x ? 1 : -1
         let vct: Vector = [endPos.x - startPos.x, endPos.y - startPos.y];
-        let cp1 = getPntInVct(startPos, vct, divide * GridSystem.Gls.scale);
-        let cp2 = getPntInVct(startPos, vct, getVctLen(vct) + divide * GridSystem.Gls.scale);
+        let cp1 = getPntInVct(startPos, vct, divide * this.gls.scale);
+        let cp2 = getPntInVct(startPos, vct, getVctLen(vct) + divide * this.gls.scale);
         let rcp1 = getRotatePnt(startPos, cp1, -10 * dirct);
         let rcp2 = getRotatePnt(endPos, cp2, 150 * dirct);
         let points = getPntsOf3Bezier(startPos, rcp1, rcp2, endPos, this.pntsLimit);

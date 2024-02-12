@@ -26,7 +26,6 @@ class SelectArea extends Feature {
         // this.fillStyle = this.hoverStyle = this.focusStyle = "transparent"
         document.addEventListener("mousedown", this.setPointArr);
         this.translateEvents.push(this.translateChild.bind(this))
-        this.ondelete = this.onDelete;
         this.resize = ()=>{
             this.lastMove.x = this.pointArr[0].x;
             this.lastMove.y = this.pointArr[0].y;
@@ -87,8 +86,8 @@ class SelectArea extends Feature {
         this.lastMove.y = this.pointArr[0].y;
     }
 
-    onDelete() {
-        this.gls.enableTranform(false, this)
+    ondelete() {
+        this.gls.enableTranform(this, false)
         this.featuresIn.forEach(f => this.gls.removeFeature(f))
     }
 

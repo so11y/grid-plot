@@ -1,21 +1,22 @@
 import { Orientation } from "../Constants";
-import GridSystem from "../GridSystem";
+import type GridSystem from "../GridSystem";
+import type MiniMap from "../MiniMap";
 import { IPoint, Size } from "../Interface";
-import MiniMap from "../MiniMap";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
-import CtrlPnt from "./function-shape/CtrlPnt";
+import Bbox from "./function-shape/Bbox";
 
 class Feature {
 
+    static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
     static isAnchor = false;
 
     pointArr: IPoint[] = [];
-    fillStyle: string = '#999';
-    strokeStyle: string = '#999';
-    hoverStyle: string = '#666';
-    focusStyle: string = '#333';
+    fillStyle: string = '#ffec99';
+    strokeStyle: string = '#f08c00';
+    hoverStyle: string = '#ffec99';
+    focusStyle: string = '#ffec99';
     zIndex: number = 0;
     lineWidth: number = .5;
     lineCap: CanvasLineCap = "round"   // butt, round, square
@@ -38,7 +39,8 @@ class Feature {
     gridPos: IPoint = { x: 0, y: 0 };  // 网格坐标系下的坐标
     parent: Feature | null = null;  // 父元素
     children: Feature[] = [];  // 子节点
-    gls: GridSystem = GridSystem.Gls;
+    gls: GridSystem = Feature.Gls;
+    bbox: Bbox | null = null;
     lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
     adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
     pntDistanceLimit = 5;  // 距离太近的两个点,就不重复添加了
@@ -200,12 +202,13 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            if (this.cbSelect) {
+            if (this.cbSelect && this.gls) {
+                let mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.closePath) {
-                    isPointIn = path ? ctx.isPointInPath(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInPath(GridSystem.MousePos.x, GridSystem.MousePos.y)
+                    isPointIn = path ? ctx.isPointInPath(path, mousePos.x, mousePos.y) : ctx.isPointInPath(mousePos.x, mousePos.y)
                 } else {
-                    isPointIn = path ? ctx.isPointInStroke(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInStroke(GridSystem.MousePos.x, GridSystem.MousePos.y)
+                    isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
                 // if(isPointIn){
                 //     this.gls.hoverNode = this;
@@ -341,47 +344,47 @@ class Feature {
         this.translateEvents.forEach(f => { f() })
         this.onTranslate && this.onTranslate();
     }
-    onmouseover(){
+    onmouseover() {
         this.mouseoverEvents.forEach(f => { f() })
         this.onMouseover && this.onMouseover();
     }
-    onmousemove(){
+    onmousemove() {
         this.mousemoveEvents.forEach(f => { f() })
         this.onMousemove && this.onMousemove();
     }
-    onmousedown(){
+    onmousedown() {
         this.mousedownEvents.forEach(f => { f() })
         this.onMousedown && this.onMousedown();
     }
-    onmouseup(){
+    onmouseup() {
         this.mouseupEvents.forEach(f => { f() })
         this.onMouseup && this.onMouseup();
     }
-    onmouseleave(){
+    onmouseleave() {
         this.mouseleaveEvents.forEach(f => { f() })
         this.onMouseleave && this.onMouseleave();
     }
-    ondbclick(){
+    ondbclick() {
         this.dbclickEvents.forEach(f => { f() })
         this.onDbclick && this.onDbclick();
     }
-    ondragend(){
+    ondragend() {
         this.dragendEvents.forEach(f => { f() })
         this.onDragend && this.onDragend();
     }
-    resize(){
+    resize() {
         this.resizeEvents.forEach(f => { f() })
         this.onResize && this.onResize();
     }
-    ondraw(){
+    ondraw() {
         this.drawEvents.forEach(f => { f() })
         this.onDraw && this.onDraw();
     }
-    onrotate(){
+    onrotate() {
         this.rotateEvents.forEach(f => { f() })
         this.onRotate && this.onRotate();
     }
-    ondelete(){
+    ondelete() {
         this.deleteEvents.forEach(f => { f() })
         this.onDelete && this.onDelete();
     }

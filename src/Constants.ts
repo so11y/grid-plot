@@ -67,7 +67,7 @@ enum LinkMark {
 }
 
 // 自定义事件名称
-enum MyEvent {
+enum Events {
     DRAW_LINK = 'draw-link', // 绘制连线
     MOUSE_DOWN = 'mouse-down', // 鼠标按下时
     MOUSE_UP = 'mouse-up', // 鼠标按下时
@@ -78,6 +78,7 @@ enum MyEvent {
     FOCUS = 'focus',  // 元素获取焦点时
     DRAW_AREA = 'draw-area',  // 绘制区域时
     DB_CLICK = 'db-click',   // 双击时
+    RIGHT_CLICK = 'right-click',   // 双击时
     FEATURE_GRAG = 'feature-drag',
     FEATURE_GRAG_END = 'feature-drag-end',
     FEATURE_MOUSEOVER = 'feature-mouseover',
@@ -137,7 +138,7 @@ export {
     BlockType,
     OperateType,
     LinkMark,
-    MyEvent,
+    Events,
     Category,
     LinkStyle,
     FontFamily,

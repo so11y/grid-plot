@@ -50,6 +50,7 @@ class Img extends Rect {
             this.radius == 0 && this.setChildAngle(ctx, pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 考虑优化问题
+            ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.element, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }
