@@ -1,6 +1,6 @@
 import Circle from "./features/basic-shape/Circle";
 import Img from "./features/basic-shape/Img";
-import Line from "./features/basic-shape/Line";
+// import Line from "./features/basic-shape/Line";
 import Link from "./features/basic-shape/Link";
 import Rect from "./features/basic-shape/Rect";
 import Text from "./features/basic-shape/Text";
@@ -48,7 +48,7 @@ type Props = Partial<Feature & Text & Img & Link> & {
     id: string
 }
 
-type BasicFeature = Img | Line | Rect | Text | Circle
+// type BasicFeature = Line | Rect | Circle
 
 type Vector = [number, number]
 

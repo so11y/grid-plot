@@ -1,4 +1,4 @@
-import { MyEvent } from "../../Constants";
+import { Events } from "../../Constants";
 import { IPoint } from "../../Interface";
 import { getMousePos } from "../../utils";
 import Rect from "../basic-shape/Rect";
@@ -17,7 +17,7 @@ class AdsorbPnt extends Rect {
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .3;
-        // this.isFixedPos = true;
+        this.isFixedSize = true;
         this.cbAdsorption = cbAdsorption;
         this.cbCrossLine = cbCrossLine;
         this.crossLineStrokeStyle = "#2471A3";
@@ -61,7 +61,7 @@ class AdsorbPnt extends Rect {
     }
 
     destory() {
-        document.removeEventListener(MyEvent.MOUSE_MOVE, this.setPos);
+        document.removeEventListener(Events.MOUSE_MOVE, this.setPos);
     }
 }
 

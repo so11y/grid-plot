@@ -1,20 +1,20 @@
-import { IPoint } from "../../Interface";
-import { createVctor } from "../../utils";
+import { BasicFeature, IPoint } from "../../Interface";
 import Rect from "../basic-shape/Rect";
-import Feature from "../Feature";
-import Bbox from "./Bbox";
 
 // 自定义控制点元素
 class AnchorPnt extends Rect {
 
     getPoint: () => IPoint;
     lastAngle: number = 0;
+    isBinding = false;  // 是否与link绑定了
+    parent: BasicFeature;
 
-    constructor(parent: Feature, fn: () => IPoint, width: number = 7) {   // 相对坐标
+    constructor(parent: BasicFeature, fn: () => IPoint, width: number = 7) {   // 相对坐标
         let pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
         this.className = "AnchorPnt";
+        this.isFixedSize = true;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isShowAdsorbLine = false;
@@ -26,7 +26,7 @@ class AnchorPnt extends Rect {
         this.isStroke = false;
         this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
-        this.ondraw = this.onUpdatePosByParent;
+        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }
     
     onUpdatePosByParent() {

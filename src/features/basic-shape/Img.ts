@@ -47,9 +47,10 @@ class Img extends Rect {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.element) {
             const { width, height, leftTop } = this.getSize(pointArr);
-            // this.setChildAngle(ctx, pointArr);
+            this.radius == 0 && this.setChildAngle(ctx, pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 考虑优化问题
+            ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.element, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }

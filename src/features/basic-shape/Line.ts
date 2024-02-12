@@ -1,8 +1,9 @@
-import { IPoint } from "../../Interface";
 import Feature from "../Feature";
+import { IPoint } from "../../Interface";
 import CtrlPnt from "../function-shape/CtrlPnt";
+import GridSystem from "@/GridSystem";
 
-export default class Line extends Feature {
+class Line extends Feature {
 
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
@@ -10,9 +11,9 @@ export default class Line extends Feature {
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
         this.className = "Line";
-        this.isClosePath = false;
+        this.closePath = false;
         this.lineCap = "round"
-        this.lineJoin = "round";
+        this.lineJoin = "round";  
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number) {
@@ -44,7 +45,7 @@ export default class Line extends Feature {
                     path.lineTo(p.x, p.y)
                 }
             })
-            this.isClosePath && path.closePath()
+            this.closePath && path.closePath()
             if (this.isPointIn) {
                 ctx.strokeStyle = this.hoverStyle;
                 if (this.gls.focusNode === this) {
@@ -60,11 +61,37 @@ export default class Line extends Feature {
             ctx.lineWidth = lineWidth;
             ctx.stroke(path);
             ctx.fillStyle = this.fillStyle
-            this.isClosePath && ctx.fill(path);
+            this.closePath && ctx.fill(path);
         }
         this.setPointIn(ctx, path);
         ctx.restore()
         return path;
     }
 
+    enableCtrlPnts() {
+        this.pointArr.forEach((p, i) => {
+            new CtrlPnt(this, i);
+        })
+    }
+
+    clearCtrlPos() {
+        let ctrlPnts = this.gls.features.filter(f => f instanceof CtrlPnt && f.parent === this);
+        ctrlPnts.forEach(cp => {
+            this.gls.removeFeature(cp, false);
+        })
+    }
+
+    getCtrlPnts(){
+        let ctrlPnts = this.gls.features.filter(f=> f instanceof CtrlPnt && f.parent === this);
+        return ctrlPnts;
+    }
+
+    destroy(): void {
+        super.destroy();
+        this.getCtrlPnts().forEach(cp=>{
+            this.gls.removeFeature(cp);
+        })
+    }
 }
+
+export default Line;

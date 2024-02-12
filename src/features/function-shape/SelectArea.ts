@@ -25,8 +25,7 @@ class SelectArea extends Feature {
         // this.isStroke = false;
         // this.fillStyle = this.hoverStyle = this.focusStyle = "transparent"
         document.addEventListener("mousedown", this.setPointArr);
-        this.translateEvents.push(this.onTranslate.bind(this))
-        this.ondelete = this.onDelete;
+        this.translateEvents.push(this.translateChild.bind(this))
         this.resize = ()=>{
             this.lastMove.x = this.pointArr[0].x;
             this.lastMove.y = this.pointArr[0].y;
@@ -79,7 +78,7 @@ class SelectArea extends Feature {
         }
     }
 
-    onTranslate() {
+    translateChild() {
         this.featuresIn.forEach(f => {
             f.translate(this.pointArr[0].x - this.lastMove.x, this.pointArr[0].y - this.lastMove.y)
         })
@@ -87,13 +86,12 @@ class SelectArea extends Feature {
         this.lastMove.y = this.pointArr[0].y;
     }
 
-    onDelete() {
-        this.gls.enableTranform(false, this)
+    ondelete() {
+        this.gls.enableTranform(this, false)
         this.featuresIn.forEach(f => this.gls.removeFeature(f))
     }
 
     getSelectFeature() {
-        // const [minX, maxX, minY, maxY] = this.getRectWrapExtent(this.pointArr);
         return this.gls.features.filter(f => {
             if (!f.cbSelect || !f.cbMove || !this.gls.isBasicFeature(f)) return
             let pointArr = f.pointArr;
@@ -112,6 +110,7 @@ class SelectArea extends Feature {
     }
 
     destroy() {
+        super.destroy();
     }
 
     // 顶部对齐

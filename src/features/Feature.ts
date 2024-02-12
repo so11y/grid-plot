@@ -1,20 +1,22 @@
 import { Orientation } from "../Constants";
-import GridSystem from "../GridSystem";
+import type GridSystem from "../GridSystem";
+import type MiniMap from "../MiniMap";
 import { IPoint, Size } from "../Interface";
-import MiniMap from "../MiniMap";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
-import CtrlPnt from "./function-shape/CtrlPnt";
+import Bbox from "./function-shape/Bbox";
 
 class Feature {
 
+    static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
+    static isAnchor = false;
 
     pointArr: IPoint[] = [];
-    fillStyle: string = '#999';
-    strokeStyle: string = '#999';
-    hoverStyle: string = '#666';
-    focusStyle: string = '#333';
+    fillStyle: string = '#ffec99';
+    strokeStyle: string = '#f08c00';
+    hoverStyle: string = '#ffec99';
+    focusStyle: string = '#ffec99';
     zIndex: number = 0;
     lineWidth: number = .5;
     lineCap: CanvasLineCap = "round"   // butt, round, square
@@ -37,9 +39,8 @@ class Feature {
     gridPos: IPoint = { x: 0, y: 0 };  // 网格坐标系下的坐标
     parent: Feature | null = null;  // 父元素
     children: Feature[] = [];  // 子节点
-    ctrlPnts: CtrlPnt[] = [];
-    anchorPnts: AnchorPnt[] = [];  // 锚点
-    gls: GridSystem = GridSystem.Gls;
+    gls: GridSystem = Feature.Gls;
+    bbox: Bbox | null = null;
     lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
     adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
     pntDistanceLimit = 5;  // 距离太近的两个点,就不重复添加了
@@ -52,11 +53,10 @@ class Feature {
         }
 
     // 节点状态
-    isClosePath: boolean = true;  // 是否闭合
+    closePath: boolean = true;  // 是否闭合
     isPointIn: boolean = false; //鼠标是否悬浮在元素上
     isFocused: boolean = false; //是否正在操作, 鼠标按在这个元素身上
     isFixedPos: boolean = false;  // 是否固定位置.不跟随网格移动
-    isFixedSize: boolean = false; // 是否固定大小
     isOutScreen: boolean = false;  // 是否在屏幕外
     isObstacle: boolean = false;  // 是否是障碍物
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
@@ -73,36 +73,33 @@ class Feature {
     cbChangeZindex: boolean = true; // 是否获取焦点时改变层级关系
     cbAdsorb: boolean = true;
 
-    // 节点事件
-    onmouseover: Function | null = null;  // 如果有，鼠标悬浮后就会被调用
-    onmousemove: Function | null = null;  // 如果有，在元素上移动触发
-    onmousedown: Function | null = null;  // 如果有，鼠标点击后就会被调用
-    onmouseup: Function | null = null;  // 如果有，鼠标点击后就会被调用
-    onmouseleave: Function | null = null;  // 如果有，鼠标离开后就会被调用
-    ondbclick: Function | null = null;  // 如果有，鼠标双击后就会被调用
-    // ontranslate: Function | null = null;  // 拖拽中的事件
-    ondragend: Function | null = null;  // 拖拽中的事件
-    resize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
-    ondraw: Function | null = null;  // 每次绘制触发
-    onrotate: Function | null = null;
-    ondelete: Function | null = null;
+    // // 节点事件
+    // ondelete: Function | null = null;
 
-    onTranslate: Function | null = null;
+    onTranslate: Function | null = null;  // 移动时,包含draging时
     translateEvents: Function[] = [];
-
-    // 节点事件, 内部使用
-    _onmouseover: Function | null = null;  // 如果有，鼠标悬浮后就会被调用
-    _onmousemove: Function | null = null;  // 如果有，在元素上移动触发
-    _onmousedown: Function | null = null;  // 如果有，鼠标点击后就会被调用
-    _onmouseup: Function | null = null;  // 如果有，鼠标点击后就会被调用
-    _onmouseleave: Function | null = null;  // 如果有，鼠标离开后就会被调用
-    _ondbclick: Function | null = null;  // 如果有，鼠标双击后就会被调用
-    _ontranslate: Function | null = null;  // 拖拽中的事件
-    _ondragend: Function | null = null;  // 拖拽中的事件
-    _resize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
-    _ondraw: Function | null = null;  // 每次绘制触发
-    _onrotate: Function | null = null;
-    _ondelete: Function | null = null;
+    onMouseover: Function | null = null;  // 鼠标悬浮后就会被调用
+    mouseoverEvents: Function[] = [];
+    onMousemove: Function | null = null;  // 在元素上移动触发
+    mousemoveEvents: Function[] = [];
+    onMousedown: Function | null = null;  // 鼠标点击后就会被调用
+    mousedownEvents: Function[] = [];
+    onMouseup: Function | null = null;  // 鼠标松开后就会被调用
+    mouseupEvents: Function[] = [];
+    onMouseleave: Function | null = null;  // 鼠标离开后就会被调用
+    mouseleaveEvents: Function[] = [];
+    onDbclick: Function | null = null;  // 鼠标双击后就会被调用
+    dbclickEvents: Function[] = [];
+    onDragend: Function | null = null;  // 拖拽中的事件
+    dragendEvents: Function[] = [];
+    onResize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
+    resizeEvents: Function[] = [];
+    onDraw: Function | null = null;  // 每次绘制触发
+    drawEvents: Function[] = [];
+    onRotate: Function | null = null;  // 旋转时
+    rotateEvents: Function[] = [];
+    onDelete: Function | null = null;  // 删除的时候
+    deleteEvents: Function[] = [];
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
@@ -112,23 +109,19 @@ class Feature {
         this.id = getUuid();
     }
 
-    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(this.pointArr)) {
+    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos()) {
         this.angle += angle;
-        this.pointArr.forEach(p => {
-            let rp = getRotatePnt(O, p, angle);
-            p.x = rp.x;
-            p.y = rp.y;
+        this.pointArr = this.pointArr.map(p => {
+            return getRotatePnt(O, p, angle)
         })
         this.onrotate && this.onrotate()
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {
-        this.pointArr.forEach(p => {
-            if (!this.isOnlyVerticalDrag) {
-                p.x += offsetX;
-            }
-            if (!this.isOnlyHorizonalDrag) {
-                p.y += offsetY;
+        this.pointArr = this.pointArr.map(p => {
+            return {
+                x: !this.isOnlyVerticalDrag ? p.x += offsetX : p.x,
+                y: !this.isOnlyHorizonalDrag ? p.y += offsetY : p.y
             }
         })
         this.ontranslate();
@@ -144,7 +137,7 @@ class Feature {
             }
         })
         ctx.save()
-        this.isClosePath && path.closePath()
+        this.closePath && path.closePath()
         this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
@@ -209,24 +202,25 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            let isPointIn = false;
-            if (this.isClosePath) {
-                isPointIn = path ? ctx.isPointInPath(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInPath(GridSystem.MousePos.x, GridSystem.MousePos.y)
-            } else {
-                isPointIn = path ? ctx.isPointInStroke(path, GridSystem.MousePos.x, GridSystem.MousePos.y) : ctx.isPointInStroke(GridSystem.MousePos.x, GridSystem.MousePos.y)
-            }
-            // if(isPointIn){
-            //     this.gls.hoverNode = this;
-            // }
+            if (this.cbSelect && this.gls) {
+                let mousePos = this.gls.mousePos;
+                let isPointIn = false;
+                if (this.closePath) {
+                    isPointIn = path ? ctx.isPointInPath(path, mousePos.x, mousePos.y) : ctx.isPointInPath(mousePos.x, mousePos.y)
+                } else {
+                    isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
+                }
+                // if(isPointIn){
+                //     this.gls.hoverNode = this;
+                // }
 
-            if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
-                this.onmouseover && this.onmouseover(this);
-            } else if (this.isPointIn && !isPointIn) {
-                this.onmouseleave && this.onmouseleave(this);
-            }
-            if (this.cbSelect) {
+                if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
+                    this.onmouseover && this.onmouseover();
+                } else if (this.isPointIn && !isPointIn) {
+                    this.onmouseleave && this.onmouseleave();
+                }
                 this.isPointIn = isPointIn;
-                this.isPointIn && this.onmousemove && this.onmousemove(this);
+                this.isPointIn && this.onmousemove && this.onmousemove();
             }
         }
     }
@@ -270,11 +264,13 @@ class Feature {
         }
     }
 
-    addPoint(point: IPoint) {
-        let prevPnt = this.pointArr[this.pointArr.length - 1];
-        if (prevPnt && getLenOfTwoPnts(point, prevPnt) < this.pntDistanceLimit) {
-            console.warn("两点距离太近了, 就不添加了!");
-            return;
+    addPoint(point: IPoint, isLimitDistance = this.pntDistanceLimit > 0) {
+        if (isLimitDistance) {
+            let prevPnt = this.pointArr[this.pointArr.length - 1];
+            if (prevPnt && getLenOfTwoPnts(point, prevPnt) < this.pntDistanceLimit) {
+                console.warn("两点距离太近了, 就不添加了!");
+                return;
+            }
         }
         this.pointArr.push(point);
     }
@@ -297,7 +293,7 @@ class Feature {
             let leftTop = this.pointArr[0];  // 左上角
             // this.gls.test = this.gls.getPixelPos(leftTop)
             this.children.forEach(cf => {
-                cf.translate(leftTop.x - this.lastRelativePnt.x, leftTop.y - this.lastRelativePnt.y);
+                // cf.translate(leftTop.x - this.lastRelativePnt.x, leftTop.y - this.lastRelativePnt.y);
                 // cf.angle = this.angle
                 // this.gls.test = this.gls.getPixelPos(O)
                 // this.children.forEach(cf => {
@@ -311,18 +307,6 @@ class Feature {
             })
             this.lastRelativePnt = { x: leftTop.x, y: leftTop.y };
         }
-    }
-
-    addCtrlPnt(feature: CtrlPnt) {
-        // new CtrlPnt();
-        this.ctrlPnts.push(feature);
-        feature.parent = this;
-        feature.angle = feature.parent.angle;
-    }
-    // 删除指定子元素
-    removeCtrlPnt(feature: CtrlPnt) {
-        feature.parent = null;
-        this.ctrlPnts.splice(this.ctrlPnts.findIndex(cf => cf == feature), 1);
     }
 
     toFixedPos() {
@@ -352,12 +336,64 @@ class Feature {
         }
     }
 
+    getAnchorPnts(): AnchorPnt[] {
+        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
+    }
+
     ontranslate() {
         this.translateEvents.forEach(f => { f() })
         this.onTranslate && this.onTranslate();
     }
+    onmouseover() {
+        this.mouseoverEvents.forEach(f => { f() })
+        this.onMouseover && this.onMouseover();
+    }
+    onmousemove() {
+        this.mousemoveEvents.forEach(f => { f() })
+        this.onMousemove && this.onMousemove();
+    }
+    onmousedown() {
+        this.mousedownEvents.forEach(f => { f() })
+        this.onMousedown && this.onMousedown();
+    }
+    onmouseup() {
+        this.mouseupEvents.forEach(f => { f() })
+        this.onMouseup && this.onMouseup();
+    }
+    onmouseleave() {
+        this.mouseleaveEvents.forEach(f => { f() })
+        this.onMouseleave && this.onMouseleave();
+    }
+    ondbclick() {
+        this.dbclickEvents.forEach(f => { f() })
+        this.onDbclick && this.onDbclick();
+    }
+    ondragend() {
+        this.dragendEvents.forEach(f => { f() })
+        this.onDragend && this.onDragend();
+    }
+    resize() {
+        this.resizeEvents.forEach(f => { f() })
+        this.onResize && this.onResize();
+    }
+    ondraw() {
+        this.drawEvents.forEach(f => { f() })
+        this.onDraw && this.onDraw();
+    }
+    onrotate() {
+        this.rotateEvents.forEach(f => { f() })
+        this.onRotate && this.onRotate();
+    }
+    ondelete() {
+        this.deleteEvents.forEach(f => { f() })
+        this.onDelete && this.onDelete();
+    }
 
-    destroy() { };
+    destroy() {
+        this.children.forEach(cf => {
+            this.gls.removeFeature(cf);
+        })
+    };
 }
 
 export default Feature;
