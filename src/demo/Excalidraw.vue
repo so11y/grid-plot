@@ -9,7 +9,7 @@
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
                     <ul class="list-wrap hover-tab">
-                        <li>
+                        <li @click.stop="onSelectTool(0, 'rect')">
                             <a-row type="flex" align="middle">
                                 <i class="iconfont gls-kuangxuan" style="margin-right: 4px;"></i> <span>矩形</span>
                             </a-row>
@@ -108,13 +108,13 @@
                         <div class="title">背景色</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button size="middle" style="background-color: #ffc9c9"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#ffc9c9') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#ffc9c9') }"></a-button>
                             <a-button size="middle" style="background-color: #b2f2bb"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#b2f2bb') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#b2f2bb') }"></a-button>
                             <a-button size="middle" style="background-color: #a5d8ff"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#a5d8ff') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#a5d8ff') }"></a-button>
                             <a-button size="middle" style="background-color: #ffec99"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#ffec99') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#ffec99') }"></a-button>
                             <input type="color" class="color-picker" ref="color-picker"
                                 @input="(e: any) => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = e.target.value) }" />
                         </a-row>
@@ -271,6 +271,7 @@ import SelectArea from "@/features/function-shape/SelectArea";
 import GridLine from "@/GridLine";
 import { message } from "ant-design-vue";
 import { onMounted, reactive, ref, toRef, toRefs } from "vue";
+import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 const cvs = ref(null);
@@ -301,11 +302,13 @@ function onSelectTool(index = 0) {
     if (activeI.value === index) {
         activeI.value = -1
     }
-    if (cb) cb();
+    if (cb) { cb(); cb = null };
     switch (index) {
         case 0: // 选择区域
             sa = gls?.removeFeature(sa)
             sa = new SelectArea();
+            sa.drawMode = DrawAreaMode.RECT;
+            console.log(111);
             break;
         case 1: // 选择区域
             let rect = new Rect(0, 0, 50, 20);
@@ -320,6 +323,7 @@ function onSelectTool(index = 0) {
             gls?.click2DrawByContinuousClick(line1, true, true)
             break;
         case 4: // 自由笔
+            if (cb) { cb(); cb = null; return };
             function click2DrawByMove() {
                 let line = new Line();
                 line.fillStyle = "#000"

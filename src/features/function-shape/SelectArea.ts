@@ -7,7 +7,7 @@ class SelectArea extends Feature {
 
     featuresIn: Feature[] = [];
     selectMode: SelectMode = SelectMode.ONE_P;  // 是否框中一个点就判定为选中，还是全部点进入才判定选中
-    drawMode: DrawAreaMode = DrawAreaMode.IRREGULAR;  // 绘制模式,多边形或者矩形
+    drawMode: DrawAreaMode = DrawAreaMode.RECT;  // 绘制模式,多边形或者矩形
     callback: Function;
     lastMove: IPoint = { x: 0, y: 0 };
 
