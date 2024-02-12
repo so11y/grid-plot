@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_dms0igne62k.woff2?t=1707728209123') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_dms0igne62k.woff?t=1707728209123') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_dms0igne62k.ttf?t=1707728209123') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_dms0igne62k.svg?t=1707728209123#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.woff2?t=1707745692513') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.woff?t=1707745692513') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.ttf?t=1707745692513') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.svg?t=1707745692513#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-bihe:before {
+  content: "\e720";
 }
 
 .gls-xuxian:before {
@@ -145,7 +149,6 @@
 .gls-wenzi:before {
   content: "\e616";
 }
-
 
 
 ul, li, body {

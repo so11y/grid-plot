@@ -8,6 +8,13 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
+                    <ul class="list-wrap hover-tab">
+                        <li>
+                            <a-row type="flex" align="middle">
+                                <i class="iconfont gls-kuangxuan" style="margin-right: 4px;"></i> <span>矩形</span>
+                            </a-row>
+                        </li>
+                    </ul>
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 1 }]" @click="onSelectTool(1)" title="单击创建矩形">
                     <i class="iconfont gls-zhengfangxing"></i>
@@ -38,6 +45,9 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap', { 'active': activeI === 8 }]" @click="onSelectTool(7)" title="更多工具">
                     <i class="iconfont gls-gengduogongju"></i>
+                    <ul class="list-wrap hover-tab">
+                        <li>123</li>
+                    </ul>
                 </div>
             </a-row>
         </div>
@@ -209,6 +219,10 @@
                                 @click="gls?.removeFeature(gls.focusNode); message.info('删除了')">
                                 <i class="iconfont gls-shanchu"></i>
                             </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
+                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                <i class="iconfont gls-bihe"></i>
+                            </a-button>
                         </a-row>
                     </li>
                 </ul>
@@ -225,9 +239,10 @@
             </template>
         </a-modal>
         <a-modal v-model:open="isShowHelp" title="帮助" width="50vw">
-            <a-row type="flex" justify="center">
-                <img alt="" id="preview-img" width="80%">
-            </a-row>
+            <h4>操作指南:</h4>
+            <ul>
+                <li>鼠标左键选择元素,选中按住移动元素; 鼠标右键拖拽移动画布, 鼠标滚轮放大缩小画布 </li>
+            </ul>
             <template #footer>
                 <a-button key="back" @click="isShowHelp = false">关 闭</a-button>
             </template>
@@ -266,7 +281,7 @@ const props = ref<Partial<Feature & Rect & Line>>({
     lineWidth: .2,
     radius: 0,
 });
-let gl: GridLine | null = null;
+let gl: GridLine | null = new GridLine();
 let sa: SelectArea | null | undefined = null;
 let gls: GridSystem | null;
 const isShowPropTab = ref(false);
@@ -275,16 +290,18 @@ const isShowHelp = ref(false);
 
 onMounted(() => {
     reset();
-
+    gl = new GridLine()
     // document.addEventListener(Events.RIGHT_CLICK, ()=>{
     //     console.log(1111);
     // })
 })
 
+let cb: any;
 function onSelectTool(index = 0) {
     if (activeI.value === index) {
         activeI.value = -1
     }
+    if (cb) cb();
     switch (index) {
         case 0: // 选择区域
             sa = gls?.removeFeature(sa)
@@ -302,27 +319,40 @@ function onSelectTool(index = 0) {
             let line1 = new Line();
             gls?.click2DrawByContinuousClick(line1, true, true)
             break;
-        case 4: // 选择区域
+        case 4: // 自由笔
             function click2DrawByMove() {
                 let line = new Line();
                 line.fillStyle = "#000"
-                gls?.click2DrawByMove(line, false, false, () => {
+                cb = gls?.click2DrawByMove(line, false, false, () => {
                     click2DrawByMove();
                 })
             }
             click2DrawByMove();
             break;
         case 5: // 选择区域
-            let text = new Text("测试文本", 0, 0, 20, 10);
-            gls?.click2DrawByClick(text, true, true)
+            var txt = prompt("请输入文字", "测试文字");
+            let text = new Text(txt as string, 0, 0, 20, 10);
+            text.fitSize = true;
+            gls?.click2DrawByClick(text, true)
             break;
         case 6: // 选择区域
-            let imgEle = new Image();
-            imgEle.src = "/meigong1.png";
-            imgEle.onload = () => {
-                let img = new Img(imgEle, 0, 0, 50, 30);
-                gls?.click2DrawByClick(img, true)
-            }
+            window.showOpenFilePicker().then((res: any) => {
+                if (res[0].kind === 'file') {
+                    const reader = new FileReader();
+                    res[0].getFile().then((file: any) => {
+                        reader.readAsDataURL(file);
+                    })
+                    reader.onload = function () {
+                        let imgEle = new Image();
+                        imgEle.src = reader.result as string;
+                        console.log(reader.result, "reader.result");
+                        imgEle.onload = () => {
+                            let img = new Img(imgEle, 0, 0, 50, 30);
+                            gls?.click2DrawByClick(img, true)
+                        }
+                    }
+                }
+            });
             break;
         case 7: // 选择区域
             gl ? gl = null : gl = new GridLine()
@@ -357,9 +387,6 @@ function onSaveImg() {
         document.body.removeChild(downloadLink);
     }
 }
-function onSaveFile() {
-
-}
 
 function onShowPreview() {
     isShowSaveImage.value = true;
@@ -372,8 +399,44 @@ function onShowPreview() {
         }
     }, 1000);
 }
-function onImportFile() {
 
+function onSaveFile() {
+    if (gls?.features && gls.features.length <= 0) {
+        return message.warning("没有元素,保存啥?")
+    }
+    let str = gls?.save();
+    const text = JSON.stringify(str)
+    const blob = new Blob([text], {
+        type: "text/plain;charset=utf-8"
+    })
+    // 根据 blob生成 url链接
+    const objectURL = URL.createObjectURL(blob)
+    const domElement = document.createElement('a')
+    domElement.href = objectURL;
+    domElement.download = `${new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()}.gls`
+    domElement.click()
+    URL.revokeObjectURL(objectURL)
+}
+function onImportFile() {
+    window.showOpenFilePicker().then((res: any) => {
+        if (res[0].kind === 'file') {
+            const reader = new FileReader();
+            res[0].getFile().then((file: any) => {
+                reader.readAsText(file);
+            })
+            reader.onload = function () {
+                let features = JSON.parse(JSON.parse(reader.result as string))
+                gls?.loadData(features);
+                // let imgEle = new Image();
+                // imgEle.src = reader.result as string;
+                // console.log(reader.result, "reader.result");
+                // imgEle.onload = () => {
+                //     let img = new Img(imgEle, 0, 0, 50, 30);
+                //     gls?.click2DrawByClick(img, true)
+                // }
+            }
+        }
+    });
 }
 
 function darkTheme() {
@@ -592,6 +655,23 @@ canvas {
             &:hover {
                 background-color: rgba(192, 202, 210, 1);
             }
+        }
+
+        &:hover {
+            &>.hover-tab {
+                width: 60px;
+                display: inline-block;
+            }
+        }
+
+        .hover-tab {
+            background-color: #fff;
+            border-radius: 5px;
+            // border: 1px solid #d9d9d9;
+            box-shadow: 0px 0px 1px 0px rgba(0, 0, 0, .17), 0px 0px 3px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
         }
     }
 }

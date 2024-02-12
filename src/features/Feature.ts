@@ -29,10 +29,10 @@ class Feature {
     id: string  // 唯一id
     name: string = ''  //名称
     className = 'Feature'  //名称
-    hidden: boolean = false;
-    position: IPoint = { x: 0, y: 0 }
+    hidden: boolean = false;   // 是否隐藏
+    position: IPoint = { x: 0, y: 0 }  // 位置
     offset: IPoint = { x: 0, y: 0 } // 相对于父元素中心点偏移
-    size: Size = { width: 0, height: 0 }
+    size: Size = { width: 0, height: 0 }  // 宽高
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
 

@@ -51,7 +51,7 @@
                 <a-button id="undo">撤 销</a-button>
                 <a-button id="restore">恢 复</a-button>
                 <a-button id="save">保存画布状态</a-button>
-                <a-button id="loadLocalData">加载数据</a-button>
+                <a-button id="loadData">加载数据</a-button>
             </div>
             <div class="flex-column">
                 <a-button id="miniMapBtn">小地图导航</a-button>
@@ -119,7 +119,7 @@ onMounted(()=>{
         let copyFocusNode = document.querySelector("#copyFocusNode") as HTMLElement;
 
         let save = document.querySelector("#save") as HTMLElement;
-        let loadLocalData = document.querySelector("#loadLocalData") as HTMLElement;
+        let loadData = document.querySelector("#loadData") as HTMLElement;
         let moveTop = document.querySelector("#moveTop") as HTMLElement;
         let moveBottom = document.querySelector("#moveBottom") as HTMLElement;
         let moveLeft = document.querySelector("#moveLeft") as HTMLElement;
@@ -350,8 +350,8 @@ onMounted(()=>{
         save.onclick = () => {
             gls.save();
         }
-        loadLocalData.onclick = () => {
-            gls.loadLocalData();
+        loadData.onclick = () => {
+            gls.loadData();
         }
 
         var sa:SelectArea|null = null;

@@ -1152,7 +1152,9 @@ class GridSystem {
                 featurePropsArr.push(fProps)
             }
         })
-        sessionStorage.setItem("features", JSON.stringify(featurePropsArr));
+        let str = JSON.stringify(featurePropsArr);
+        sessionStorage.setItem("features", str);
+        return str
     }
 
     // 判断是否时基础元素
@@ -1166,8 +1168,12 @@ class GridSystem {
         this.pageSlicePos.y += offsetY;
     }
 
-    loadLocalData() {
-        let featurePropsArr = JSON.parse(sessionStorage.getItem("features") || '') as Props[];
+    loadData(featurePropsArr: Props[]) {
+        if (!featurePropsArr) {
+            featurePropsArr = JSON.parse(sessionStorage.getItem("features") || '') as Props[];
+        }
+        console.log(featurePropsArr, "featurePropsArr");
+        
         featurePropsArr.forEach(fp => {
             this.createFeature(fp)
         })
