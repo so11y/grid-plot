@@ -86,7 +86,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="props-page props-setting">
+            <div class="props-page props-setting" v-if="isShowSide">
                 <ul class="list-wrap">
                     <li>
                         <div class="title">描边色</div>
@@ -291,7 +291,7 @@ const isShowHelp = ref(false);
 
 onMounted(() => {
     reset();
-    gl = new GridLine()
+    gl = new GridLine();
     // document.addEventListener(Events.RIGHT_CLICK, ()=>{
     //     console.log(1111);
     // })
@@ -305,10 +305,11 @@ function onSelectTool(index = 0) {
     if (cb) { cb(); cb = null };
     switch (index) {
         case 0: // 选择区域
-            sa = gls?.removeFeature(sa)
-            sa = new SelectArea();
-            sa.drawMode = DrawAreaMode.RECT;
-            console.log(111);
+            gls?.enableSelectArea();
+            // sa = gls?.removeFeature(sa)
+            // sa = new SelectArea();
+            // sa.drawMode = DrawAreaMode.RECT;
+            // console.log(111);
             break;
         case 1: // 选择区域
             let rect = new Rect(0, 0, 50, 20);
@@ -462,6 +463,10 @@ function reset() {
     gls = new GridSystem(canvasDom);
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
+    gls.addFeature(new Feature([
+        {x: 100, y: 100},
+        {x: 200, y: 200},
+    ]))
 }
 
 function linkTo(url: string) {
@@ -493,6 +498,7 @@ canvas {
 .app-container {
     position: relative;
     font-family: "glsfont";
+    overflow: hidden;
 
     .top-toolbar {
         position: absolute;

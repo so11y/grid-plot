@@ -54,7 +54,6 @@ class Rect extends Feature {
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.updateChild();
         ctx.restore();
-        // this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
         return path;
     }
 

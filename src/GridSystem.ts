@@ -177,6 +177,9 @@ class GridSystem {
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
         var mousemove = (e: any) => { };
         this.enableTranform(null, false);
+        if (!(this.focusNode instanceof SelectArea)) {
+            this.enableSelectArea(false)
+        }
         if (ev.buttons != 1) {
             this.focusNode = focusNode;
         }
@@ -505,6 +508,7 @@ class GridSystem {
 
     // --------------------画布内元素的增删查API----------------------------
     removeFeature(f: Feature | string | undefined | null, isRecord = true) {
+        console.log(f, "f");
         let feature: Feature | null | undefined = null;
         if (!f && this.focusNode) {
             feature = this.focusNode as Feature;
@@ -960,17 +964,23 @@ class GridSystem {
     }
 
     enableSelectArea(enabled: boolean = true) {
-        if (!enabled) {
-            this.removeFeature(GridSystem.SelectArea);
-            GridSystem.SelectArea = null;
-        } else {
-            if (GridSystem.SelectArea) {
-                this.removeFeature(GridSystem.SelectArea);
-                GridSystem.SelectArea = null;
-            } else {
-                GridSystem.SelectArea = new SelectArea();
-            }
-        }
+        // if (!enabled) {
+        //     this.removeFeature(this.features.find(f => f instanceof SelectArea));
+        //     GridSystem.SelectArea = null;
+        //     //     if (GridSystem.SelectArea) {
+        //     //     this.removeFeature(GridSystem.SelectArea);
+        //     //     GridSystem.SelectArea = null;
+        //     // } else {
+        //     //     this.removeFeature(this.features.find(f => f instanceof SelectArea));
+        //     // }
+        // } else {
+        //     if (GridSystem.SelectArea) {
+        //         this.removeFeature(GridSystem.SelectArea);
+        //         GridSystem.SelectArea = null;
+        //     } else {
+        //         GridSystem.SelectArea = new SelectArea();
+        //     }
+        // }
     }
 
     enableTranform(f: BasicFeature | SelectArea | null | undefined, enabled: boolean = true) {
@@ -1173,7 +1183,7 @@ class GridSystem {
             featurePropsArr = JSON.parse(sessionStorage.getItem("features") || '') as Props[];
         }
         console.log(featurePropsArr, "featurePropsArr");
-        
+
         featurePropsArr.forEach(fp => {
             this.createFeature(fp)
         })

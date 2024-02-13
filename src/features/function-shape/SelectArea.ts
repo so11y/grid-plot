@@ -86,11 +86,6 @@ class SelectArea extends Feature {
         this.lastMove.y = this.pointArr[0].y;
     }
 
-    ondelete() {
-        this.gls.enableTranform(this, false)
-        this.featuresIn.forEach(f => this.gls.removeFeature(f))
-    }
-
     getSelectFeature() {
         return this.gls.features.filter(f => {
             if (!f.cbSelect || !f.cbMove || !this.gls.isBasicFeature(f)) return
@@ -111,6 +106,8 @@ class SelectArea extends Feature {
 
     destroy() {
         super.destroy();
+        this.gls.enableTranform(this, false)
+        this.featuresIn.forEach(f => this.gls.removeFeature(f))
     }
 
     // 顶部对齐
