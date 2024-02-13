@@ -94,6 +94,7 @@ class GridSystem {
     }
 
     draw(loop = true, fn?: Function) {
+        console.time();
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
@@ -102,6 +103,7 @@ class GridSystem {
         this.ctx.fillStyle = "red"
         this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
         // this.ctx.rotate(-30 * Math.PI/180)
+        console.timeEnd();
         if (loop) {  // 是否循环渲染
             this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
