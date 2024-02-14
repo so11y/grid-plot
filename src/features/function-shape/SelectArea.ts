@@ -81,7 +81,7 @@ class SelectArea extends Feature {
 
     getSelectFeature() {
         return this.gls.features.filter(f => {
-            if (!f.cbSelect || !f.cbMove || !this.gls.isBasicFeature(f)) return
+            if (!f.cbSelect || !this.gls.isBasicFeature(f)) return
             let pointArr = f.pointArr;
             if (this.selectMode === SelectMode.ALL_P) {
                 return pointArr.every(p => {

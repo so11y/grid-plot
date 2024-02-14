@@ -1,7 +1,6 @@
 import Feature from "../Feature";
 import { IPoint } from "../../Interface";
 import CtrlPnt from "../function-shape/CtrlPnt";
-import GridSystem from "@/GridSystem";
 
 class Line extends Feature {
 

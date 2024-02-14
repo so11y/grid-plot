@@ -105,10 +105,8 @@ class GridSystem {
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
-            this.timer = setInterval(() => {
-                this.draw(loop, fn)
-            })
-            // this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
+            // this.timer = setInterval(() => {this.draw(loop, fn)})
+            this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
     };
 
@@ -177,38 +175,37 @@ class GridSystem {
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
-        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);
-        focusNode?.onmousedown && focusNode.onmousedown();
+        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);  // 寻找鼠标悬浮元素
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
         var mousemove = (e: any) => { };
-        if (!(focusNode instanceof Bbox) && this.focusedTransform) {
-            this.enableTranform(null, false);
-            if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
-                this.enableTranform(focusNode, true);
-                focusNode = GridSystem.Bbox as Bbox;
-            }
-        };
-        if (!(this.focusNode instanceof SelectArea) && !(this.focusNode && this.focusNode.parent && this.focusNode.parent.parent instanceof SelectArea)) {
-            let sa = this.features.find(f => f instanceof SelectArea)
-            sa && this.removeFeature(sa);
-        }
         if (ev.buttons != 1) {
             this.focusNode = focusNode;
+        } else {  // 左键点击
+            focusNode?.onmousedown && focusNode.onmousedown();
+            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSlectFeatures) {  // 点击了就加控制点,没点击就去除所有控制点
+                this.enableTranform(null, false);
+                if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
+                    this.enableTranform(focusNode, true);
+                    focusNode = GridSystem.Bbox as Bbox;
+                }
+            };
+            // 如果有区域选择,那么就先清除
+            if (!(this.focusNode instanceof SelectArea) && !(this.focusNode && this.focusNode.parent && this.focusNode.parent.parent instanceof SelectArea)) {
+                let sa = this.features.find(f => f instanceof SelectArea)
+                sa && this.removeFeature(sa);
+            }
         }
-        if (focusNode && this.cbSlectFeatures && ev.buttons == 1) {  // 拖拽元素
+        if (focusNode && ev.buttons == 1) {  // 拖拽元素
             focusNode.isFocused = true;
-
             this.toMaxIndex(focusNode);
             let pointArr = JSON.parse(JSON.stringify(focusNode.pointArr));
             let { x: dx, y: dy } = this.getRelativePos({ x: downX, y: downY }, focusNode.isFixedPos);
-
             function translateChild(children: Feature[], move: IPoint) {
                 children.forEach(cf => {
                     cf.translate(move.x, move.y);
                     translateChild(cf.children, move)
                 })
             }
-            
             mousemove = (e: any) => {
                 if (focusNode && focusNode.cbMove) {
                     const { x: moveX, y: moveY } = getMousePos(this.dom, e);
@@ -223,7 +220,7 @@ class GridSystem {
                                 p.y = pointArr[i].y + (my - dy)
                             };
                         })
-                        translateChild(focusNode.children, {x: mx - lastMovePos.x, y: my - lastMovePos.y});   // 递归的移动所有子元素
+                        translateChild(focusNode.children, { x: mx - lastMovePos.x, y: my - lastMovePos.y });   // 递归的移动所有子元素
                         if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
                             let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
                                 gridCompute: focusNode.adsorbTypes.includes("grid"),
@@ -232,9 +229,6 @@ class GridSystem {
                             });
                             focusNode.translate(offsetX, offsetY)
                             focusNode._orientations = orientations;
-                            // focusNode.children.forEach(cf => {
-                            //     cf.translate(offsetX, offsetY)
-                            // })
                         }
 
                     }
@@ -719,25 +713,37 @@ class GridSystem {
     }
 
     // ------------------ 鼠标点击方式去创建元素-----------------
-    click2DrawByClick(rect: Rect | Circle, cbAdsorption = false, cbCrossLine = false) {
-        let adsorbPnt = new AdsorbPnt(8, cbAdsorption, cbCrossLine);
+    click2DrawByClick(rect: Rect | Circle) {
+        this.addFeature(rect);
+        let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         this.cbSlectFeatures = false;
         var click2draw = (e: any) => {
             if (e.detail.button === 0) {
                 this.cbSlectFeatures = true;
                 rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
                 this.removeFeature(adsorbPnt, false);
-                this.addFeature(rect);
                 document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+                document.removeEventListener(Events.MOUSE_MOVE, move2draw);
             }
         }
+        var move2draw = (e: any) => {
+            rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
+        }
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
+        document.addEventListener(Events.MOUSE_MOVE, move2draw);
+        return () => {
+            this.cbSlectFeatures = true;
+            this.removeFeature(rect, false);
+            this.removeFeature(adsorbPnt, false);
+            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+        }
     }
 
     // 鼠标点一下添加一个点去画折线
-    click2DrawByContinuousClick(line: Line, cbAdsorption = false, cbCrossLine = false, fn?: Function) {
+    click2DrawByContinuousClick(line: Line, fn?: Function) {
         this.cbSlectFeatures = false;
-        let adsorbPnt = new AdsorbPnt(8, cbAdsorption, cbCrossLine);
+        let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         var move2draw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
         }
@@ -761,27 +767,27 @@ class GridSystem {
         }
         document.addEventListener(Events.DB_CLICK, over2draw);
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
+
+        return () => {
+            this.cbSlectFeatures = true;
+            this.removeFeature(adsorbPnt, false);
+            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.DB_CLICK, over2draw);
+            this.dom.removeEventListener('mousemove', move2draw);
+        }
     }
 
     // 鼠标按住不放持续画线
-    click2DrawByMove(line: Line, keepStraight = false, cbCrossLine = false, fn?: Function) {
+    click2DrawByMove(line: Line, isLaserPen = false, fn?: Function) {
         this.cbSlectFeatures = false;
-        line.isFreeStyle = !keepStraight;
-        let adsorbPnt = new AdsorbPnt(8, keepStraight, cbCrossLine);
+        let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         let lastLineWidth = 0
         let lastTime = 0
 
         var move2draw = (e: any) => {
             let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
-            if (keepStraight) {  // 保持直线
-                if (line.pointArr.length == 1) {
-                    line.addPoint({ x, y });
-                } else {
-                    line.pointArr[line.pointArr.length - 1] = { x, y };
-                }
-            } else {
-                line.addPoint({ x, y });
-
+            line.addPoint({ x, y });
+            if (line.pointArr.length > 1) {
                 // 自由画笔的宽度计算
                 let lineWidth = 0
                 let diffx = x - line.pointArr[line.pointArr.length - 2].x
@@ -803,6 +809,19 @@ class GridSystem {
             }
         }
         let over2draw = () => {
+            if (isLaserPen) {  // 激光笔
+                let timer = 0, timer2 = 0;
+                timer = setTimeout(() => {
+                    timer2 = setInterval(() => {
+                        line.pointArr.shift();
+                        if (line.pointArr.length <= 0) {
+                            clearInterval(timer2)
+                            clearTimeout(timer)
+                            this.removeFeature(line);
+                        }
+                    }, 20)
+                }, 350)
+            }
             this.cbSlectFeatures = true;
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
@@ -821,8 +840,11 @@ class GridSystem {
         }
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
         return () => {
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            this.cbSlectFeatures = true;
             this.removeFeature(adsorbPnt, false);
+            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            document.removeEventListener(Events.MOUSE_UP, over2draw);
         }
     }
 

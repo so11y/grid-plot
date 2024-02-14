@@ -261,6 +261,7 @@
             123
             <li></li>
         </ul> -->
+        <div class="update-time">最后更新时间: {{env.BUILD_TIME}}</div>
     </div>
 </template>
     
@@ -296,6 +297,7 @@ const isShowPropTab = ref(false);
 const isShowRightClickPanel = ref(false);
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
+const env = import.meta.env;
 
 onMounted(() => {
     reset();
@@ -321,25 +323,26 @@ function onSelectTool(index = 0) {
             sa.drawMode = DrawAreaMode.RECT;
             // console.log(111);
             break;
-        case 1: // 选择区域
+        case 1: // 单击创建Rect
             let rect = new Rect(0, 0, 50, 20);
-            gls?.click2DrawByClick(rect, true)
+            cb = gls?.click2DrawByClick(rect)
             break;
-        case 2: // 选择区域
+        case 2: // 单击创建Circle
             let circle = new Circle(0, 0, 50, 50);
-            gls?.click2DrawByClick(circle, true)
+            cb = gls?.click2DrawByClick(circle)
             break;
-        case 3: // 选择区域
+        case 3: // 点击创建Line
             let line1 = new Line();
-            gls?.click2DrawByContinuousClick(line1, true, true)
+            cb = gls?.click2DrawByContinuousClick(line1)
             break;
         case 4: // 自由笔
             if (cb) { cb(); cb = null; return };
             function click2DrawByMove() {
                 let line = new Line();
+                line.isFreeStyle = true;
                 line.fillStyle = "#000"
                 line.strokeStyle = "#000"
-                cb = gls?.click2DrawByMove(line, false, false, () => {
+                cb = gls?.click2DrawByMove(line, false, () => {
                     click2DrawByMove();
                 })
             }
@@ -349,7 +352,7 @@ function onSelectTool(index = 0) {
             var txt = prompt("请输入文字", "测试文字");
             let text = new Text(txt as string, 0, 0, 20, 10);
             text.fitSize = true;
-            gls?.click2DrawByClick(text, true)
+            gls?.click2DrawByClick(text)
             break;
         case 6: // 选择区域
             window.showOpenFilePicker().then((res: any) => {
@@ -709,6 +712,17 @@ canvas {
         left: 0;
         top: 0;
         z-index: 1000;
+    }
+
+    .update-time {
+        position: fixed;
+        right: 0px;
+        bottom: 0px;
+        color: #999;
+        font-size: 12px;
+        background-color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
     }
 }
 </style>
