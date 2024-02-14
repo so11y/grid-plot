@@ -26,9 +26,15 @@
                     title="连续点击创建折线">
                     <i class="iconfont gls-zhixian"></i>
                 </div>
-                <div :class="['icon-wrap subscript', { 'active': activeI === 4 }]" @click="onSelectTool(4)"
-                    title="按住移动随意绘制">
-                    <i class="iconfont gls-ziyoubi"></i>
+                <div :class="['icon-wrap subscript', { 'active': activeI === 4 }]" @click="onSelectTool(4)" title="自由画笔">
+                    <i class="iconfont gls-huabi"></i>
+                    <ul class="list-wrap hover-tab">
+                        <li @click.stop="onSelectTool(4, true)">
+                            <a-row type="flex" align="middle">
+                                <i class="iconfont gls-jiguangbi" style="margin-right: 4px;"></i> <span>激光笔</span>
+                            </a-row>
+                        </li>
+                    </ul>
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 5 }]" @click="onSelectTool(5)" title="单击创建文本">
                     <i class="iconfont gls-wenzi"></i>
@@ -261,7 +267,7 @@
             123
             <li></li>
         </ul> -->
-        <div class="update-time">最后更新时间: {{env.BUILD_TIME}}</div>
+        <div class="update-time">最后更新时间: {{ env.BUILD_TIME }}</div>
     </div>
 </template>
     
@@ -312,43 +318,49 @@ onMounted(() => {
 })
 
 let cb: any;
-function onSelectTool(index = 0) {
+function onSelectTool(index = 0, param?: any) {
     if (activeI.value === index) {
         activeI.value = -1
     }
     if (cb) { cb(); cb = null };
     switch (index) {
         case 0: // 选择区域
+            message.info("按住左键移动吧!")
             sa = new SelectArea();
             sa.drawMode = DrawAreaMode.RECT;
             // console.log(111);
             break;
         case 1: // 单击创建Rect
+            message.info("点击画布创建吧!")
             let rect = new Rect(0, 0, 50, 20);
             cb = gls?.click2DrawByClick(rect)
             break;
         case 2: // 单击创建Circle
+            message.info("点击画布创建吧!")
             let circle = new Circle(0, 0, 50, 50);
             cb = gls?.click2DrawByClick(circle)
             break;
         case 3: // 点击创建Line
+            message.info("点击画布创建吧!")
             let line1 = new Line();
             cb = gls?.click2DrawByContinuousClick(line1)
             break;
         case 4: // 自由笔
+            message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
             function click2DrawByMove() {
                 let line = new Line();
                 line.isFreeStyle = true;
-                line.fillStyle = "#000"
                 line.strokeStyle = "#000"
-                cb = gls?.click2DrawByMove(line, false, () => {
+                if(!!param){line.strokeStyle = '#F96363'}
+                cb = gls?.click2DrawByMove(line, !!param, () => {
                     click2DrawByMove();
                 })
             }
             click2DrawByMove();
             break;
         case 5: // 选择区域
+            message.info("点击画布创建吧!")
             var txt = prompt("请输入文字", "测试文字");
             let text = new Text(txt as string, 0, 0, 20, 10);
             text.fitSize = true;
@@ -362,6 +374,7 @@ function onSelectTool(index = 0) {
                         reader.readAsDataURL(file);
                     })
                     reader.onload = function () {
+                        message.info("点击画布创建吧!")
                         let imgEle = new Image();
                         imgEle.src = reader.result as string;
                         console.log(reader.result, "reader.result");
@@ -691,8 +704,13 @@ canvas {
 
         &:hover {
             &>.hover-tab {
-                width: 60px;
+                padding: 4px 7px;
+                width: 80px;
                 display: inline-block;
+            }
+
+            li:hover {
+                background-color: rgba(192, 202, 210, .5);
             }
         }
 

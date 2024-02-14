@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.woff2?t=1707745692513') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.woff?t=1707745692513') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.ttf?t=1707745692513') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_a91c8slvafp.svg?t=1707745692513#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_gi8um15hljd.woff2?t=1707903558219') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_gi8um15hljd.woff?t=1707903558219') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_gi8um15hljd.ttf?t=1707903558219') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_gi8um15hljd.svg?t=1707903558219#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,14 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-jiguangbi:before {
+  content: "\e605";
+}
+
+.gls-huabi:before {
+  content: "\e753";
 }
 
 .gls-bihe:before {

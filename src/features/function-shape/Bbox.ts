@@ -27,7 +27,6 @@ export default class Bbox extends Rect {
         this.className = 'Bbox';
         this.addFeature(feature);
         this.target = feature;
-        // this.parent = parent;
         // this.isFixedPos = parent.isFixedPos;
         this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
@@ -38,7 +37,7 @@ export default class Bbox extends Rect {
         this.lineWidth = .1;
         // this.cbSelect = false;
         this.zIndex = Infinity;
-        this.keepRatio = true;
+        this.keepRatio = false;
         this.lastMove = { x: feature.pointArr[0].x, y: feature.pointArr[0].y };
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
