@@ -69,10 +69,10 @@ class GridSystem {
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
 
     freeLineConfig = {  // 自由画笔线条粗细参数配置
-        maxWidth: 1.2,
-        minWidth: .1,
-        maxSpeed: 2,
-        minSpeed: 0.2,
+        maxWidth: .3,
+        minWidth: .03,
+        maxSpeed: 1.5,
+        minSpeed: 0.1,
     }
 
     // 提供的事件
@@ -94,18 +94,21 @@ class GridSystem {
     }
 
     draw(loop = true, fn?: Function) {
-        console.time();
+        // console.time();
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
         fn && fn()
         this.drawFeatures();
-        this.ctx.fillStyle = "red"
-        this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
+        // this.ctx.fillStyle = "red"
+        // this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
         // this.ctx.rotate(-30 * Math.PI/180)
-        console.timeEnd();
+        // console.timeEnd();
         if (loop) {  // 是否循环渲染
-            this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
+            this.timer = setInterval(() => {
+                this.draw(loop, fn)
+            })
+            // this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
     };
 
@@ -174,39 +177,53 @@ class GridSystem {
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
-        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.isPointIn);
+        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);
         focusNode?.onmousedown && focusNode.onmousedown();
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
         var mousemove = (e: any) => { };
-        this.enableTranform(null, false);
-        if (!(this.focusNode instanceof SelectArea)) {
-            this.enableSelectArea(false)
+        if (!(focusNode instanceof Bbox) && this.focusedTransform) {
+            this.enableTranform(null, false);
+            if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
+                this.enableTranform(focusNode, true);
+                focusNode = GridSystem.Bbox as Bbox;
+            }
+        };
+        if (!(this.focusNode instanceof SelectArea) && !(this.focusNode && this.focusNode.parent && this.focusNode.parent.parent instanceof SelectArea)) {
+            let sa = this.features.find(f => f instanceof SelectArea)
+            sa && this.removeFeature(sa);
         }
         if (ev.buttons != 1) {
             this.focusNode = focusNode;
         }
         if (focusNode && this.cbSlectFeatures && ev.buttons == 1) {  // 拖拽元素
             focusNode.isFocused = true;
-            if (this.isBasicFeature(focusNode) && this.focusedTransform) {
-                this.enableTranform(focusNode, true);
-            }
+
             this.toMaxIndex(focusNode);
             let pointArr = JSON.parse(JSON.stringify(focusNode.pointArr));
-            let { x: x1, y: y1 } = this.getRelativePos({ x: downX, y: downY }, focusNode.isFixedPos)
+            let { x: dx, y: dy } = this.getRelativePos({ x: downX, y: downY }, focusNode.isFixedPos);
+
+            function translateChild(children: Feature[], move: IPoint) {
+                children.forEach(cf => {
+                    cf.translate(move.x, move.y);
+                    translateChild(cf.children, move)
+                })
+            }
+            
             mousemove = (e: any) => {
                 if (focusNode && focusNode.cbMove) {
                     const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                    const { x: x2, y: y2 } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
+                    const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
                     if (lastMovePos.x && lastMovePos.y) {  // 移动元素
-                        // focusNode.translate(x2 - lastMovePos.x, y2 - lastMovePos.y)
+                        // focusNode.translate(mx - lastMovePos.x, my - lastMovePos.y)
                         focusNode.pointArr.forEach((p, i) => {   // 拖动元素
                             if (!focusNode?.isOnlyVerticalDrag) {
-                                p.x = pointArr[i].x + (x2 - x1)
+                                p.x = pointArr[i].x + (mx - dx)
                             }
                             if (!focusNode?.isOnlyHorizonalDrag) {
-                                p.y = pointArr[i].y + (y2 - y1)
+                                p.y = pointArr[i].y + (my - dy)
                             };
                         })
+                        translateChild(focusNode.children, {x: mx - lastMovePos.x, y: my - lastMovePos.y});   // 递归的移动所有子元素
                         if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
                             let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
                                 gridCompute: focusNode.adsorbTypes.includes("grid"),
@@ -215,14 +232,18 @@ class GridSystem {
                             });
                             focusNode.translate(offsetX, offsetY)
                             focusNode._orientations = orientations;
+                            // focusNode.children.forEach(cf => {
+                            //     cf.translate(offsetX, offsetY)
+                            // })
                         }
+
                     }
                     focusNode.ontranslate();
                     this.dom.onmouseup = () => {
                         document.onmousemove = null;
                         this.dom.onmouseup = null;
                     };
-                    lastMovePos = { x: x2, y: y2 }
+                    lastMovePos = { x: mx, y: my }
                 }
             }
         } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
@@ -509,12 +530,9 @@ class GridSystem {
     // --------------------以下是暴露的方法----------------------------
 
     // --------------------画布内元素的增删查API----------------------------
-    removeFeature(f: Feature | string | undefined | null, isRecord = true) {
-        console.log(f, "f");
+    removeFeature(f: Feature | string, isRecord = true) {
         let feature: Feature | null | undefined = null;
-        if (!f && this.focusNode) {
-            feature = this.focusNode as Feature;
-        } else if (f instanceof Feature) {
+        if (f instanceof Feature) {
             feature = f;
         } else {
             feature = this.features.find(f => f.id === String(f))
@@ -778,7 +796,7 @@ class GridSystem {
                 } else {
                     lineWidth = this.freeLineConfig.maxWidth - (speed / this.freeLineConfig.maxSpeed) * this.freeLineConfig.maxWidth
                 }
-                lineWidth = lineWidth * (1 / 3) + lastLineWidth * (2 / 3)
+                lineWidth = lineWidth * (1 / 3) + lastLineWidth * (2.8 / 3)
                 lastLineWidth = lineWidth
                 lastTime = Date.now();
                 line.lineWidthArr.push(lineWidth);
@@ -963,26 +981,6 @@ class GridSystem {
                 new Shortcuts(["shift", "y"], GridSystem.Stack.restore.bind(this));
             }
         }
-    }
-
-    enableSelectArea(enabled: boolean = true) {
-        // if (!enabled) {
-        //     this.removeFeature(this.features.find(f => f instanceof SelectArea));
-        //     GridSystem.SelectArea = null;
-        //     //     if (GridSystem.SelectArea) {
-        //     //     this.removeFeature(GridSystem.SelectArea);
-        //     //     GridSystem.SelectArea = null;
-        //     // } else {
-        //     //     this.removeFeature(this.features.find(f => f instanceof SelectArea));
-        //     // }
-        // } else {
-        //     if (GridSystem.SelectArea) {
-        //         this.removeFeature(GridSystem.SelectArea);
-        //         GridSystem.SelectArea = null;
-        //     } else {
-        //         GridSystem.SelectArea = new SelectArea();
-        //     }
-        // }
     }
 
     enableTranform(f: BasicFeature | SelectArea | null | undefined, enabled: boolean = true) {
@@ -1170,7 +1168,8 @@ class GridSystem {
     }
 
     // 判断是否时基础元素
-    isBasicFeature(f: Feature) {
+    isBasicFeature(f?: Feature) {
+        if (!f) return false;
         // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
         return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle'
     }

@@ -52,7 +52,7 @@ class Rect extends Feature {
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-        this.updateChild();
+        
         ctx.restore();
         return path;
     }

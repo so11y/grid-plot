@@ -5,7 +5,6 @@ import Feature from "../Feature";
 
 class SelectArea extends Feature {
 
-    featuresIn: Feature[] = [];
     selectMode: SelectMode = SelectMode.ONE_P;  // 是否框中一个点就判定为选中，还是全部点进入才判定选中
     drawMode: DrawAreaMode = DrawAreaMode.RECT;  // 绘制模式,多边形或者矩形
     callback: Function;
@@ -25,8 +24,7 @@ class SelectArea extends Feature {
         // this.isStroke = false;
         // this.fillStyle = this.hoverStyle = this.focusStyle = "transparent"
         document.addEventListener("mousedown", this.setPointArr);
-        this.translateEvents.push(this.translateChild.bind(this))
-        this.resize = ()=>{
+        this.resize = () => {
             this.lastMove.x = this.pointArr[0].x;
             this.lastMove.y = this.pointArr[0].y;
         }
@@ -66,9 +64,12 @@ class SelectArea extends Feature {
                 this.lastMove = JSON.parse(JSON.stringify(this.pointArr[0]));
             }
             var mouseUp = () => {
-                this.featuresIn = this.getSelectFeature();
-                // this.gls.enableTranform(true, this)
-                this.callback(this.featuresIn);
+                let featuresIn = this.getSelectFeature();
+                featuresIn.forEach(fi => {
+                    this.addFeature(fi)
+                })
+                this.gls.enableTranform(this, true)
+                this.callback(featuresIn);
                 document.removeEventListener("mousedown", this.setPointArr)
                 document.removeEventListener("mousemove", mouseMove)
                 document.removeEventListener("mouseup", mouseUp)
@@ -76,14 +77,6 @@ class SelectArea extends Feature {
             document.addEventListener("mousemove", mouseMove);
             document.addEventListener("mouseup", mouseUp);
         }
-    }
-
-    translateChild() {
-        this.featuresIn.forEach(f => {
-            f.translate(this.pointArr[0].x - this.lastMove.x, this.pointArr[0].y - this.lastMove.y)
-        })
-        this.lastMove.x = this.pointArr[0].x;
-        this.lastMove.y = this.pointArr[0].y;
     }
 
     getSelectFeature() {
@@ -105,9 +98,9 @@ class SelectArea extends Feature {
     }
 
     destroy() {
-        super.destroy();
-        this.gls.enableTranform(this, false)
-        this.featuresIn.forEach(f => this.gls.removeFeature(f))
+        this.children.forEach(f => { f.cbSelect = true; f.parent = null })
+        // super.destroy();
+        // this.gls.enableTranform(this, false)
     }
 
     // 顶部对齐

@@ -240,14 +240,14 @@ onMounted(()=>{
             // img.isOnlyHorizonalDrag = true;
 
             let rect2 = new Rect(10, 20, 50, 5);
-            img.addChildren(rect2)
+            img.addFeature(rect2)
 
             gls.addFeature(img)
 
 
             let text2 = new Text("测试文本", 0, 0, 20, 10);
             text2.toFitSize()
-            rect2.addChildren(text2)
+            rect2.addFeature(text2)
 
             // let line = new Line([
             //     { x: 40, y: 90 },
@@ -255,7 +255,7 @@ onMounted(()=>{
             //     { x: 40, y: 200 },
             // ]);
             // line.closePath = false;
-            // img.addChildren(line)
+            // img.addFeature(line)
 
             // let link = new Link(img.children[0], text);
 

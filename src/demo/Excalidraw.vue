@@ -8,13 +8,13 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
-                    <ul class="list-wrap hover-tab">
+                    <!-- <ul class="list-wrap hover-tab">
                         <li @click.stop="onSelectTool(0, 'rect')">
                             <a-row type="flex" align="middle">
                                 <i class="iconfont gls-kuangxuan" style="margin-right: 4px;"></i> <span>矩形</span>
                             </a-row>
                         </li>
-                    </ul>
+                    </ul> -->
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 1 }]" @click="onSelectTool(1)" title="单击创建矩形">
                     <i class="iconfont gls-zhengfangxing"></i>
@@ -33,7 +33,8 @@
                 <div :class="['icon-wrap subscript', { 'active': activeI === 5 }]" @click="onSelectTool(5)" title="单击创建文本">
                     <i class="iconfont gls-wenzi"></i>
                 </div>
-                <div :class="['icon-wrap subscript', { 'active': activeI === 6 }]" @click="onSelectTool(6)" title="单击创建图片">
+                <div :class="['icon-wrap subscript', { 'active': activeI === 6 }]" @click="onSelectTool(6)"
+                    title="单击创建图片, 可上传图片或者svg">
                     <i class="iconfont gls-tupian"></i>
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 7 }]" @click="onSelectTool(7)" title="网格背景">
@@ -256,6 +257,10 @@
                 <a-button key="back" @click="isShowSaveImage = false">关 闭</a-button>
             </template>
         </a-modal> -->
+        <!-- <ul class="list-wrap right-click-panel" ref="rPanel" v-if="isShowRightClickPanel">
+            123
+            <li></li>
+        </ul> -->
     </div>
 </template>
     
@@ -271,11 +276,12 @@ import SelectArea from "@/features/function-shape/SelectArea";
 import GridLine from "@/GridLine";
 import { randomNum } from "@/utils";
 import { message } from "ant-design-vue";
-import { onMounted, reactive, ref, toRef, toRefs } from "vue";
+import { nextTick, onMounted, reactive, ref, toRef, toRefs } from "vue";
 import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 const cvs = ref(null);
+const rPanel = ref(null);
 const activeI = ref(-1);
 const isShowSide = ref(false);
 const props = ref<Partial<Feature & Rect & Line>>({
@@ -287,14 +293,19 @@ let gl: GridLine | null = new GridLine();
 let sa: SelectArea | null | undefined = null;
 let gls: GridSystem | null;
 const isShowPropTab = ref(false);
+const isShowRightClickPanel = ref(false);
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
 
 onMounted(() => {
     reset();
     gl = new GridLine();
-    // document.addEventListener(Events.RIGHT_CLICK, ()=>{
-    //     console.log(1111);
+    // document.addEventListener(Events.RIGHT_CLICK, (e: any) => {
+    //     isShowRightClickPanel.value = true;
+    //     nextTick(()=>{
+    //         rPanel.value.style.left = e.detail.clientX + "px";
+    //         rPanel.value.style.top = e.detail.clientY + "px";
+    //     })
     // })
 })
 
@@ -306,10 +317,8 @@ function onSelectTool(index = 0) {
     if (cb) { cb(); cb = null };
     switch (index) {
         case 0: // 选择区域
-            gls?.enableSelectArea();
-            // sa = gls?.removeFeature(sa)
-            // sa = new SelectArea();
-            // sa.drawMode = DrawAreaMode.RECT;
+            sa = new SelectArea();
+            sa.drawMode = DrawAreaMode.RECT;
             // console.log(111);
             break;
         case 1: // 选择区域
@@ -329,6 +338,7 @@ function onSelectTool(index = 0) {
             function click2DrawByMove() {
                 let line = new Line();
                 line.fillStyle = "#000"
+                line.strokeStyle = "#000"
                 cb = gls?.click2DrawByMove(line, false, false, () => {
                     click2DrawByMove();
                 })
@@ -465,12 +475,16 @@ function reset() {
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
-    for (let index = 0; index < 1000; index++) {
-        gls.addFeature(new Feature([
-            { x: randomNum(0,1000), y: randomNum(0,1000) },
-            { x: randomNum(0,1000), y: randomNum(0,1000) },
-        ]))
-    }
+    // for (let index = 0; index < 500; index++) {
+    let rect = new Rect(0, 0, 100, 100)
+    rect.fillStyle = "transparent"
+    gls.addFeature(rect)
+    const text = new Text("你好世界", 0, 0, 100, 10);
+    text.fitSize = true;
+    rect.addFeature(text);
+    console.log(gls.features, "features");
+
+    // }
 
 }
 
@@ -688,6 +702,13 @@ canvas {
             margin-top: 20px;
             padding: 10px;
         }
+    }
+
+    .right-click-panel {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1000;
     }
 }
 </style>
