@@ -19,13 +19,13 @@ export default class Bbox extends Rect {
     lastLenY = 0;
     target: Feature;
 
-    constructor(feature: Feature, ctrlPntSize = 10) {   // 相对坐标
-        let [minX, maxX, minY, maxY] = feature.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
-        let center = feature.getCenterPos();  // [leftTop, rightTop, rightBottom, leftBottom]
+    constructor(target: Feature, ctrlPntSize = 10) {   // 相对坐标
+        let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+        let center = target.getCenterPos();  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
         this.className = 'Bbox';
-        this.addFeature(feature);
-        this.target = feature;
+        this.addFeature(target);
+        this.target = target;
         // this.isFixedPos = parent.isFixedPos;
         this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
@@ -38,31 +38,31 @@ export default class Bbox extends Rect {
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
         this.setVct();
-        this.setPointArrPer(feature);
+        this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
         this.gls.addFeature(this, false);
     }
 
     // 获取父元素pointArr所有点距离包围盒上下百分比
-    setPointArrPer(feature: Feature) {
-        let width = getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]);
-        let height = getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]);
-        feature && feature.pointArr.forEach(p => {
+    setPointArrPer(target: Feature, width = 0, height = 0) {
+        target.pntExtentPer.left = []
+        target.pntExtentPer.right = []
+        target && target.pointArr.forEach(p => {
             let lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
             let lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
 
             let lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             let lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
-            feature.pntExtentPer.left.push({
+            target.pntExtentPer.left.push({
                 x: lenX / width,
                 y: lenY / height,
             })
-            feature.pntExtentPer.right.push({
+            target.pntExtentPer.right.push({
                 x: lenX1 / width,
                 y: lenY1 / height,
             })
         })
-        feature.children.forEach(f => {
-            this.setPointArrPer(f);
+        target.children.forEach(f => {
+            this.setPointArrPer(f, width, height);
         })
     }
 
@@ -398,7 +398,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize();
+                            // feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -470,5 +470,6 @@ export default class Bbox extends Rect {
         anchorPnts.forEach(ap => {
             this.gls.removeFeature(ap);
         })
+        this.children.forEach(cf => cf.parent = null)
     }
 }

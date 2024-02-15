@@ -530,25 +530,26 @@ function reset() {
     startTime(gls as GridSystem);
 
     // for (let index = 0; index < 500; index++) {
-    let rect = new Rect(0, 0, 100, 100)
+    let rect = new Rect(100, 100, 100, 100)
     rect.fillStyle = "transparent"
     rect.isOverflowHidden = true;
     gls.addFeature(rect)
-    const text = new Text("你好世界", -50, 0, 100, 10);
+    const text = new Text("你好世界", 100, 100, 100, 10);
     text.fitSize = true;
     gls.addFeature(text);
     rect.addFeature(text);
 
-    let rect2 = new Rect(50, 50, 50, 50)
+    let rect2 = new Rect(150, 150, 50, 50)
+    rect2.fillStyle = "transparent"
     gls.addFeature(rect2)
 
-    let rect4 = new Rect(200, 200, 50, 50)
-    gls.addFeature(rect4)
+    // let rect4 = new Rect(200, 200, 50, 50)
+    // gls.addFeature(rect4)
 
-    let circle = new Circle(180, 180, 30, 30)
-    gls.addFeature(circle)
+    // let circle = new Circle(180, 180, 30, 30)
+    // gls.addFeature(circle)
 
-    let group = new Group([rect, rect2])
+    // let group = new Group([rect, rect2])
 
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
@@ -573,17 +574,17 @@ function setCanvasSize(canvasDom: HTMLCanvasElement) {
 function toTopAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
     sa && sa.toTopAlign();
-    message.info('左对齐');
+    message.info('顶对齐');
 }
 function toBottomAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
     sa && sa.toBottomAlign();
-    message.info('左对齐');
+    message.info('底对齐');
 }
 function toRightAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
     sa && sa.toRightAlign();
-    message.info('左对齐');
+    message.info('右对齐');
 }
 function toLeftAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
@@ -593,12 +594,12 @@ function toLeftAlign (){
 function toHorizonalAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
     sa && sa.toHorizonalAlign();
-    message.info('左对齐');
+    message.info('水平对齐');
 }
 function toVerticalAlign (){
     let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
     sa && sa.toVerticalAlign();
-    message.info('左对齐');
+    message.info('垂直对齐');
 }
 
 
