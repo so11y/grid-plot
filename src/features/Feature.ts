@@ -277,12 +277,16 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature: Feature, cbSelect = false) {
+    addFeature(feature: Feature, cbSelect = true) {
         this.children.push(feature);
         feature.parent = this;
-        // feature.cbSelect = cbSelect;
         feature.isFixedPos = this.isFixedPos;
         feature.angle = feature.parent.angle;
+        function setProps(f: Feature) {   // 递归设置子元素属性
+            f.cbSelect = cbSelect;
+            f.children.forEach(cf => {setProps(cf) })
+        }
+        setProps(feature)
     }
     // 删除指定子元素
     removeChild(feature: Feature) {

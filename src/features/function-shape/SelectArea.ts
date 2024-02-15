@@ -21,8 +21,6 @@ class SelectArea extends Feature {
         };
         this.zIndex = Infinity;
         this.fillStyle = this.hoverStyle = this.focusStyle = "rgba(220, 233, 126, .4)"
-        // this.isStroke = false;
-        // this.fillStyle = this.hoverStyle = this.focusStyle = "transparent"
         document.addEventListener("mousedown", this.setPointArr);
         this.resize = () => {
             this.lastMove.x = this.pointArr[0].x;
@@ -98,13 +96,13 @@ class SelectArea extends Feature {
     }
 
     destroy() {
-        this.children.forEach(f => { f.cbSelect = true; f.parent = null })
+        // this.children.forEach(f => { f.cbSelect = true; f.parent = null })
         // super.destroy();
         // this.gls.enableTranform(this, false)
     }
 
     // 顶部对齐
-    toTopAlign(features: Feature[], minY?: number) {
+    toTopAlign(features: Feature[] = this.children, minY?: number) {
         if (minY == undefined) {
             if (features.length > 1) {
                 let minYs = features.map(f => f.getRectWrapExtent()[2]);
@@ -122,7 +120,7 @@ class SelectArea extends Feature {
         })
     }
 
-    toBottomAlign(features: Feature[], maxY: number) {
+    toBottomAlign(features: Feature[] = this.children, maxY?: number) {
         if (maxY == undefined) {
             if (features.length > 1) {
                 let maxYs = features.map(f => f.getRectWrapExtent()[3]);
@@ -145,7 +143,7 @@ class SelectArea extends Feature {
         })
     }
 
-    toLeftAlign(features: Feature[], minX?: number) {
+    toLeftAlign(features: Feature[] = this.children, minX?: number) {
         if (minX == undefined) {
             if (features.length > 1) {
                 let minXs = features.map(f => f.getRectWrapExtent()[0]);
@@ -164,7 +162,7 @@ class SelectArea extends Feature {
         })
     }
 
-    toRightAlign(features: Feature[], maxY?: number) {
+    toRightAlign(features: Feature[] = this.children, maxY?: number) {
         if (maxY == undefined) {
             if (features.length > 1) {
                 let maxXs = features.map(f => f.getRectWrapExtent()[1]);
@@ -182,7 +180,7 @@ class SelectArea extends Feature {
         })
     }
 
-    toHorizonalAlign(features: Feature[], centerX?: number) {
+    toHorizonalAlign(features: Feature[] = this.children, centerX?: number) {
         if (centerX == undefined) {
             if (features.length > 1) {
                 let ys = features.map(f => f.getCenterPos().y);
@@ -198,7 +196,7 @@ class SelectArea extends Feature {
         })
     }
 
-    toVerticalAlign(features: Feature[], centerY?: number) {
+    toVerticalAlign(features: Feature[] = this.children, centerY?: number) {
         if (centerY == undefined) {
             if (features.length > 1) {
                 let xs = features.map(f => f.getCenterPos().x);
@@ -216,7 +214,7 @@ class SelectArea extends Feature {
     }
 
     // 均匀分布子元素, 两边有空隙
-    toSpaceAroud(features: Feature[]) {
+    toSpaceAroud(features: Feature[] = this.children) {
         if (features.length > 1) {
             features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
             this.toLeftAlign(features);
@@ -239,7 +237,7 @@ class SelectArea extends Feature {
     }
 
     // 均匀分布子元素, 两边吗没有空隙
-    toSpaceBetween(features: Feature[]) {
+    toSpaceBetween(features: Feature[] = this.children) {
         if (features.length > 1) {
             features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
             this.toLeftAlign(features);

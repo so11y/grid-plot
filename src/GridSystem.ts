@@ -5,7 +5,7 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
 import { BasicFeature, IPoint, Props } from "./Interface";
 import Stack from "./Stack";
-import { getMidOfTwoPnts, getMousePos } from "./utils";
+import { getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -53,6 +53,7 @@ class GridSystem {
     hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
+    features2: Feature[] = [];  // 所有元素的集合
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
     dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
@@ -62,7 +63,7 @@ class GridSystem {
     cbOverlap: boolean = true;  // 元素间是否可重叠
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
-    cbSlectFeatures: boolean = true;  // 画布中的元素是否可被拖拽
+    cbSelectFeature: boolean = true;  // 画布中的元素是否可被拖拽
     cbAdsorption: boolean = false;  // 元素拖拽是否启用吸附
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
@@ -139,7 +140,8 @@ class GridSystem {
             }
             f.ondraw && f.ondraw()
             f.isOverflowHidden && this.ctx.clip(path);
-            this.drawFeatures(f.children);
+            // console.log(children, "children");
+            // this.drawFeatures(children);
             this.ctx.restore();
         })
     }
@@ -155,7 +157,10 @@ class GridSystem {
         window.addEventListener("mouseup", this.mouseUp.bind(this));
         document.addEventListener(Events.DB_CLICK, this.dbclick.bind(this));
         // window.addEventListener("resize", this.setCanvasSize.bind(this))
-        new Shortcuts(["del"], this.removeFeature.bind(this));
+        new Shortcuts(["del"], () => {
+            this.removeFeature(this.getBasicFocusNode() as Feature, true)
+            this.enableTranform(this.getBasicFocusNode(), false)
+        });
     }
 
     private mouseMove = (e: any) => {
@@ -182,22 +187,22 @@ class GridSystem {
             this.focusNode = focusNode;
         } else {  // 左键点击
             focusNode?.onmousedown && focusNode.onmousedown();
-            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSlectFeatures) {  // 点击了就加控制点,没点击就去除所有控制点
+            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature) {  // 点击了就加控制点,没点击就去除所有控制点
                 this.enableTranform(null, false);
                 if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
                     this.enableTranform(focusNode, true);
                     focusNode = GridSystem.Bbox as Bbox;
                 }
             };
-            // 如果有区域选择,那么就先清除
-            if (!(this.focusNode instanceof SelectArea) && !(this.focusNode && this.focusNode.parent && this.focusNode.parent.parent instanceof SelectArea)) {
+            // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
+            if (!(this.getBasicFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
                 let sa = this.features.find(f => f instanceof SelectArea)
                 sa && this.removeFeature(sa);
             }
         }
         if (focusNode && ev.buttons == 1) {  // 拖拽元素
             focusNode.isFocused = true;
-            this.toMaxIndex(focusNode);
+            // this.toMaxIndex(this.getBasicFocusNode() as BasicFeature);
             let pointArr = JSON.parse(JSON.stringify(focusNode.pointArr));
             let { x: dx, y: dy } = this.getRelativePos({ x: downX, y: downY }, focusNode.isFixedPos);
             function translateChild(children: Feature[], move: IPoint) {
@@ -522,7 +527,6 @@ class GridSystem {
     }
 
     // --------------------以下是暴露的方法----------------------------
-
     // --------------------画布内元素的增删查API----------------------------
     removeFeature(f: Feature | string, isRecord = true) {
         let feature: Feature | null | undefined = null;
@@ -531,14 +535,15 @@ class GridSystem {
         } else {
             feature = this.features.find(f => f.id === String(f))
         }
-        feature && feature.destroy();
-        feature && feature.ondelete();
-        this.features = this.features.filter(f => f != feature);
-        if (GridSystem.Bbox?.parent === feature) {  // 关闭包围盒形变
-            this.enableTranform(feature, false)
+        if (feature) {
+            if (feature.parent && feature.parent instanceof Bbox) {
+            }
+            feature.destroy();
+            feature.ondelete();
+            this.features = this.features.filter(f => f != feature);
+            feature = null;
+            isRecord && GridSystem.Stack && GridSystem.Stack.record();
         }
-        feature = null;
-        isRecord && GridSystem.Stack && GridSystem.Stack.record();
         return null;
     }
     /**
@@ -558,108 +563,61 @@ class GridSystem {
         return undefined;
     }
 
-    initAnchorPnts() {
-        this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
-            let anchorPnts = f.getAnchorPnts();
-            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
-                let lAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
-                    return leftCenter;
-                });
-                lAnchorPnt.name = 'leftAnchor';
-                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
-                lAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
-                let rAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
-                    return rightCenter;
-                });
-                rAnchorPnt.name = 'rightAnchor';
-                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
-                rAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
-                let tAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
-                    return rightCenter;
-                });
-                tAnchorPnt.name = 'tAnchorPnt';
-                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
-                tAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
-                let bAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
-                    return rightCenter;
-                });
-                bAnchorPnt.name = 'bottomAnchor';
-                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
-                bAnchorPnt.cbSelect = false;
-            }
-        })
-    }
-
-    removeAnchorPnts() {
-        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
-    }
-
     addFeature(feature: Feature, isRecord = true) {
-        if (isRecord) {
-            this.focusNode = feature;
-        }
+        // if (isRecord) {
+        this.focusNode = feature;
+        // }
         this.features.push(feature);
-        this.toMaxIndex(feature);
+        if (!feature.zIndex) {
+            let features = this.features.filter(f => !this.isCtrlFeature(f));
+            feature.zIndex = features.length;
+            this.features.sort((a, b) => a.zIndex - b.zIndex);
+        }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();
     }
-    toMinIndex(feature: Feature) {
-
+    toMinusIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        swapElements<Feature>(this.features, index, index - 1);
+        this.resetIndex();
+    }
+    toPlusIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        swapElements<Feature>(this.features, index, index + 1);
+        this.resetIndex();
+    }
+    toMinIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        this.features.splice(index, 1);
+        this.features.unshift(feature);
+        this.resetIndex();
     }
     // 将元素置顶，在画布最上层显示
-    toMaxIndex(feature: Feature) {
-        if (feature.cbChangeZindex) {
-            feature.zIndex = this.getMaxIndex() + 1
-        }
-        this.features.forEach(f => {
-            if (f instanceof CtrlPnt || f instanceof BCtrlPnt || f instanceof AnchorPnt) {
-                f.zIndex = 1000
-            }
-        })
-        this.features.sort((fa, fb) => {
-            return fb.zIndex - fa.zIndex
-        });
-        this.features.reverse();
+    toMaxIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        this.features.splice(index, 1);
+        this.features.push(feature);
+        this.resetIndex();
     }
-    getMaxIndex() {
-        var maxIndex = 0
-        if (this.features.length > 0) {
-            let features = this.features.filter(f => this.isBasicFeature(f))
-            if (features.length == 0) {
-                maxIndex = 0
-            } else {
-                maxIndex = features.reduce(function (prev, curr) {
-                    return prev.zIndex > curr.zIndex ? prev : curr;  // 比较两个对象的num属性，返回更大的那个
-                }).zIndex;
-            }
-        }
-        return maxIndex;
+    resetIndex(){
+        let features = this.features.filter(f => this.isBasicFeature(f));
+        features.forEach((f, i) => f.zIndex = i);
+        this.features.sort((a, b) => a.zIndex - b.zIndex);
     }
 
     // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
     getBasicFocusNode() {
         if (this.focusNode) {
-            if (this.focusNode instanceof CtrlPnt || this.focusNode instanceof BCtrlPnt || this.focusNode instanceof AnchorPnt) {
-                if (this.focusNode.parent instanceof Bbox) {
-                    return this.focusNode.parent.parent;
-                } else {
-                    return this.focusNode.parent;
+            if (this.focusNode instanceof Bbox) {
+                return this.focusNode.children[0] as BasicFeature;
+            }
+            if (this.isCtrlFeature(this.focusNode)) {
+                if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
+                    return this.focusNode.parent.parent as BasicFeature;
+                } else {  // 比如线段的ctrlNode
+                    return this.focusNode.parent as BasicFeature;
                 }
             }
-            return this.focusNode;
+            return this.focusNode as BasicFeature;
         }
         return;
     }
@@ -716,10 +674,10 @@ class GridSystem {
     click2DrawByClick(rect: Rect | Circle) {
         this.addFeature(rect);
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
-        this.cbSlectFeatures = false;
+        this.cbSelectFeature = false;
         var click2draw = (e: any) => {
             if (e.detail.button === 0) {
-                this.cbSlectFeatures = true;
+                this.cbSelectFeature = true;
                 rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
                 this.removeFeature(adsorbPnt, false);
                 document.removeEventListener(Events.MOUSE_DOWN, click2draw);
@@ -731,9 +689,9 @@ class GridSystem {
         }
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
         document.addEventListener(Events.MOUSE_MOVE, move2draw);
-        return () => {
-            this.cbSlectFeatures = true;
-            this.removeFeature(rect, false);
+        return (remove = true) => {
+            this.cbSelectFeature = true;
+            remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
@@ -742,7 +700,7 @@ class GridSystem {
 
     // 鼠标点一下添加一个点去画折线
     click2DrawByContinuousClick(line: Line, fn?: Function) {
-        this.cbSlectFeatures = false;
+        this.cbSelectFeature = false;
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         var move2draw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
@@ -758,7 +716,7 @@ class GridSystem {
             }
         }
         let over2draw = () => {
-            this.cbSlectFeatures = true;
+            this.cbSelectFeature = true;
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.DB_CLICK, over2draw);
@@ -769,7 +727,7 @@ class GridSystem {
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
 
         return () => {
-            this.cbSlectFeatures = true;
+            this.cbSelectFeature = true;
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.DB_CLICK, over2draw);
@@ -779,7 +737,7 @@ class GridSystem {
 
     // 鼠标按住不放持续画线
     click2DrawByMove(line: Line, isLaserPen = false, fn?: Function) {
-        this.cbSlectFeatures = false;
+        this.cbSelectFeature = false;
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         let lastLineWidth = 0
         let lastTime = 0
@@ -822,7 +780,7 @@ class GridSystem {
                     }, 20)
                 }, 350)
             }
-            this.cbSlectFeatures = true;
+            this.cbSelectFeature = true;
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
@@ -840,7 +798,7 @@ class GridSystem {
         }
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
         return () => {
-            this.cbSlectFeatures = true;
+            this.cbSelectFeature = true;
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
@@ -1176,6 +1134,56 @@ class GridSystem {
         }
     }
 
+    initAnchorPnts() {
+        this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
+            let anchorPnts = f.getAnchorPnts();
+            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
+                let lAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
+                    return leftCenter;
+                });
+                lAnchorPnt.name = 'leftAnchor';
+                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
+                lAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
+                let rAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
+                    return rightCenter;
+                });
+                rAnchorPnt.name = 'rightAnchor';
+                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
+                rAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
+                let tAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
+                    return rightCenter;
+                });
+                tAnchorPnt.name = 'tAnchorPnt';
+                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
+                tAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
+                let bAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
+                    return rightCenter;
+                });
+                bAnchorPnt.name = 'bottomAnchor';
+                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
+                bAnchorPnt.cbSelect = false;
+            }
+        })
+    }
+
+    removeAnchorPnts() {
+        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
+    }
+
     save() {
         let featurePropsArr: Props[] = [];
         this.features.forEach(f => {
@@ -1193,7 +1201,12 @@ class GridSystem {
     isBasicFeature(f?: Feature) {
         if (!f) return false;
         // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle'
+        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    }
+    // 判断是否时基础元素
+    isCtrlFeature(f?: Feature) {
+        if (!f) return false;
+        return f.className == 'CtrlPnt' || f.className == 'BCtrlPnt' || f.className == 'AnchorPnt'
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {

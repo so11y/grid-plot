@@ -1,4 +1,4 @@
-import { IPoint, Vector } from "../../Interface";
+import { Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
@@ -12,7 +12,6 @@ export default class Bbox extends Rect {
     keepRatio: boolean;  // 是否按比例缩放
     ratio: number;  // 宽高比
     ctrlPntSize: number;
-    lastMove: IPoint;
     lastAngle: number = 0;
     vctX: Vector = [100, 0];
     vctY: Vector = [0, 100];
@@ -35,10 +34,7 @@ export default class Bbox extends Rect {
         this.strokeStyle = "#55585A";
         this.lineDashArr = [8, 8]
         this.lineWidth = .1;
-        // this.cbSelect = false;
-        this.zIndex = Infinity;
-        this.keepRatio = false;
-        this.lastMove = { x: feature.pointArr[0].x, y: feature.pointArr[0].y };
+        this.keepRatio = true;
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
         this.setVct();
@@ -132,6 +128,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
+                    feature.resize();
                     feature.children.forEach(f => {
                         setTranform(f);
                     })
@@ -139,6 +136,7 @@ export default class Bbox extends Rect {
                 setTranform(this.target);
             }
             this.lastLenX = lenX;
+            this.ratio = this.getRatio();
         })
 
         // 右边
@@ -164,6 +162,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
+                    feature.resize();
                     feature.children.forEach(f => {
                         setTranform(f);
                     })
@@ -171,6 +170,7 @@ export default class Bbox extends Rect {
                 setTranform(this.target);
             }
             this.lastLenX = lenX;
+            this.ratio = this.getRatio();
         })
 
         // 上边
@@ -196,6 +196,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
+                    feature.resize();
                     feature.children.forEach(f => {
                         setTranform(f);
                     })
@@ -203,6 +204,7 @@ export default class Bbox extends Rect {
                 setTranform(this.target);
             }
             this.lastLenY = lenY;
+            this.ratio = this.getRatio();
         })
 
         // 下边
@@ -228,6 +230,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
+                    feature.resize();
                     feature.children.forEach(f => {
                         setTranform(f);
                     })
@@ -235,6 +238,7 @@ export default class Bbox extends Rect {
                 setTranform(this.target);
             }
             this.lastLenY = lenY;
+            this.ratio = this.getRatio();
         })
 
         if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
@@ -310,6 +314,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
+                            feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -351,6 +356,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
+                            feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -392,6 +398,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
+                            feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -433,6 +440,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
+                            feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -453,7 +461,6 @@ export default class Bbox extends Rect {
     }
 
     destroy() {
-        // console.log(1111);
         // super.destroy();
         let ctrlPnts = this.getCtrlPnts();
         let anchorPnts = this.getAnchorPnts();
