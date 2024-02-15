@@ -10,7 +10,6 @@
     "paths": {
       "@/*": ["src/*"]
     },
-
     /* Bundler mode */
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,

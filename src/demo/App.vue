@@ -222,7 +222,7 @@ onMounted(()=>{
         gls.addFeature(text)
 
         let imgEle = new Image();
-        imgEle.src = "/meigong1.png";
+        imgEle.src = "/img.png";
         imgEle.onload = () => {
             let img = new Img(imgEle,300, 100, 200, 120);
             // img.isFixedPos = true;
@@ -295,7 +295,7 @@ onMounted(()=>{
 
         createImgByClick.onclick = () => {
             let imgEle = new Image();
-            imgEle.src = "/meigong1.png";
+            imgEle.src = "/img.png";
             imgEle.onload = () => {
                 let img = new Img(imgEle, 0, 0, 50, 30);
                 gls.click2DrawByClick(img, true)

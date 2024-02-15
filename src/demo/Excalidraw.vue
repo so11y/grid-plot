@@ -549,7 +549,7 @@ function reset() {
     // let circle = new Circle(180, 180, 30, 30)
     // gls.addFeature(circle)
 
-    // let group = new Group([rect, rect2])
+    let group = new Group([rect, rect2])
 
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
