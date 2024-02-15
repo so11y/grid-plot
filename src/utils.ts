@@ -488,31 +488,42 @@ function getPntsInEllipse(center: Vector, majorRadius: number, minorRadius: numb
 };
 
 // 判断点是否在多边形内
-function isPointInPolygon(point:IPoint, polygon: IPoint[]) {  
-    var j = polygon.length - 1;  
-    var isInside = false;  
-  
-    for (var i = 0; i < polygon.length; i++) {  
-        if (  
-            ((polygon[i].y < point.y && polygon[j].y >= point.y) || (polygon[j].y < point.y && polygon[i].y >= point.y))  
-            &&  
-            (polygon[i].x + (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) * (polygon[j].x - polygon[i].x) < point.x)  
-        ) {  
-            isInside = !isInside;  
-        }  
-        j = i;  
-    }  
-  
-    return isInside;  
-}  
+function isPointInPolygon(point: IPoint, polygon: IPoint[]) {
+    var j = polygon.length - 1;
+    var isInside = false;
 
-function getRectPoint(pos: IPoint, size: Size){
+    for (var i = 0; i < polygon.length; i++) {
+        if (
+            ((polygon[i].y < point.y && polygon[j].y >= point.y) || (polygon[j].y < point.y && polygon[i].y >= point.y))
+            &&
+            (polygon[i].x + (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) * (polygon[j].x - polygon[i].x) < point.x)
+        ) {
+            isInside = !isInside;
+        }
+        j = i;
+    }
+
+    return isInside;
+}
+
+function getRectPoint(pos: IPoint, size: Size) {
     return [
         { x: pos.x - size.width / 2, y: pos.y - size.height / 2 },
         { x: pos.x + size.width / 2, y: pos.y - size.height / 2 },
         { x: pos.x + size.width / 2, y: pos.y + size.height / 2 },
         { x: pos.x - size.width / 2, y: pos.y + size.height / 2 },
     ]
+}
+
+// 数组两个元素交换位置
+function swapElements<F>(arr: F[], index1 = 0, index2 = 0) {
+    if (index1 < 0 || index1 >= arr.length || index2 < 0 || index2 >= arr.length) {
+        console.log("Invalid index");
+        return;
+    }
+    var temp = arr[index1];
+    arr[index1] = arr[index2];
+    arr[index2] = temp;
 }
 
 export {
@@ -549,4 +560,5 @@ export {
     isPointInPolygon,
     getRectPoint,
     getPntsInEllipse,
+    swapElements,
 }

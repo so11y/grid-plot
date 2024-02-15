@@ -1,7 +1,6 @@
 import Feature from "../Feature";
 import { IPoint } from "../../Interface";
 import CtrlPnt from "../function-shape/CtrlPnt";
-import GridSystem from "@/GridSystem";
 
 class Line extends Feature {
 
@@ -13,7 +12,7 @@ class Line extends Feature {
         this.className = "Line";
         this.closePath = false;
         this.lineCap = "round"
-        this.lineJoin = "round";  
+        this.lineJoin = "round";
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number) {
@@ -33,6 +32,8 @@ class Line extends Feature {
                     ctx.moveTo(lastX, lastY);
                     ctx.quadraticCurveTo(centerX, centerY, x, y);
                     ctx.lineWidth = this.gls.getRatioSize(this.lineWidthArr[i] || this.lineWidthArr[i - 1] || .2);
+                    ctx.strokeStyle = this.strokeStyle;
+                    ctx.lineCap = this.lineCap;
                     ctx.stroke();
                 }
             });
@@ -81,14 +82,14 @@ class Line extends Feature {
         })
     }
 
-    getCtrlPnts(){
-        let ctrlPnts = this.gls.features.filter(f=> f instanceof CtrlPnt && f.parent === this);
+    getCtrlPnts() {
+        let ctrlPnts = this.gls.features.filter(f => f instanceof CtrlPnt && f.parent === this);
         return ctrlPnts;
     }
 
     destroy(): void {
         super.destroy();
-        this.getCtrlPnts().forEach(cp=>{
+        this.getCtrlPnts().forEach(cp => {
             this.gls.removeFeature(cp);
         })
     }

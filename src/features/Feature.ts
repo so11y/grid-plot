@@ -29,10 +29,10 @@ class Feature {
     id: string  // 唯一id
     name: string = ''  //名称
     className = 'Feature'  //名称
-    hidden: boolean = false;
-    position: IPoint = { x: 0, y: 0 }
+    hidden: boolean = false;   // 是否隐藏
+    position: IPoint = { x: 0, y: 0 }  // 位置
     offset: IPoint = { x: 0, y: 0 } // 相对于父元素中心点偏移
-    size: Size = { width: 0, height: 0 }
+    size: Size = { width: 0, height: 0 }  // 宽高
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
 
@@ -43,7 +43,7 @@ class Feature {
     bbox: Bbox | null = null;
     lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
     adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
-    pntDistanceLimit = 5;  // 距离太近的两个点,就不重复添加了
+    pntDistanceLimit = 2;  // 距离太近的两个点,就不重复添加了
     pntExtentPer: {
         left: IPoint[],
         right: IPoint[]
@@ -114,6 +114,9 @@ class Feature {
         this.pointArr = this.pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
+        this.children.forEach(cf => {
+            cf.rotate(angle, O)
+        })
         this.onrotate && this.onrotate()
     }
 
@@ -157,7 +160,6 @@ class Feature {
         this.isStroke && ctx.stroke(path);
         ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-        this.updateChild();
         ctx.restore();
         return path;
     }
@@ -275,38 +277,21 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addChildren(feature: Feature, cbSelect = false) {
-        feature.translate(this.lastRelativePnt.x + feature.position.x, this.lastRelativePnt.y + feature.position.y)   // 第一次添加需要将子元素移动到定位点并且加上他的x,y
+    addFeature(feature: Feature, cbSelect = true) {
         this.children.push(feature);
         feature.parent = this;
-        feature.cbSelect = cbSelect;
         feature.isFixedPos = this.isFixedPos;
         feature.angle = feature.parent.angle;
+        function setProps(f: Feature) {   // 递归设置子元素属性
+            f.cbSelect = cbSelect;
+            f.children.forEach(cf => {setProps(cf) })
+        }
+        setProps(feature)
     }
     // 删除指定子元素
     removeChild(feature: Feature) {
         feature.parent = null;
         this.children.splice(this.children.findIndex(cf => cf == feature), 1);
-    }
-    updateChild() {
-        if (this.children && this.children.length > 0) {
-            let leftTop = this.pointArr[0];  // 左上角
-            // this.gls.test = this.gls.getPixelPos(leftTop)
-            this.children.forEach(cf => {
-                // cf.translate(leftTop.x - this.lastRelativePnt.x, leftTop.y - this.lastRelativePnt.y);
-                // cf.angle = this.angle
-                // this.gls.test = this.gls.getPixelPos(O)
-                // this.children.forEach(cf => {
-                //     // cf.rotate(angle);
-                //     cf.pointArr.forEach(p => {
-                //         let rp = getRotatePnt(O, p, angle);
-                //         p.x = rp.x;
-                //         p.y = rp.y;
-                //     })
-                // })
-            })
-            this.lastRelativePnt = { x: leftTop.x, y: leftTop.y };
-        }
     }
 
     toFixedPos() {

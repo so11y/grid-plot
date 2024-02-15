@@ -36,7 +36,6 @@ class BCtrlPnt extends Rect {
         if (this.parent) {
             this.parent.vctX = createVctor(this.parent.pointArr[0], this.parent.pointArr[1]);   // 控制点1,2的向量
             this.parent.vctY = createVctor(this.parent.pointArr[0], this.parent.pointArr[3]);   // 控制点1,2的向量
-            this.parent.updateLastMove();
         }
     }
 

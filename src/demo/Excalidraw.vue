@@ -8,6 +8,13 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
+                    <!-- <ul class="list-wrap hover-tab">
+                        <li @click.stop="onSelectTool(0, 'rect')">
+                            <a-row type="flex" align="middle">
+                                <i class="iconfont gls-kuangxuan" style="margin-right: 4px;"></i> <span>矩形</span>
+                            </a-row>
+                        </li>
+                    </ul> -->
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 1 }]" @click="onSelectTool(1)" title="单击创建矩形">
                     <i class="iconfont gls-zhengfangxing"></i>
@@ -19,14 +26,21 @@
                     title="连续点击创建折线">
                     <i class="iconfont gls-zhixian"></i>
                 </div>
-                <div :class="['icon-wrap subscript', { 'active': activeI === 4 }]" @click="onSelectTool(4)"
-                    title="按住移动随意绘制">
-                    <i class="iconfont gls-ziyoubi"></i>
+                <div :class="['icon-wrap subscript', { 'active': activeI === 4 }]" @click="onSelectTool(4)" title="自由画笔">
+                    <i class="iconfont gls-huabi"></i>
+                    <ul class="list-wrap hover-tab">
+                        <li @click.stop="onSelectTool(4, true)">
+                            <a-row type="flex" align="middle">
+                                <i class="iconfont gls-jiguangbi" style="margin-right: 4px;"></i> <span>激光笔</span>
+                            </a-row>
+                        </li>
+                    </ul>
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 5 }]" @click="onSelectTool(5)" title="单击创建文本">
                     <i class="iconfont gls-wenzi"></i>
                 </div>
-                <div :class="['icon-wrap subscript', { 'active': activeI === 6 }]" @click="onSelectTool(6)" title="单击创建图片">
+                <div :class="['icon-wrap subscript', { 'active': activeI === 6 }]" @click="onSelectTool(6)"
+                    title="单击创建图片, 可上传图片或者svg">
                     <i class="iconfont gls-tupian"></i>
                 </div>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 7 }]" @click="onSelectTool(7)" title="网格背景">
@@ -38,6 +52,9 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap', { 'active': activeI === 8 }]" @click="onSelectTool(7)" title="更多工具">
                     <i class="iconfont gls-gengduogongju"></i>
+                    <ul class="list-wrap hover-tab">
+                        <li>123</li>
+                    </ul>
                 </div>
             </a-row>
         </div>
@@ -76,7 +93,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="props-page props-setting">
+            <div class="props-page props-setting" v-if="isShowSide">
                 <ul class="list-wrap">
                     <li>
                         <div class="title">描边色</div>
@@ -98,13 +115,14 @@
                         <div class="title">背景色</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button size="middle" style="background-color: #ffc9c9"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#ffc9c9') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#ffc9c9') }"></a-button>
                             <a-button size="middle" style="background-color: #b2f2bb"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#b2f2bb') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#b2f2bb') }"></a-button>
                             <a-button size="middle" style="background-color: #a5d8ff"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#a5d8ff') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#a5d8ff') }"></a-button>
                             <a-button size="middle" style="background-color: #ffec99"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = '#ffec99') }"></a-button>
+                                @click="() => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = gls.focusNode.focusStyle = '#ffec99') }"></a-button>
+                            <a-divider type="vertical"></a-divider>
                             <input type="color" class="color-picker" ref="color-picker"
                                 @input="(e: any) => { gls && gls.focusNode && (gls.focusNode.fillStyle = gls.focusNode.hoverStyle = e.target.value) }" />
                         </a-row>
@@ -181,20 +199,51 @@
                         <div class="title">图层</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于顶层"
-                                @click="gls?.focusNode && gls?.toMaxIndex(gls.focusNode); message.info('置于顶层')">
+                                @click="gls?.toMaxIndex(gls.getBasicFocusNode() as BasicFeature); message.info('置于顶层')">
                                 <i class="iconfont gls-zhiyudingceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="上移一层"
-                                @click="gls?.focusNode && gls.focusNode.zIndex++; message.info('上移一层')">
+                                @click="gls?.toPlusIndex(gls.getBasicFocusNode() as BasicFeature);; message.info('上移一层')">
                                 <i class="iconfont gls-shangyiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="下移一层"
-                                @click="gls?.focusNode && gls.focusNode.zIndex--; message.info('下移一层')">
+                                @click="gls?.toMinusIndex(gls.getBasicFocusNode() as BasicFeature);; message.info('下移一层')">
                                 <i class="iconfont gls-xiayiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于底层"
-                                @click="gls?.focusNode && gls?.toMinIndex(gls.focusNode); message.info('置于底层')">
+                                @click="gls?.toMinIndex(gls.getBasicFocusNode() as BasicFeature); message.info('置于底层')">
                                 <i class="iconfont gls-zhiyudiceng"></i>
+                            </a-button>
+                        </a-row>
+                    </li>
+                    <li>
+                        <div class="title">对齐</div>
+                        <a-row type="flex" align="middle" class="func-wrap" style="margin-bottom: 8px">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="左对齐"
+                                @click="toLeftAlign">
+                                <i class="iconfont gls-zuoduiqi"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直对齐"
+                                @click="toVerticalAlign">
+                                <i class="iconfont gls-chuizhijuzhongduiqi"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="右对齐"
+                                @click="toRightAlign">
+                                <i class="iconfont gls-youduiqi"></i>
+                            </a-button>
+                        </a-row>
+                        <a-row type="flex" align="middle" class="func-wrap">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐"
+                                @click="toTopAlign">
+                                <i class="iconfont gls-dingduiqi"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="水平对齐"
+                                @click="toHorizonalAlign">
+                                <i class="iconfont gls-shuipingjuzhongduiqi"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="底对齐"
+                                @click="toBottomAlign">
+                                <i class="iconfont gls-diduiqi"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -206,8 +255,12 @@
                                 <i class="iconfont gls-fuzhi"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="删除"
-                                @click="gls?.removeFeature(gls.focusNode); message.info('删除了')">
+                                @click="gls?.removeFeature(gls.getBasicFocusNode()); gls?.enableTranform(gls.getBasicFocusNode(), false); message.info('删除了')">
                                 <i class="iconfont gls-shanchu"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
+                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                <i class="iconfont gls-bihe"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -225,9 +278,10 @@
             </template>
         </a-modal>
         <a-modal v-model:open="isShowHelp" title="帮助" width="50vw">
-            <a-row type="flex" justify="center">
-                <img alt="" id="preview-img" width="80%">
-            </a-row>
+            <h4>操作指南:</h4>
+            <ul>
+                <li>鼠标左键选择元素,选中按住移动元素; 鼠标右键拖拽移动画布, 鼠标滚轮放大缩小画布 </li>
+            </ul>
             <template #footer>
                 <a-button key="back" @click="isShowHelp = false">关 闭</a-button>
             </template>
@@ -241,6 +295,11 @@
                 <a-button key="back" @click="isShowSaveImage = false">关 闭</a-button>
             </template>
         </a-modal> -->
+        <!-- <ul class="list-wrap right-click-panel" ref="rPanel" v-if="isShowRightClickPanel">
+            123
+            <li></li>
+        </ul> -->
+        <div class="update-time">最后更新时间: {{ env.BUILD_TIME }}</div>
     </div>
 </template>
     
@@ -253,12 +312,17 @@ import Rect from "@/features/basic-shape/Rect";
 import Text from "@/features/basic-shape/Text";
 import Feature from "@/features/Feature";
 import SelectArea from "@/features/function-shape/SelectArea";
+import Group from "@/features/function-shape/Group";
 import GridLine from "@/GridLine";
+import { randomNum } from "@/utils";
 import { message } from "ant-design-vue";
-import { onMounted, reactive, ref, toRef, toRefs } from "vue";
+import { nextTick, onMounted, reactive, ref, toRef, toRefs } from "vue";
+import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
+import { BasicFeature } from "@/Interface";
 const cvs = ref(null);
+const rPanel = ref(null);
 const activeI = ref(-1);
 const isShowSide = ref(false);
 const props = ref<Partial<Feature & Rect & Line>>({
@@ -266,63 +330,99 @@ const props = ref<Partial<Feature & Rect & Line>>({
     lineWidth: .2,
     radius: 0,
 });
-let gl: GridLine | null = null;
+let gl: GridLine | null = new GridLine();
 let sa: SelectArea | null | undefined = null;
 let gls: GridSystem | null;
 const isShowPropTab = ref(false);
+const isShowRightClickPanel = ref(false);
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
+const env = import.meta.env;
 
 onMounted(() => {
     reset();
-
-    // document.addEventListener(Events.RIGHT_CLICK, ()=>{
-    //     console.log(1111);
+    gl = new GridLine();
+    // document.addEventListener(Events.RIGHT_CLICK, (e: any) => {
+    //     isShowRightClickPanel.value = true;
+    //     nextTick(()=>{
+    //         rPanel.value.style.left = e.detail.clientX + "px";
+    //         rPanel.value.style.top = e.detail.clientY + "px";
+    //     })
     // })
 })
 
-function onSelectTool(index = 0) {
+let cb: any;
+function onSelectTool(index = 0, param?: any) {
     if (activeI.value === index) {
         activeI.value = -1
     }
+    if (cb) { cb(false); cb = null };
     switch (index) {
         case 0: // 选择区域
-            sa = gls?.removeFeature(sa)
+            message.info("按住左键移动吧!")
             sa = new SelectArea();
+            sa.drawMode = DrawAreaMode.RECT;
+            // console.log(111);
             break;
-        case 1: // 选择区域
+        case 1: // 单击创建Rect
+            message.info("点击画布创建吧!")
             let rect = new Rect(0, 0, 50, 20);
-            gls?.click2DrawByClick(rect, true)
+            rect.name = '你好'
+            cb = gls?.click2DrawByClick(rect)
             break;
-        case 2: // 选择区域
+        case 2: // 单击创建Circle
+            message.info("点击画布创建吧!")
             let circle = new Circle(0, 0, 50, 50);
-            gls?.click2DrawByClick(circle, true)
+            cb = gls?.click2DrawByClick(circle)
             break;
-        case 3: // 选择区域
+        case 3: // 点击创建Line
+            message.info("点击画布创建吧!")
             let line1 = new Line();
-            gls?.click2DrawByContinuousClick(line1, true, true)
+            cb = gls?.click2DrawByContinuousClick(line1)
             break;
-        case 4: // 选择区域
+        case 4: // 自由笔
+            message.info("点击移动绘制吧!")
+            if (cb) { cb(); cb = null; return };
             function click2DrawByMove() {
                 let line = new Line();
-                line.fillStyle = "#000"
-                gls?.click2DrawByMove(line, false, false, () => {
+                line.isFreeStyle = true;
+                line.strokeStyle = "#000"
+                if (!!param) { line.strokeStyle = '#F96363' }
+                cb = gls?.click2DrawByMove(line, !!param, () => {
                     click2DrawByMove();
                 })
             }
             click2DrawByMove();
             break;
         case 5: // 选择区域
-            let text = new Text("测试文本", 0, 0, 20, 10);
-            gls?.click2DrawByClick(text, true, true)
+            var txt = prompt("请输入文字", "测试文字");
+            if (txt) {
+                message.info("点击画布创建吧!")
+                let text = new Text(txt as string, 0, 0, 20, 10);
+                text.fitSize = true;
+                gls?.click2DrawByClick(text)
+            }
+
             break;
         case 6: // 选择区域
-            let imgEle = new Image();
-            imgEle.src = "/meigong1.png";
-            imgEle.onload = () => {
-                let img = new Img(imgEle, 0, 0, 50, 30);
-                gls?.click2DrawByClick(img, true)
-            }
+            window.showOpenFilePicker().then((res: any) => {
+                if (res[0].kind === 'file') {
+                    const reader = new FileReader();
+                    res[0].getFile().then((file: any) => {
+                        reader.readAsDataURL(file);
+                    })
+                    reader.onload = function () {
+                        message.info("点击画布创建吧!")
+                        let imgEle = new Image();
+                        imgEle.src = reader.result as string;
+                        imgEle.onload = () => {
+                            console.log();
+                            let img = new Img(imgEle, 0, 0, 50, 50 * imgEle.height / imgEle.width);
+                            gls?.click2DrawByClick(img, true)
+                        }
+                    }
+                }
+            });
             break;
         case 7: // 选择区域
             gl ? gl = null : gl = new GridLine()
@@ -357,9 +457,6 @@ function onSaveImg() {
         document.body.removeChild(downloadLink);
     }
 }
-function onSaveFile() {
-
-}
 
 function onShowPreview() {
     isShowSaveImage.value = true;
@@ -372,8 +469,44 @@ function onShowPreview() {
         }
     }, 1000);
 }
-function onImportFile() {
 
+function onSaveFile() {
+    if (gls?.features && gls.features.length <= 0) {
+        return message.warning("没有元素,保存啥?")
+    }
+    let str = gls?.save();
+    const text = JSON.stringify(str)
+    const blob = new Blob([text], {
+        type: "text/plain;charset=utf-8"
+    })
+    // 根据 blob生成 url链接
+    const objectURL = URL.createObjectURL(blob)
+    const domElement = document.createElement('a')
+    domElement.href = objectURL;
+    domElement.download = `${new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()}.gls`
+    domElement.click()
+    URL.revokeObjectURL(objectURL)
+}
+function onImportFile() {
+    window.showOpenFilePicker().then((res: any) => {
+        if (res[0].kind === 'file') {
+            const reader = new FileReader();
+            res[0].getFile().then((file: any) => {
+                reader.readAsText(file);
+            })
+            reader.onload = function () {
+                let features = JSON.parse(JSON.parse(reader.result as string))
+                gls?.loadData(features);
+                // let imgEle = new Image();
+                // imgEle.src = reader.result as string;
+                // console.log(reader.result, "reader.result");
+                // imgEle.onload = () => {
+                //     let img = new Img(imgEle, 0, 0, 50, 30);
+                //     gls?.click2DrawByClick(img, true)
+                // }
+            }
+        }
+    });
 }
 
 function darkTheme() {
@@ -395,6 +528,33 @@ function reset() {
     gls = new GridSystem(canvasDom);
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
+
+    // for (let index = 0; index < 500; index++) {
+    let rect = new Rect(100, 100, 100, 100)
+    rect.fillStyle = "transparent"
+    rect.isOverflowHidden = true;
+    gls.addFeature(rect)
+    const text = new Text("你好世界", 100, 100, 100, 10);
+    text.fitSize = true;
+    gls.addFeature(text);
+    rect.addFeature(text);
+
+    let rect2 = new Rect(150, 150, 50, 50)
+    rect2.fillStyle = "transparent"
+    gls.addFeature(rect2)
+
+    // let rect4 = new Rect(200, 200, 50, 50)
+    // gls.addFeature(rect4)
+
+    // let circle = new Circle(180, 180, 30, 30)
+    // gls.addFeature(circle)
+
+    // let group = new Group([rect, rect2])
+
+    // setTimeout(() => {
+    //     gls.removeFeature(rect4)
+    // }, 1000);
+
 }
 
 function linkTo(url: string) {
@@ -411,6 +571,38 @@ function setCanvasSize(canvasDom: HTMLCanvasElement) {
     }
 }
 
+function toTopAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toTopAlign();
+    message.info('顶对齐');
+}
+function toBottomAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toBottomAlign();
+    message.info('底对齐');
+}
+function toRightAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toRightAlign();
+    message.info('右对齐');
+}
+function toLeftAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toLeftAlign();
+    message.info('左对齐');
+}
+function toHorizonalAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toHorizonalAlign();
+    message.info('水平对齐');
+}
+function toVerticalAlign (){
+    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+    sa && sa.toVerticalAlign();
+    message.info('垂直对齐');
+}
+
+
 </script>
 
 <style scoped lang="less">
@@ -426,6 +618,7 @@ canvas {
 .app-container {
     position: relative;
     font-family: "glsfont";
+    overflow: hidden;
 
     .top-toolbar {
         position: absolute;
@@ -512,7 +705,7 @@ canvas {
                 display: flex;
 
                 button {
-                    margin-right: 8px;
+                    margin-right: 12px;
                     width: 32px;
                     height: 32px;
                     padding: 0;
@@ -593,6 +786,46 @@ canvas {
                 background-color: rgba(192, 202, 210, 1);
             }
         }
+
+        &:hover {
+            &>.hover-tab {
+                padding: 4px 7px;
+                width: 80px;
+                display: inline-block;
+            }
+
+            li:hover {
+                background-color: rgba(192, 202, 210, .5);
+            }
+        }
+
+        .hover-tab {
+            background-color: #fff;
+            border-radius: 5px;
+            // border: 1px solid #d9d9d9;
+            box-shadow: 0px 0px 1px 0px rgba(0, 0, 0, .17), 0px 0px 3px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+        }
+    }
+
+    .right-click-panel {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .update-time {
+        position: fixed;
+        right: 0px;
+        bottom: 0px;
+        color: #999;
+        font-size: 12px;
+        background-color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
     }
 }
-</style>
+</style>@/features/basic-shape/Group

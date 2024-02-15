@@ -1,4 +1,4 @@
-import { BasicFeature, IPoint, Vector } from "../../Interface";
+import { Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
@@ -6,71 +6,64 @@ import Feature from "../Feature";
 import AnchorPnt from "./AnchorPnt";
 import BCtrlPnt from "./BCtrlPnt";
 import CtrlPnt from "./CtrlPnt";
-import SelectArea from "./SelectArea";
 
 export default class Bbox extends Rect {
 
     keepRatio: boolean;  // 是否按比例缩放
     ratio: number;  // 宽高比
     ctrlPntSize: number;
-    lastMove: IPoint;
     lastAngle: number = 0;
     vctX: Vector = [100, 0];
     vctY: Vector = [0, 100];
     lastLenX = 0;
     lastLenY = 0;
-    parent: BasicFeature | SelectArea;
+    target: Feature;
 
-    constructor(parent: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
-        let [minX, maxX, minY, maxY] = parent.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
-        let center = parent.getCenterPos();  // [leftTop, rightTop, rightBottom, leftBottom]
+    constructor(target: Feature, ctrlPntSize = 10) {   // 相对坐标
+        let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+        let center = target.getCenterPos();  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
         this.className = 'Bbox';
-        this.parent = parent;
-        this.isFixedPos = parent.isFixedPos;
+        this.addFeature(target);
+        this.target = target;
+        // this.isFixedPos = parent.isFixedPos;
         this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
         this.isStroke = true;
+        this.closePath = true;
         this.strokeStyle = "#55585A";
         this.lineDashArr = [8, 8]
         this.lineWidth = .1;
-        this.cbSelect = false;
-        this.zIndex = Infinity;
-        this.keepRatio = false;
-        this.lastMove = { x: this.parent.pointArr[0].x, y: this.parent.pointArr[0].y };
+        this.keepRatio = true;
         this.ratio = this.getRatio();
-        this.parent.translateEvents.push(this.onMoveByParent.bind(this))
         this.initBCtrlPnt();
         this.setVct();
-        this.setParentPointArrPer(this.parent);
+        this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
         this.gls.addFeature(this, false);
-        // document.addEventListener('pointArr' + this.id, this.onMoveByParent.bind(this));
     }
 
     // 获取父元素pointArr所有点距离包围盒上下百分比
-    setParentPointArrPer(parent: Feature) {
-        let width = getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]);
-        let height = getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]);
-        parent && parent.pointArr.forEach(p => {
+    setPointArrPer(target: Feature, width = 0, height = 0) {
+        target.pntExtentPer.left = []
+        target.pntExtentPer.right = []
+        target && target.pointArr.forEach(p => {
             let lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
             let lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
 
             let lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             let lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
-            parent.pntExtentPer.left.push({
+            target.pntExtentPer.left.push({
                 x: lenX / width,
                 y: lenY / height,
             })
-            parent.pntExtentPer.right.push({
+            target.pntExtentPer.right.push({
                 x: lenX1 / width,
                 y: lenY1 / height,
             })
         })
-        if (parent instanceof SelectArea) {
-            parent.featuresIn.forEach(f => {
-                this.setParentPointArrPer(f);
-            })
-        }
+        target.children.forEach(f => {
+            this.setPointArrPer(f, width, height);
+        })
     }
 
     // 初始化设置包围盒水平方向与垂直方向的向量
@@ -109,14 +102,7 @@ export default class Bbox extends Rect {
             //     }
             // }
             this.rotate(offsetAngle, centerPos);
-            this.parent.rotate(offsetAngle, centerPos);
-            if (this.parent instanceof SelectArea) {
-                this.parent.featuresIn.forEach(f => {
-                    f.rotate(offsetAngle, centerPos);
-                })
-            }
             bCtrlP1.lastAngle = angle;
-            this.updateLastMove();
         })
 
         // 左边
@@ -142,16 +128,15 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                }
-                setTranform(this.parent);
-                if (this.parent instanceof SelectArea) {
-                    this.parent.featuresIn.forEach(f => {
+                    feature.resize();
+                    feature.children.forEach(f => {
                         setTranform(f);
                     })
                 }
+                setTranform(this.target);
             }
             this.lastLenX = lenX;
-            this.updateLastMove();
+            this.ratio = this.getRatio();
         })
 
         // 右边
@@ -177,16 +162,15 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                }
-                setTranform(this.parent);
-                if (this.parent instanceof SelectArea) {
-                    this.parent.featuresIn.forEach(f => {
+                    feature.resize();
+                    feature.children.forEach(f => {
                         setTranform(f);
                     })
                 }
+                setTranform(this.target);
             }
             this.lastLenX = lenX;
-            this.updateLastMove();
+            this.ratio = this.getRatio();
         })
 
         // 上边
@@ -212,16 +196,15 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                }
-                setTranform(this.parent);
-                if (this.parent instanceof SelectArea) {
-                    this.parent.featuresIn.forEach(f => {
+                    feature.resize();
+                    feature.children.forEach(f => {
                         setTranform(f);
                     })
                 }
+                setTranform(this.target);
             }
             this.lastLenY = lenY;
-            this.updateLastMove();
+            this.ratio = this.getRatio();
         })
 
         // 下边
@@ -247,19 +230,18 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                }
-                setTranform(this.parent);
-                if (this.parent instanceof SelectArea) {
-                    this.parent.featuresIn.forEach(f => {
+                    feature.resize();
+                    feature.children.forEach(f => {
                         setTranform(f);
                     })
                 }
+                setTranform(this.target);
             }
             this.lastLenY = lenY;
-            this.updateLastMove();
+            this.ratio = this.getRatio();
         })
 
-        if (this.parent.className != 'SelectArea') {  // 区域选择不可以锚点
+        if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
             // 左边 锚点
             let aCtrlP1 = new AnchorPnt(this, () => {
                 const pointArr = this.pointArr;
@@ -270,7 +252,7 @@ export default class Bbox extends Rect {
             aCtrlP1.name = "leftAnchor";
             aCtrlP1.mousedownEvents.push(() => {
                 this.gls.initAnchorPnts();
-                let anchorPnts = this.parent.getAnchorPnts();
+                let anchorPnts = this.target.getAnchorPnts();
                 let link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
                 link.name = 'tempLink';
             })
@@ -283,9 +265,9 @@ export default class Bbox extends Rect {
                     return touched
                 })
                 let tempLink = this.gls.features.find(f => f.name === 'tempLink');
-                this.gls.removeFeature(tempLink);
+                tempLink && this.gls.removeFeature(tempLink);
                 if (hasTouch && touchedAnchor) {
-                    let anchorPnts = this.parent.getAnchorPnts();
+                    let anchorPnts = this.target.getAnchorPnts();
                     let startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
                     startAnchor.isBinding = true;
                     touchedAnchor.isBinding = true;
@@ -332,13 +314,12 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                        }
-                        setTranform(bbox.parent);
-                        if (bbox.parent instanceof SelectArea) {
-                            bbox.parent.featuresIn.forEach(f => {
+                            feature.resize();
+                            feature.children.forEach(f => {
                                 setTranform(f);
                             })
                         }
+                        setTranform(bbox.target);
                     }
                     bbox.lastLenX = lenX;
                     bbox.lastLenY = lenY;
@@ -375,13 +356,12 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                        }
-                        setTranform(bbox.parent);
-                        if (bbox.parent instanceof SelectArea) {
-                            bbox.parent.featuresIn.forEach(f => {
+                            feature.resize();
+                            feature.children.forEach(f => {
                                 setTranform(f);
                             })
                         }
+                        setTranform(bbox.target);
                     }
                     bbox.lastLenX = lenX;
                     bbox.lastLenY = lenY;
@@ -418,13 +398,12 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                        }
-                        setTranform(bbox.parent);
-                        if (bbox.parent instanceof SelectArea) {
-                            bbox.parent.featuresIn.forEach(f => {
+                            // feature.resize();
+                            feature.children.forEach(f => {
                                 setTranform(f);
                             })
                         }
+                        setTranform(bbox.target);
                     }
                     bbox.lastLenX = lenX;
                     bbox.lastLenY = lenY;
@@ -461,13 +440,12 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                        }
-                        setTranform(bbox.parent);
-                        if (bbox.parent instanceof SelectArea) {
-                            bbox.parent.featuresIn.forEach(f => {
+                            feature.resize();
+                            feature.children.forEach(f => {
                                 setTranform(f);
                             })
                         }
+                        setTranform(bbox.target);
                     }
                     bbox.lastLenX = lenX;
                     bbox.lastLenY = lenY;
@@ -476,27 +454,6 @@ export default class Bbox extends Rect {
             default:
                 break;
         }
-        bbox.updateLastMove();
-    }
-
-    // 父元素位置变化时实时更新bbox位置
-    onMoveByParent() {
-        this.pointArr.forEach(p => {
-            p.x += this.parent.pointArr[0].x - this.lastMove.x;
-            p.y += this.parent.pointArr[0].y - this.lastMove.y;
-        })
-        this.updateLastMove();
-    }
-
-    updateLastMove() {
-        this.lastMove.x = this.parent.pointArr[0].x;
-        this.lastMove.y = this.parent.pointArr[0].y;
-        this.parent.resize && this.parent.resize();
-        if (this.parent instanceof SelectArea) {
-            this.parent.featuresIn.forEach(f => {
-                f.resize && f.resize();
-            })
-        }
     }
 
     getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
@@ -504,7 +461,7 @@ export default class Bbox extends Rect {
     }
 
     destroy() {
-        super.destroy();
+        // super.destroy();
         let ctrlPnts = this.getCtrlPnts();
         let anchorPnts = this.getAnchorPnts();
         ctrlPnts.forEach(cp => {
@@ -513,5 +470,6 @@ export default class Bbox extends Rect {
         anchorPnts.forEach(ap => {
             this.gls.removeFeature(ap);
         })
+        this.children.forEach(cf => cf.parent = null)
     }
 }
