@@ -3,19 +3,17 @@ import { BasicFeature, Props } from "./Interface";
 
 class Stack {
 
-    statusList: Props[][];  // gls中所有的元素放到stackList中
-    pointer: number;  // 指针,下标
+    statusList: Props[][] = [];  // gls中所有的元素放到stackList中
+    pointer: number = -1;  // 指针,下标
     gls: GridSystem;
+    isLocal = true;
 
     constructor() {
-        this.statusList = []
-        this.pointer = this.statusList.length - 1;
         this.gls = GridSystem.Gls;
         this.record();
     }
 
     record() {
-        // console.log("记录一下");
         let featurePropsArr: Props[] = [];
         while (this.pointer != this.statusList.length - 1) {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
@@ -28,12 +26,12 @@ class Stack {
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
-        console.log(featurePropsArr, "featurePropsArr");
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
+        console.log("记录一下");
     }
     // [featuresArr1, featuresArr2, featuresArr3]
 
     undo() {
-        this.gls.enableTranform(null, false)
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
         if (!prevFeaturesPropsArr) return;
@@ -61,10 +59,12 @@ class Stack {
             })
         }
         this.pointer--;
+        this.gls.enableBbox(null)
+        this.gls.enableSelectArea(false)
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
     restore() {
-        this.gls.enableTranform(null, false)
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let nextFeaturesPropsArr = this.statusList[this.pointer + 1];
         if (!nextFeaturesPropsArr) return;
@@ -90,6 +90,9 @@ class Stack {
             })
         }
         this.pointer++;
+        this.gls.enableBbox(null)
+        this.gls.enableSelectArea(false)
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
     destory() {

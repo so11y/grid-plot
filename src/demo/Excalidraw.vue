@@ -68,7 +68,7 @@
                     <li @click="onSaveFile"><i class="iconfont gls-xiazai" /> 保存到...</li>
                     <li @click="onShowPreview"><i class="iconfont gls-daochutupian" /> 导出图片...</li>
                     <li @click="isShowHelp = true"><i class="iconfont gls-bangzhu" /> 帮助</li>
-                    <li @click="reset"><i class="iconfont gls-shanchu" /> 重置画布</li>
+                    <li @click="reset(true)"><i class="iconfont gls-shanchu" /> 重置画布</li>
                     <!-- <li @click="darkTheme"><i class="iconfont gls-shanchu" /> 深色模式</li> -->
                     <a-divider type="horizonal"></a-divider>
                     <li @click="linkTo('https://littlesunnn.github.io/')"><i class="iconfont gls-github" /> GitHub</li>
@@ -245,11 +245,11 @@
                         <div class="title">操作</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制"
-                                @click="gls?.focusNode && gls?.recordFeatureProps(gls.focusNode); message.info('复制了')">
+                                @click="gls?.focusNode && gls?.recordFeatureProps(gls.focusNode as BasicFeature); message.info('复制了')">
                                 <i class="iconfont gls-fuzhi"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="删除"
-                                @click="gls?.removeFeature(gls.getFocusNode()); gls?.enableTranform(gls.getFocusNode(), false); message.info('删除了')">
+                                @click="gls?.removeFeature(gls.getFocusNode()); gls?.enableBbox(gls.getFocusNode()); message.info('删除了')">
                                 <i class="iconfont gls-shanchu"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
@@ -309,9 +309,9 @@
         </div>
         <a-row class="stack-wrap">
             <a-row style="border-radius: 7px;overflow: hidden;margin-right: 10px;">
-                <button @click="gls?.scale && gls.scale--"><i class="iconfont gls-jianhao"></i></button>
-                <button style="border-radius: 0;width: 55px">{{ gls?.scale.toFixed(2) }}</button>
-                <button @click="gls?.scale && gls.scale++"><i class="iconfont gls-jiahao"></i></button>
+                <button @click="gls?.zoomTo(gls.scale-1)"><i class="iconfont gls-jianhao"></i></button>
+                <button style="border-radius: 0;width: 55px">缩放</button>
+                <button @click="gls?.zoomTo(gls.scale+1)"><i class="iconfont gls-jiahao"></i></button>
             </a-row>
             <a-row style="border-radius: 7px;overflow: hidden;">
                 <button @click="GridSystem.Stack?.undo()"><i class="iconfont gls-chexiao" /></button>
@@ -378,8 +378,8 @@ function onSelectTool(index = 0, param?: any) {
     switch (index) {
         case 0: // 选择区域
             message.info("按住左键移动吧!")
-            sa = new SelectArea();
-            sa.drawMode = DrawAreaMode.RECT;
+            let sa = gls?.enableSelectArea() as SelectArea;
+            sa && (sa.drawMode = DrawAreaMode.RECT);
             // console.log(111);
             break;
         case 1: // 单击创建Rect
@@ -436,7 +436,7 @@ function onSelectTool(index = 0, param?: any) {
                         imgEle.onload = () => {
                             console.log();
                             let img = new Img(imgEle, 0, 0, 50, 50 * imgEle.height / imgEle.width);
-                            gls?.click2DrawByClick(img, true)
+                            gls?.click2DrawByClick(img)
                         }
                     }
                 }
@@ -537,39 +537,41 @@ function startTime(gls: GridSystem) {
     });
 }
 
-function reset() {
+function reset(clear = false) {
+    if(clear) localStorage.setItem("features", []);
     if (gls) {
         gls.destroy();
         gls = null;
     }
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls = new GridSystem(canvasDom);
-    gls.enableStack()
+    gls.loadData();
+    gls.enableStack();
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
     // for (let index = 0; index < 500; index++) {
-    let rect = new Rect(100, 100, 100, 100)
-    rect.fillStyle = "transparent"
-    rect.isOverflowHidden = true;
-    gls.addFeature(rect)
-    const text = new Text("你好世界", 100, 100, 100, 10);
-    text.fitSize = true;
-    gls.addFeature(text);
-    rect.addFeature(text);
+    // let rect = new Rect(100, 100, 100, 100)
+    // rect.fillStyle = "transparent"
+    // rect.isOverflowHidden = true;
+    // gls.addFeature(rect, false)
+    // const text = new Text("你好世界", 100, 100, 100, 10);
+    // text.fitSize = true;
+    // gls.addFeature(text, false);
+    // rect.addFeature(text);
 
-    let rect2 = new Rect(150, 150, 50, 50)
-    rect2.fillStyle = "transparent"
-    gls.addFeature(rect2)
+    // let rect2 = new Rect(150, 150, 50, 50)
+    // rect2.fillStyle = "transparent"
+    // gls.addFeature(rect2, false)
 
-    let rect4 = new Rect(200, 200, 50, 50)
-    gls.addFeature(rect4)
+    // let rect4 = new Rect(200, 200, 50, 50)
+    // gls.addFeature(rect4, false)
 
-    let circle = new Circle(180, 180, 30, 30)
-    gls.addFeature(circle)
+    // let circle = new Circle(180, 180, 30, 30)
+    // gls.addFeature(circle, false)
 
-    let group = new Group([rect, rect2])
-    gls.addFeature(group)
+    // let group = new Group([rect, rect2])
+    // gls.addFeature(group, false)
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);

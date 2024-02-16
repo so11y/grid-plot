@@ -1,4 +1,5 @@
-import { Vector } from "../../Interface";
+import GridSystem from "@/GridSystem";
+import { BasicFeature, Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
@@ -6,6 +7,7 @@ import Feature from "../Feature";
 import AnchorPnt from "./AnchorPnt";
 import BCtrlPnt from "./BCtrlPnt";
 import CtrlPnt from "./CtrlPnt";
+import SelectArea from "./SelectArea";
 
 export default class Bbox extends Rect {
 
@@ -19,7 +21,7 @@ export default class Bbox extends Rect {
     lastLenY = 0;
     target: Feature;
 
-    constructor(target: Feature, ctrlPntSize = 10) {   // 相对坐标
+    constructor(target: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
         let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
         let center = target.getCenterPos();  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
@@ -276,6 +278,10 @@ export default class Bbox extends Rect {
                 this.gls.removeAnchorPnts();
             })
         }
+
+        this.getCtrlPnts().forEach(cp => cp.dragendEvents.push(() => {
+            GridSystem.Stack && GridSystem.Stack.record()
+        }))
     }
 
     onSizeChange() {

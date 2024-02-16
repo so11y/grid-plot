@@ -1,5 +1,5 @@
 import { Orientation } from "../Constants";
-import type GridSystem from "../GridSystem";
+import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
@@ -109,7 +109,7 @@ class Feature {
         this.children.forEach(cf => {
             cf.rotate(angle, O)
         })
-        this.onrotate && this.onrotate()
+        this.onrotate && this.onrotate();
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {

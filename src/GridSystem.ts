@@ -21,6 +21,7 @@ class GridSystem {
     static Gls: GridSystem;
     static Stack: Stack | null;
     static Bbox: Bbox | null;
+    static Shortcuts: Shortcuts | null;
     static lastAndPrevMouseMovePoint = {
         last_p: { x: 0, y: 0 },
         prev_p: { x: 0, y: 0 },
@@ -51,7 +52,6 @@ class GridSystem {
     hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
-    features2: Feature[] = [];  // 所有元素的集合
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
     dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
@@ -142,12 +142,13 @@ class GridSystem {
         this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        // document.addEventListener("drop", this.fileDrop);
-        // window.addEventListener("resize", this.setCanvasSize.bind(this))
-        new Shortcuts(["del"], () => {
-            this.removeFeature(this.getFocusNode() as Feature, true)
-            this.enableTranform(this.getFocusNode(), false)
-        });
+        GridSystem.Shortcuts = new Shortcuts();
+        GridSystem.Shortcuts.addEvent('del', () => {
+            this.removeFeature(this.getFocusNode(), true)
+            this.enableBbox(null)
+        })
+        GridSystem.Shortcuts.addEvent(["shift", "z"], () => GridSystem.Stack && GridSystem.Stack.undo.bind(this))
+        GridSystem.Shortcuts.addEvent(["shift", "y"], () => GridSystem.Stack && GridSystem.Stack.restore.bind(this))
     }
 
     private mouseMove = (e: any) => {
@@ -169,22 +170,22 @@ class GridSystem {
         const { x: px, y: py } = this.pageSlicePos;
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);  // 寻找鼠标悬浮元素
         let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
+        let moveFlag = false;
         var mousemove = (e: any) => { };
         if (ev.buttons != 1) {
             this.focusNode = focusNode;
         } else {  // 左键点击
             focusNode?.onmousedown && focusNode.onmousedown();
-            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature) {  // 点击了就加控制点,没点击就去除所有控制点
-                this.enableTranform(null, false);
-                if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
-                    this.enableTranform(focusNode as BasicFeature | SelectArea, true);
-                    GridSystem.Bbox && (focusNode = GridSystem.Bbox);
+            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
+                this.enableBbox(null);
+                if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                    let bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
+                    bbox && (focusNode = bbox);
                 }
             };
             // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
             if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
-                let sa = this.features.find(f => f instanceof SelectArea)
-                sa && this.removeFeature(sa, false);
+                this.enableSelectArea(false)
             }
         }
         if (focusNode && ev.buttons == 1) {  // 拖拽元素
@@ -221,13 +222,9 @@ class GridSystem {
                             focusNode.translate(offsetX, offsetY)
                             focusNode._orientations = orientations;
                         }
-
+                        moveFlag = true;
                     }
                     focusNode.ontranslate();
-                    this.dom.onmouseup = () => {
-                        document.onmousemove = null;
-                        this.dom.onmouseup = null;
-                    };
                     lastMovePos = { x: mx, y: my }
                 }
             }
@@ -251,9 +248,8 @@ class GridSystem {
                 focusNode._orientations = null;
                 focusNode.onmouseup && focusNode.onmouseup();
                 focusNode.ondragend && focusNode.ondragend();
-                if (this.isBasicFeature(this.getFocusNode())) {
-                    console.log(this.getFocusNode(), "this.getFocusNode()");
-                    GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
+                if (this.isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
+                    GridSystem.Stack && GridSystem.Stack.record();
                 }
             }
             document.removeEventListener("mousemove", mousemove)
@@ -508,7 +504,8 @@ class GridSystem {
 
     // --------------------以下是暴露的方法----------------------------
     // --------------------画布内元素的增删查API----------------------------
-    removeFeature(f: Feature | string, isRecord = true) {
+    removeFeature(f: Feature | string | undefined, isRecord = true) {
+        if (!f) return;
         let feature: Feature | null | undefined = null;
         if (f instanceof Feature) {
             feature = f;
@@ -630,7 +627,7 @@ class GridSystem {
 
     // ------------------ 鼠标点击方式去创建元素-----------------
     click2DrawByClick(rect: Rect | Circle, fn?: Function) {
-        this.addFeature(rect);
+        this.addFeature(rect, false);
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         this.cbSelectFeature = false;
         var clear = (remove = true) => {
@@ -639,10 +636,11 @@ class GridSystem {
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         var click2draw = (e: any) => {
             if (e.detail.button === 0) {
-                rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
+                rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y);
                 clear(false);
                 fn && fn();
             } else {
@@ -668,6 +666,7 @@ class GridSystem {
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.RIGHT_CLICK, overDraw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         var move2draw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
@@ -678,7 +677,7 @@ class GridSystem {
                 if (line.pointArr.length == 1) {
                     line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
-                this.addFeature(line);
+                this.addFeature(line, false);
                 document.addEventListener(Events.MOUSE_MOVE, move2draw);
             } else {
                 throw "请用左键绘制!"
@@ -706,6 +705,7 @@ class GridSystem {
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
             document.removeEventListener(Events.MOUSE_UP, overDraw);
+            !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         var move2draw = () => {
             let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
@@ -754,7 +754,7 @@ class GridSystem {
                 line.addPoint({ x, y });
                 document.addEventListener(Events.MOUSE_MOVE, move2draw);
                 document.addEventListener(Events.MOUSE_UP, overDraw);
-                this.addFeature(line);
+                this.addFeature(line, false);
             } else {
                 throw "请用左键绘制!"
             }
@@ -911,27 +911,26 @@ class GridSystem {
                 GridSystem.Stack = null;
             } else {
                 GridSystem.Stack = new Stack();
-                new Shortcuts(["shift", "z"], GridSystem.Stack.undo.bind(this));
-                new Shortcuts(["shift", "y"], GridSystem.Stack.restore.bind(this));
             }
         }
     }
 
-    enableTranform(f: BasicFeature | SelectArea | null | undefined, enabled: boolean = true) {
-        if (!f && (this.isCtrlFeature(this.focusNode))) return  // 如果是控制点,那么先不要清除bbox
-        if (!enabled) {
-            if (GridSystem.Bbox) {
-                this.removeFeature(GridSystem.Bbox, false);
-                GridSystem.Bbox = null;
-            }
-        } else if (f) {
-            if (GridSystem.Bbox) {
-                if (GridSystem.Bbox.parent == f) return;
-                this.removeFeature(GridSystem.Bbox, false);
-                GridSystem.Bbox = null;
-            } else {
-                GridSystem.Bbox = new Bbox(f);
-            }
+    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
+        let bbox = this.features.find(f => f instanceof Bbox);
+        this.removeFeature(bbox, false);
+        if (f) {
+            let nbbox = new Bbox(f);
+            return nbbox;
+        }
+    }
+
+    enableSelectArea(bool = true) {
+        let sa = this.features.find(f => f instanceof SelectArea);
+        this.removeFeature(sa, false);
+        if (bool) {
+            sa = new SelectArea();
+            this.addFeature(sa, false);
+            return sa;
         }
     }
 
@@ -1179,25 +1178,29 @@ class GridSystem {
         this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
     }
 
-    save() {
-        let featurePropsArr: Props[] = [];
-        this.features.forEach(f => {
-            if (this.isBasicFeature(f)) {
-                let fProps = this.recordFeatureProps(f as BasicFeature);
-                featurePropsArr.push(fProps)
-            }
-        })
+    save(featurePropsArr: Props[]) {
+        if (!featurePropsArr) {
+            featurePropsArr = [];
+            this.features.forEach(f => {
+                if (this.isBasicFeature(f)) {
+                    let fProps = this.recordFeatureProps(f as BasicFeature);
+                    featurePropsArr.push(fProps)
+                }
+            })
+        }
         let str = JSON.stringify(featurePropsArr);
-        sessionStorage.setItem("features", str);
+        localStorage.setItem("features", str);
         return str
     }
 
-    loadData(featurePropsArr: Props[]) {
+    loadData(featurePropsArr?: Props[]) {
         if (!featurePropsArr) {
-            featurePropsArr = JSON.parse(sessionStorage.getItem("features") || '') as Props[];
+            try {
+                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
+            } catch (error) {
+                featurePropsArr = []
+            }
         }
-        console.log(featurePropsArr, "featurePropsArr");
-
         featurePropsArr.forEach(fp => {
             this.createFeature(fp)
         })
