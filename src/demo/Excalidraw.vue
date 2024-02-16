@@ -199,19 +199,19 @@
                         <div class="title">图层</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于顶层"
-                                @click="gls?.toMaxIndex(gls.getBasicFocusNode() as BasicFeature); message.info('置于顶层')">
+                                @click="gls?.toMaxIndex(gls.getFocusNode() as BasicFeature); message.info('置于顶层')">
                                 <i class="iconfont gls-zhiyudingceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="上移一层"
-                                @click="gls?.toPlusIndex(gls.getBasicFocusNode() as BasicFeature);; message.info('上移一层')">
+                                @click="gls?.toPlusIndex(gls.getFocusNode() as BasicFeature);; message.info('上移一层')">
                                 <i class="iconfont gls-shangyiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="下移一层"
-                                @click="gls?.toMinusIndex(gls.getBasicFocusNode() as BasicFeature);; message.info('下移一层')">
+                                @click="gls?.toMinusIndex(gls.getFocusNode() as BasicFeature);; message.info('下移一层')">
                                 <i class="iconfont gls-xiayiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于底层"
-                                @click="gls?.toMinIndex(gls.getBasicFocusNode() as BasicFeature); message.info('置于底层')">
+                                @click="gls?.toMinIndex(gls.getFocusNode() as BasicFeature); message.info('置于底层')">
                                 <i class="iconfont gls-zhiyudiceng"></i>
                             </a-button>
                         </a-row>
@@ -219,30 +219,24 @@
                     <li>
                         <div class="title">对齐</div>
                         <a-row type="flex" align="middle" class="func-wrap" style="margin-bottom: 8px">
-                            <a-button style="background-color: hsl(240 25% 96%)" title="左对齐"
-                                @click="toLeftAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="左对齐" @click="toLeftAlign">
                                 <i class="iconfont gls-zuoduiqi"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直对齐"
-                                @click="toVerticalAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直对齐" @click="toVerticalAlign">
                                 <i class="iconfont gls-chuizhijuzhongduiqi"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="右对齐"
-                                @click="toRightAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="右对齐" @click="toRightAlign">
                                 <i class="iconfont gls-youduiqi"></i>
                             </a-button>
                         </a-row>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐"
-                                @click="toTopAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐" @click="toTopAlign">
                                 <i class="iconfont gls-dingduiqi"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="水平对齐"
-                                @click="toHorizonalAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="水平对齐" @click="toHorizonalAlign">
                                 <i class="iconfont gls-shuipingjuzhongduiqi"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="底对齐"
-                                @click="toBottomAlign">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="底对齐" @click="toBottomAlign">
                                 <i class="iconfont gls-diduiqi"></i>
                             </a-button>
                         </a-row>
@@ -255,7 +249,7 @@
                                 <i class="iconfont gls-fuzhi"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="删除"
-                                @click="gls?.removeFeature(gls.getBasicFocusNode()); gls?.enableTranform(gls.getBasicFocusNode(), false); message.info('删除了')">
+                                @click="gls?.removeFeature(gls.getFocusNode()); gls?.enableTranform(gls.getFocusNode(), false); message.info('删除了')">
                                 <i class="iconfont gls-shanchu"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
@@ -278,28 +272,52 @@
             </template>
         </a-modal>
         <a-modal v-model:open="isShowHelp" title="帮助" width="50vw">
-            <h4>操作指南:</h4>
-            <ul>
-                <li>鼠标左键选择元素,选中按住移动元素; 鼠标右键拖拽移动画布, 鼠标滚轮放大缩小画布 </li>
-            </ul>
+            <div class="list-of-instructions">
+                <h4 class="title">基本操作: </h4>
+                <ul>
+                    <li>1.鼠标左键点击用于选择元素, 右键移动可以拖动画布, 滚轮缩放画布大小</li>
+                    <li>2.创建矩形,圆形, 文本, 图片, 鼠标左键点击创建</li>
+                    <li>3.创建折线, 鼠标左键点击创建, 右键点击结束绘制</li>
+                    <li>4.创建自由画笔, 鼠标左键移动绘制, 松开后还会继续绘制, 右键点击结束绘制</li>
+                </ul>
+                <br />
+                <div style="width: 50%" class="list-wrap">
+                    <h4 class="title">快捷键列表: </h4>
+                    <a-row type="flex" justify="space-between" class="row">
+                        <span>删除元素</span> <a-tag>Del</a-tag>
+                    </a-row>
+                    <a-row type="flex" justify="space-between" class="row">
+                        <span>撤销</span>
+                        <div><a-tag>Ctrl</a-tag><a-tag>Z</a-tag></div>
+                    </a-row>
+                    <a-row type="flex" justify="space-between" class="row">
+                        <span>恢复</span>
+                        <div><a-tag>Ctrl</a-tag><a-tag>Y</a-tag></div>
+                    </a-row>
+                </div>
+            </div>
             <template #footer>
                 <a-button key="back" @click="isShowHelp = false">关 闭</a-button>
             </template>
         </a-modal>
-        <!-- <a-modal v-model:open="isShowSaveImage" title="保存为图片" width="80vw">
-            <a-row type="flex" justify="center">
-                <img alt="" id="preview-img" width="80%">
+        <div class="update-time">
+            <a-row type="flex" align="middle">
+                <span style="margin-right: 10px;">最后更新时间: {{ env.BUILD_TIME }}</span>
+                <a-button style="width: 34px;height: 34px;padding: 0;line-height: 34px;" @click="isShowHelp = true"><i
+                        class="iconfont gls-bangzhu" style="font-size: 20px"></i></a-button>
             </a-row>
-            <template #footer>
-                <a-button key="submit" type="primary" @click="onSaveImg">下载图片</a-button>
-                <a-button key="back" @click="isShowSaveImage = false">关 闭</a-button>
-            </template>
-        </a-modal> -->
-        <!-- <ul class="list-wrap right-click-panel" ref="rPanel" v-if="isShowRightClickPanel">
-            123
-            <li></li>
-        </ul> -->
-        <div class="update-time">最后更新时间: {{ env.BUILD_TIME }}</div>
+        </div>
+        <a-row class="stack-wrap">
+            <a-row style="border-radius: 7px;overflow: hidden;margin-right: 10px;">
+                <button @click="gls?.scale && gls.scale--"><i class="iconfont gls-jianhao"></i></button>
+                <button style="border-radius: 0;width: 55px">{{ gls?.scale.toFixed(2) }}</button>
+                <button @click="gls?.scale && gls.scale++"><i class="iconfont gls-jiahao"></i></button>
+            </a-row>
+            <a-row style="border-radius: 7px;overflow: hidden;">
+                <button @click="GridSystem.Stack?.undo()"><i class="iconfont gls-chexiao" /></button>
+                <button @click="GridSystem.Stack?.restore()"><i class="iconfont gls-huifu" /></button>
+            </a-row>
+        </a-row>
     </div>
 </template>
     
@@ -526,6 +544,7 @@ function reset() {
     }
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls = new GridSystem(canvasDom);
+    gls.enableStack()
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
@@ -543,14 +562,14 @@ function reset() {
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2)
 
-    // let rect4 = new Rect(200, 200, 50, 50)
-    // gls.addFeature(rect4)
+    let rect4 = new Rect(200, 200, 50, 50)
+    gls.addFeature(rect4)
 
-    // let circle = new Circle(180, 180, 30, 30)
-    // gls.addFeature(circle)
+    let circle = new Circle(180, 180, 30, 30)
+    gls.addFeature(circle)
 
     let group = new Group([rect, rect2])
-
+    gls.addFeature(group)
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
@@ -571,33 +590,33 @@ function setCanvasSize(canvasDom: HTMLCanvasElement) {
     }
 }
 
-function toTopAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toTopAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toTopAlign();
     message.info('顶对齐');
 }
-function toBottomAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toBottomAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toBottomAlign();
     message.info('底对齐');
 }
-function toRightAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toRightAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toRightAlign();
     message.info('右对齐');
 }
-function toLeftAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toLeftAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toLeftAlign();
     message.info('左对齐');
 }
-function toHorizonalAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toHorizonalAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toHorizonalAlign();
     message.info('水平对齐');
 }
-function toVerticalAlign (){
-    let sa = gls?.features.find(f=> f instanceof SelectArea) as SelectArea;
+function toVerticalAlign() {
+    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
     sa && sa.toVerticalAlign();
     message.info('垂直对齐');
 }
@@ -819,13 +838,50 @@ canvas {
 
     .update-time {
         position: fixed;
-        right: 0px;
-        bottom: 0px;
+        right: 5px;
+        bottom: 5px;
         color: #999;
         font-size: 12px;
-        background-color: #fff;
+        // background-color: #fff;
         padding: 5px 10px;
         border-radius: 5px;
     }
+
+    .stack-wrap {
+        position: fixed;
+        left: 10px;
+        bottom: 10px;
+        color: #999;
+        font-size: 12px;
+
+        i {
+            font-size: 23px;
+        }
+
+        button {
+            line-height: 34px;
+            padding: 0 0px;
+            width: 45px;
+            height: 34px;
+            border: none;
+            background-color: #ececf4;
+            border-radius: 0;
+
+            &:hover {
+                background-color: rgb(224, 224, 243);
+            }
+        }
+    }
 }
-</style>@/features/basic-shape/Group
+
+.list-of-instructions {
+    .list-wrap {
+        .row {
+            border-bottom: 1px solid rgba(240, 240, 240, 1);
+            padding: 5px;
+            margin: 5px 0;
+        }
+    }
+
+}
+</style>

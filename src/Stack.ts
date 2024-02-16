@@ -1,5 +1,5 @@
 import GridSystem from "./GridSystem";
-import { Props } from "./Interface";
+import { BasicFeature, Props } from "./Interface";
 
 class Stack {
 
@@ -21,21 +21,23 @@ class Stack {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
             this.statusList.pop();
         }
-        this.gls.features.forEach(f => {
+        let features = this.gls.features.filter(f => this.gls.isBasicFeature(f)) as BasicFeature[]
+        features.forEach(f => {
             let fProps = this.gls.recordFeatureProps(f);
             featurePropsArr.push(fProps)
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
+        console.log(featurePropsArr, "featurePropsArr");
     }
     // [featuresArr1, featuresArr2, featuresArr3]
 
     undo() {
+        this.gls.enableTranform(null, false)
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
-        console.log(curFeaturesPropsArr, prevFeaturesPropsArr);
-        
         if (!prevFeaturesPropsArr) return;
+        console.log(curFeaturesPropsArr, prevFeaturesPropsArr);
         if (curFeaturesPropsArr.length >= prevFeaturesPropsArr.length) {  // 有修改或是新增元素,撤销需要修改或删除元素
             curFeaturesPropsArr.forEach(cs => {
                 let ps = prevFeaturesPropsArr.find(p => p.id === cs.id);
@@ -43,13 +45,14 @@ class Stack {
                     let id = ps.id;
                     let feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.setFeatureProps(feature, ps);
+                        this.gls.setFeatureProps(feature as BasicFeature, ps);
                     }
                 } else {  // 说明之前没有这个元素，撤销需要删除该元素
                     this.gls.removeFeature(cs.id, false);
                 }
             })
         } else {  // 有元素被删除了，撤销需要恢复创建之前的元素
+
             prevFeaturesPropsArr.forEach(ps => {
                 let cs = curFeaturesPropsArr.find(cs => cs.id === ps.id);
                 if (!cs) {
@@ -61,6 +64,7 @@ class Stack {
     }
 
     restore() {
+        this.gls.enableTranform(null, false)
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let nextFeaturesPropsArr = this.statusList[this.pointer + 1];
         if (!nextFeaturesPropsArr) return;
@@ -78,7 +82,7 @@ class Stack {
                     let id = ns.id;
                     let feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.setFeatureProps(feature, ns);
+                        this.gls.setFeatureProps(feature as BasicFeature, ns);
                     }
                 } else {  // 说明之前没有这个元素，恢复需要重新创建这些元素
                     this.gls.createFeature(ns)

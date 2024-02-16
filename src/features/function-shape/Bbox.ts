@@ -265,7 +265,7 @@ export default class Bbox extends Rect {
                     return touched
                 })
                 let tempLink = this.gls.features.find(f => f.name === 'tempLink');
-                tempLink && this.gls.removeFeature(tempLink);
+                tempLink && this.gls.removeFeature(tempLink, false);
                 if (hasTouch && touchedAnchor) {
                     let anchorPnts = this.target.getAnchorPnts();
                     let startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
@@ -398,7 +398,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            // feature.resize();
+                            feature.resize();
                             feature.children.forEach(f => {
                                 setTranform(f);
                             })
@@ -465,10 +465,10 @@ export default class Bbox extends Rect {
         let ctrlPnts = this.getCtrlPnts();
         let anchorPnts = this.getAnchorPnts();
         ctrlPnts.forEach(cp => {
-            this.gls.removeFeature(cp);
+            this.gls.removeFeature(cp, false);
         })
         anchorPnts.forEach(ap => {
-            this.gls.removeFeature(ap);
+            this.gls.removeFeature(ap, false);
         })
         this.children.forEach(cf => cf.parent = null)
     }

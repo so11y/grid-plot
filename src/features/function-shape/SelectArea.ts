@@ -87,7 +87,6 @@ class SelectArea extends Group {
 
     destroy() {
         this.children.forEach(cf => cf.parent = null)
-
     }
 }
 

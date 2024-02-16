@@ -4,6 +4,13 @@ import CtrlPnt from "../function-shape/CtrlPnt";
 
 class Line extends Feature {
 
+    static freeLineConfig = {  // 自由画笔线条粗细参数配置
+        maxWidth: .3,
+        minWidth: .03,
+        maxSpeed: 1.5,
+        minSpeed: 0.1,
+    }
+
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
 
@@ -69,14 +76,17 @@ class Line extends Feature {
         return path;
     }
 
-    enableCtrlPnts() {
-        this.pointArr.forEach((p, i) => {
-            new CtrlPnt(this, i);
-        })
+    enableCtrlPnts(bool = true) {
+        this.clearCtrlPos();
+        if (bool) {
+            this.pointArr.forEach((p, i) => {
+                new CtrlPnt(this, i);
+            })
+        }
     }
 
     clearCtrlPos() {
-        let ctrlPnts = this.gls.features.filter(f => f instanceof CtrlPnt && f.parent === this);
+        let ctrlPnts = this.getCtrlPnts();
         ctrlPnts.forEach(cp => {
             this.gls.removeFeature(cp, false);
         })
@@ -89,9 +99,7 @@ class Line extends Feature {
 
     destroy(): void {
         super.destroy();
-        this.getCtrlPnts().forEach(cp => {
-            this.gls.removeFeature(cp);
-        })
+        this.clearCtrlPos();
     }
 }
 

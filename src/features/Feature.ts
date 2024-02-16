@@ -1,16 +1,15 @@
 import { Orientation } from "../Constants";
 import type GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { IPoint, Size } from "../Interface";
+import { BasicFeature, IPoint, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
-import Bbox from "./function-shape/Bbox";
+import gsap from "gsap";
 
 class Feature {
 
     static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
-    static isAnchor = false;
 
     pointArr: IPoint[] = [];
     fillStyle: string = '#ffec99';
@@ -21,7 +20,6 @@ class Feature {
     lineWidth: number = .5;
     lineCap: CanvasLineCap = "round"   // butt, round, square
     lineJoin: CanvasLineJoin = "round"
-
     opacity: number = 1; // 整体透明度
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0;
@@ -36,12 +34,9 @@ class Feature {
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
 
-    gridPos: IPoint = { x: 0, y: 0 };  // 网格坐标系下的坐标
     parent: Feature | null = null;  // 父元素
-    children: Feature[] = [];  // 子节点
+    children: BasicFeature[] = [];  // 子节点
     gls: GridSystem = Feature.Gls;
-    bbox: Bbox | null = null;
-    lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
     adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
     pntDistanceLimit = 2;  // 距离太近的两个点,就不重复添加了
     pntExtentPer: {
@@ -58,10 +53,8 @@ class Feature {
     isFocused: boolean = false; //是否正在操作, 鼠标按在这个元素身上
     isFixedPos: boolean = false;  // 是否固定位置.不跟随网格移动
     isOutScreen: boolean = false;  // 是否在屏幕外
-    isObstacle: boolean = false;  // 是否是障碍物
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
-    isTransform: boolean = true; // 是否形变
     isShowAdsorbLine: boolean = false;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
@@ -70,7 +63,6 @@ class Feature {
     // 节点功能
     cbSelect: boolean = true;  // 是否可被选择
     cbMove: boolean = true;  // 是否可被拖拽
-    cbChangeZindex: boolean = true; // 是否获取焦点时改变层级关系
     cbAdsorb: boolean = true;
 
     // // 节点事件
@@ -204,7 +196,7 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            if (this.cbSelect && this.gls) {
+            if (this.cbSelect && this.gls.cbSelectFeature) {
                 let mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.closePath) {
@@ -212,10 +204,6 @@ class Feature {
                 } else {
                     isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
-                // if(isPointIn){
-                //     this.gls.hoverNode = this;
-                // }
-
                 if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
                     this.onmouseover && this.onmouseover();
                 } else if (this.isPointIn && !isPointIn) {
@@ -277,14 +265,15 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature: Feature, cbSelect = true) {
+    addFeature(feature?: BasicFeature, cbSelect = true) {
+        if (!feature) return;
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
         feature.angle = feature.parent.angle;
         function setProps(f: Feature) {   // 递归设置子元素属性
             f.cbSelect = cbSelect;
-            f.children.forEach(cf => {setProps(cf) })
+            f.children.forEach(cf => { setProps(cf) })
         }
         setProps(feature)
     }
@@ -323,6 +312,18 @@ class Feature {
 
     getAnchorPnts(): AnchorPnt[] {
         return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
+    }
+
+    // 将元素移动到画中间
+    toCenter(feature: Feature) {
+        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
+        gsap.to(this.gls.pageSlicePos, {
+            duration: 0.25,
+            x: this.gls.pageSlicePos.x + distX,
+            y: this.gls.pageSlicePos.y + distY,
+            ease: "slow.out",
+        })
     }
 
     ontranslate() {
@@ -376,7 +377,7 @@ class Feature {
 
     destroy() {
         this.children.forEach(cf => {
-            this.gls.removeFeature(cf);
+            this.gls.removeFeature(cf, false);
         })
     };
 }
