@@ -152,7 +152,7 @@ export default {
     // let imgs = document.querySelector("#vid");
     let img;
     if (imgs) {
-      img = new Img(imgs, 370, 250, 300, 180);
+      img = new Img(imgs, 370, 250);
       img.isStroke = false
       img.zIndex = 2
       gls.addFeature(rect3);

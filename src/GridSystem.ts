@@ -143,28 +143,7 @@ class GridSystem {
         this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.dom.ondrop = (e: any) => {
-            //取得拖进来的文件
-            var data = e.dataTransfer;
-            console.log(data.files);
-            if(data.files && (data.files[0].type === 'image/png' || data.files[0].type === 'image/jpeg' )){
-                const reader = new FileReader();
-                reader.readAsDataURL(data.files[0]);
-                reader.onload = () => {
-                    let dataUrl = reader.result as string;
-                    console.log(dataUrl, "dataUrl");
-                    if (dataUrl) {
-                        let imgEle = new Image();
-                        imgEle.src = dataUrl;
-                        imgEle.onload = () => {
-                            let pos = this.getRelativePos(getMousePos(this.dom, {x: e.clientX, y: e.clientY}))
-                            let img = new Img(imgEle, pos.x, pos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
-                            this.addFeature(img);
-                        }
-                    }
-                }
-            }
-        }
+        this.dom.ondrop = this.drop2Feature.bind(this);
         document.ondragover = function (e) { e.preventDefault(); };
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -1090,7 +1069,7 @@ class GridSystem {
         }
 
         if (feature instanceof Img) {
-            props.base64Str && (feature.src = props.base64Str);
+            props.src && (feature.src = props.src);
         }
 
         if (feature instanceof Text) {
@@ -1145,7 +1124,7 @@ class GridSystem {
             isFixedSize: f instanceof Rect ? f.isFixedSize : false,
             radius: f instanceof Rect ? f.radius : 0,
 
-            src: f instanceof Img ? f.base64Str : '',
+            src: f instanceof Img ? f.src : '',
 
             text: f instanceof Text ? f.text : '',
             fitSize: f instanceof Text ? f.fitSize : false,
@@ -1318,12 +1297,8 @@ class GridSystem {
                         let dataUrl = reader.result as string;
                         console.log(dataUrl, "dataUrl");
                         if (dataUrl) {
-                            let imgEle = new Image();
-                            imgEle.src = dataUrl;
-                            imgEle.onload = () => {
-                                let img = new Img(imgEle, pos.x, pos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
-                                this.addFeature(img);
-                            }
+                            let img = new Img(dataUrl, pos.x, pos.y)
+                            this.addFeature(img);
                         }
                     }
                     return;
@@ -1347,6 +1322,24 @@ class GridSystem {
         } catch (error) {
             console.error('Failed to read clipboard content: ', error);
             return null;
+        }
+    }
+
+    drop2Feature(e: any) {
+        //取得拖进来的文件
+        var data = e.dataTransfer;
+        const files = data.files;
+        if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
+            let pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
+            const reader = new FileReader();
+            reader.readAsDataURL(files[0]);  // base64
+            reader.onload = () => {
+                let dataUrl = reader.result as string;
+                if (dataUrl) {
+                    let img = new Img(dataUrl, pos.x, pos.y)
+                    this.addFeature(img);
+                }
+            }
         }
     }
 

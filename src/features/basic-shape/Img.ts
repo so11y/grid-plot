@@ -1,46 +1,62 @@
-import { IBBox, IPoint, Src } from "../../Interface";
-import { getLenOfTwoPnts, toBase64 } from "../../utils";
+import { IPoint, Src } from "../../Interface";
 import Rect from "./Rect";
 
 class Img extends Rect {
 
-    element: HTMLImageElement | HTMLVideoElement  // 图片对象
-    src: Src // 图片地址
-    base64Str: string = '';
+    element: HTMLImageElement | HTMLVideoElement | null = null;  // 图片dom元素
+    src: string // 图片地址
 
-    constructor(src: Src, x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
+    /**
+     * 
+     * @param src 如果是html标签就传入.src属性, 如果是base64直接传入
+     * @param x 
+     * @param y 
+     */
+    constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
         super(x, y, width, height);
         this.className = "Img";
         this.src = src;
-        if (typeof (src) == 'string') {
-            if (src.indexOf(".mp4") != -1) {
-                this.element = document.createElement("video");
-                document.body.appendChild(this.element);
-                this.element.src = src;
-                this.element.style.display = "none";
-                this.element.play();
-            } else if(src.indexOf('.png')){
-                this.element = new Image();
-                this.element.src = src;
-                // this.element.onload = () => {
-                // }
-            }else {
-            throw "参数错误!"
-            }
-            this.src = this.element;
-        } else if (src instanceof HTMLImageElement) {
-            this.element = src;
-        } else if (src instanceof HTMLVideoElement) {
-            this.element = src;
+        if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
+            const video = this.element = document.createElement("video") as HTMLVideoElement;
             document.body.appendChild(this.element);
+            this.element.src = src;
             this.element.style.display = "none";
             this.element.play();
+            // 视频加载完成事件
+            if (!width && !height) {
+                this.element.addEventListener('loadeddata', () => {
+                    this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
+                });
+            }
+
+            this.mousedownEvents.push(() => {
+                video.play();
+            })
+        } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
+            const image = this.element = new Image();
+            this.element.src = src;
+            if (!width && !height) {
+                this.element.onload = () => {
+                    this.setSize(this.gls.getRelativeLen(image.width), this.gls.getRelativeLen(image.height))
+                }
+            }
         } else {
             throw "参数错误!"
         }
-        if (this.element instanceof HTMLImageElement) {
-            this.base64Str = toBase64(this.element);
-        }
+        // this.src = this.element;
+        // else if (src instanceof HTMLImageElement) {
+        //     this.element = src;
+        // } else if (src instanceof HTMLVideoElement) {
+        //     this.element = src;
+        //     // document.body.appendChild(this.element);
+        //     // this.element.style.display = "none";
+        //     // this.element.play();
+        // } else {
+        //     throw "参数错误!"
+        // }
+        // if (this.element instanceof HTMLImageElement) {
+        //     this.base64Str = toBase64(this.element);
+        // }
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {

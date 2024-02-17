@@ -526,6 +526,16 @@ function swapElements<F>(arr: F[], index1 = 0, index2 = 0) {
     arr[index2] = temp;
 }
 
+function isBase64(str: string) {
+    try {
+        const decodedStr = atob(str);
+        // 如果解码成功，再判断解码后的字符串是否等于原始字符串
+        return btoa(decodedStr) === str;
+    } catch (error) {
+        return false; // 解码失败则认为不是Base64
+    }
+}
+
 export {
     getMousePos,
     getUuid,
@@ -561,4 +571,5 @@ export {
     getRectPoint,
     getPntsInEllipse,
     swapElements,
+    isBase64,
 }

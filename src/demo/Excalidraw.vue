@@ -445,12 +445,8 @@ function onSelectTool(index = 0, param?: any) {
                     })
                     reader.onload = function () {
                         message.info("点击画布创建吧!")
-                        let imgEle = new Image();
-                        imgEle.src = reader.result as string;
-                        imgEle.onload = () => {
-                            let img = new Img(imgEle, 0, 0, 50, 50 * imgEle.height / imgEle.width);
-                            gls?.click2DrawByClick(img)
-                        }
+                        let img = new Img(reader.result as string, 0, 0);
+                        gls?.click2DrawByClick(img)
                     }
                 }
             });
@@ -528,13 +524,6 @@ function onImportFile() {
             reader.onload = function () {
                 let features = JSON.parse(JSON.parse(reader.result as string))
                 gls?.loadData(features);
-                // let imgEle = new Image();
-                // imgEle.src = reader.result as string;
-                // console.log(reader.result, "reader.result");
-                // imgEle.onload = () => {
-                //     let img = new Img(imgEle, 0, 0, 50, 30);
-                //     gls?.click2DrawByClick(img, true)
-                // }
             }
         }
     });
@@ -551,7 +540,7 @@ function startTime(gls: GridSystem) {
 }
 
 function reset(clear = false) {
-    if (clear) localStorage.setItem("features", []);
+    if (clear) localStorage.setItem("features", '');
     if (gls) {
         gls.destroy();
         gls = null;
