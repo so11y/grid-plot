@@ -258,11 +258,11 @@
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="合并为组"
                                 @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
-                                <i class="iconfont gls-bihe"></i>
+                                <i class="iconfont gls-hebing"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="复制图片"
+                            <a-button style="background-color: hsl(240 25% 96%)" title="复制为图片到剪贴板"
                                 @click="gls?.copyImageToClipboard(gls.getFocusNode())">
-                                <i class="iconfont gls-bihe"></i>
+                                <i class="iconfont gls-fuzhitupian"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -560,7 +560,6 @@ function reset(clear = false) {
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls = new GridSystem(canvasDom);
     // gls.loadData();
-    gls.enableStack();
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
@@ -588,7 +587,8 @@ function reset(clear = false) {
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
-
+    
+    gls.enableStack();
 }
 
 function linkTo(url: string) {

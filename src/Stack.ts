@@ -32,6 +32,8 @@ class Stack {
     // [featuresArr1, featuresArr2, featuresArr3]
 
     undo() {
+        console.log(111);
+        
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
         if (!prevFeaturesPropsArr) return;

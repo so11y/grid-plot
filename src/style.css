@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_nxadyi1jppf.woff2?t=1707998956179') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_nxadyi1jppf.woff?t=1707998956179') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_nxadyi1jppf.ttf?t=1707998956179') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_nxadyi1jppf.svg?t=1707998956179#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.woff2?t=1708167481150') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.woff?t=1708167481150') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.ttf?t=1708167481150') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.svg?t=1708167481150#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,18 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-hebing:before {
+  content: "\e60d";
+}
+
+.gls-fuzhitupian:before {
+  content: "\e62b";
+}
+
+.gls-SVG:before {
+  content: "\e621";
 }
 
 .gls-jiahao:before {
@@ -201,8 +213,6 @@
 .gls-wenzi:before {
   content: "\e616";
 }
-
-
 
 
 ul, li, body {

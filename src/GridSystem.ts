@@ -146,10 +146,13 @@ class GridSystem {
         GridSystem.Shortcuts = new Shortcuts();
         GridSystem.Shortcuts.addEvent('del', () => {
             this.removeFeature(this.getFocusNode(), true)
-            this.enableBbox(null)
         })
-        GridSystem.Shortcuts.addEvent(["shift", "z"], () => GridSystem.Stack && GridSystem.Stack.undo.bind(this))
-        GridSystem.Shortcuts.addEvent(["shift", "y"], () => GridSystem.Stack && GridSystem.Stack.restore.bind(this))
+        GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
+        GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
+        GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
+        GridSystem.Shortcuts.addEvent(["ctrl"], () => {
+            console.log(111);
+        })
     }
 
     private mouseMove = (e: any) => {
@@ -514,6 +517,12 @@ class GridSystem {
             feature = this.features.find(ff => ff.id == f)
         }
         if (feature) {
+            let bbox = this.features.find(f => f instanceof Bbox) as Bbox | undefined;
+            if (bbox && bbox.target === feature) {
+                setTimeout(() => {
+                    this.enableBbox(null)
+                }, 10);
+            }
             feature.destroy();
             feature.ondelete();
             this.features = this.features.filter(f => f != feature);
@@ -1212,7 +1221,7 @@ class GridSystem {
     }
 
     // 复制元素为png到剪贴板
-    copyImageToClipboard(feature?: BasicFeature) {
+    copyImageToClipboard(feature?: BasicFeature, padding = 20) {
         if (!feature) return;
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
@@ -1235,19 +1244,19 @@ class GridSystem {
             const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
             let pointArr = feature.pointArr.map(p => this.getPixelPos(p))
             let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
-            canvas.width = Math.abs(rightTop.x - leftTop.x);
-            canvas.height = Math.abs(leftTop.y - leftBottom.y);
+            let lineWidth = this.getRatioSize(feature.lineWidth);
+            canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
+            canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
             // 将多边形移动到Canvas的左上角  
             pointArr.forEach(point => {
-                point.x -= leftTop.x;  // 水平方向移动到左侧边界
-                point.y -= leftTop.y; // 垂直方向移动到顶部边界  
+                point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
             });
             ctx.fillStyle = this.backgroundColor
             ctx.fillRect(0, 0, canvas.width, canvas.height)
-            let lineWidth = this.getRatioSize(feature.lineWidth);
             feature.draw(ctx, pointArr, lineWidth);
             if (feature.children) {
-                drawChildren(ctx, feature.children, leftTop);
+                drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
             }
             canvas.toBlob(blob => {
                 // 使用剪切板API进行复制
@@ -1266,6 +1275,55 @@ class GridSystem {
     }
     // 复制元素为svg到剪贴板
     copySvgToClipboard() { }
+
+    // 读取剪贴板内容生成文字或图片
+    async clipboard2Feature() {
+        try {
+            const clipboardData = await navigator.clipboard.read();
+            let mousPos = this.getRelativePos(getMousePos(this.dom, this.mousePos))
+            // 判断剪贴板数据类型为图像
+            if (clipboardData && clipboardData[0].types.includes('image/png') || clipboardData[0].types.includes('image/jpeg')) {
+                console.log(clipboardData, "clipboardData");
+                let index = clipboardData[0].types.findIndex(type => type === 'image/png' || type === 'image/jpeg');
+                // 将图像转换成Blob对象
+                const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
+                const reader = new FileReader();
+                reader.readAsDataURL(imageBlob);
+                reader.onload = () => {
+                    let dataUrl = reader.result as string;
+                    console.log(dataUrl, "dataUrl");
+
+                    if (dataUrl) {
+                        let imgEle = new Image();
+                        imgEle.src = dataUrl;
+                        imgEle.onload = () => {
+                            let img = new Img(imgEle, mousPos.x, mousPos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
+                            this.addFeature(img);
+                        }
+                    }
+                }
+                return;
+            }
+            // 判断剪贴板数据类型为文本
+            if (clipboardData && clipboardData[0]?.types.includes('text/plain')) {
+                let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
+                const reader = new FileReader();
+                reader.readAsText(textBlob);
+                reader.onload = () => {
+                    let txt = reader.result as string
+                    if (txt && txt.length > 0) {
+                        let text = new Text(txt, mousPos.x, mousPos.y)
+                        text.fitSize = true;
+                        this.addFeature(text);
+                    }
+                }
+                return;
+            }
+        } catch (error) {
+            console.error('Failed to read clipboard content: ', error);
+            return null;
+        }
+    }
 
     destroy() {
         cancelAnimationFrame(this.timer);

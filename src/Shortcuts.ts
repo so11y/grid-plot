@@ -77,12 +77,12 @@ export default class Shortcuts {
             kns = [kns]
         }
         let keyNames = kns.map(kn => kn.toString().toUpperCase());
-        if (keyNames.length == 1 && (keyNames[0] === 'CTRL' || keyNames[0] === 'SHIFT' || keyNames[0] === 'ALT')) {
-            throw new Error("快捷键不能只有CTRL或SHIFT或ALT一个!");
-        }
-        if (keyNames.filter(kn => kn !== 'CTRL' && kn !== 'SHIFT' && kn !== 'ALT').length != 1) {
-            throw new Error("主键不能有多个!");
-        }
+        // if (keyNames.length == 1 && (keyNames[0] === 'CTRL' || keyNames[0] === 'SHIFT' || keyNames[0] === 'ALT')) {
+        //     throw new Error("快捷键不能只有CTRL或SHIFT或ALT一个!");
+        // }
+        // if (keyNames.filter(kn => kn !== 'CTRL' && kn !== 'SHIFT' && kn !== 'ALT').length != 1) {
+        //     throw new Error("主键不能有多个!");
+        // }
         this.typeArr.push({
             ctrl: keyNames.includes("CTRL"),
             shift: keyNames.includes("SHIFT"),
@@ -111,6 +111,7 @@ export default class Shortcuts {
                 }
             }
             if (e.keyCode === keyCodeMap.get(ta.mainKey)) {
+                console.log("触发");
                 ta.cb()
             }
         })
