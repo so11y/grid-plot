@@ -3,14 +3,11 @@ import Rect from "./Rect";
 
 class Img extends Rect {
 
-    element: HTMLImageElement | HTMLVideoElement | null = null;  // 图片dom元素
-    src: string // 图片地址
+    element: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
+    src: string // 图片/视频的地址
 
     /**
-     * 
-     * @param src 如果是html标签就传入.src属性, 如果是base64直接传入
-     * @param x 
-     * @param y 
+     * @param src 如果是html标签就传入.src属性, 如果是base64直接传入, 
      */
     constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
         super(x, y, width, height);
@@ -28,7 +25,6 @@ class Img extends Rect {
                     this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
                 });
             }
-
             this.mousedownEvents.push(() => {
                 video.play();
             })
@@ -43,20 +39,6 @@ class Img extends Rect {
         } else {
             throw "参数错误!"
         }
-        // this.src = this.element;
-        // else if (src instanceof HTMLImageElement) {
-        //     this.element = src;
-        // } else if (src instanceof HTMLVideoElement) {
-        //     this.element = src;
-        //     // document.body.appendChild(this.element);
-        //     // this.element.style.display = "none";
-        //     // this.element.play();
-        // } else {
-        //     throw "参数错误!"
-        // }
-        // if (this.element instanceof HTMLImageElement) {
-        //     this.base64Str = toBase64(this.element);
-        // }
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
