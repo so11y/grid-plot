@@ -143,6 +143,30 @@ class GridSystem {
         this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
+        this.dom.ondrop = (e: any) => {
+            //取得拖进来的文件
+            var data = e.dataTransfer;
+            console.log(data.files);
+            if(data.files && (data.files[0].type === 'image/png' || data.files[0].type === 'image/jpeg' )){
+                const reader = new FileReader();
+                reader.readAsDataURL(data.files[0]);
+                reader.onload = () => {
+                    let dataUrl = reader.result as string;
+                    console.log(dataUrl, "dataUrl");
+                    if (dataUrl) {
+                        let imgEle = new Image();
+                        imgEle.src = dataUrl;
+                        imgEle.onload = () => {
+                            let pos = this.getRelativePos(getMousePos(this.dom, {x: e.clientX, y: e.clientY}))
+                            let img = new Img(imgEle, pos.x, pos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
+                            this.addFeature(img);
+                        }
+                    }
+                }
+            }
+        }
+        document.ondragover = function (e) { e.preventDefault(); };
+        document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
         GridSystem.Shortcuts.addEvent('del', () => {
             this.removeFeature(this.getFocusNode(), true)
@@ -1141,13 +1165,13 @@ class GridSystem {
         }
     }
     // -------------------保存画布状态,读取画布状态---------------------------
-    save(featurePropsArr: Props[]) {
+    save(featurePropsArr?: Props[]) {
         if (!featurePropsArr) {
             featurePropsArr = [];
             this.features.forEach(f => {
                 if (this.isBasicFeature(f)) {
                     let fProps = this.recordFeature(f as BasicFeature);
-                    featurePropsArr.push(fProps)
+                    featurePropsArr && featurePropsArr.push(fProps)
                 }
             })
         }
@@ -1277,47 +1301,48 @@ class GridSystem {
     copySvgToClipboard() { }
 
     // 读取剪贴板内容生成文字或图片
-    async clipboard2Feature() {
+    async clipboard2Feature(pos = getMousePos(this.dom, this.mousePos)) {
         try {
             const clipboardData = await navigator.clipboard.read();
-            let mousPos = this.getRelativePos(getMousePos(this.dom, this.mousePos))
+            pos = this.getRelativePos(pos)
             // 判断剪贴板数据类型为图像
-            if (clipboardData && clipboardData[0].types.includes('image/png') || clipboardData[0].types.includes('image/jpeg')) {
+            if (clipboardData) {
                 console.log(clipboardData, "clipboardData");
                 let index = clipboardData[0].types.findIndex(type => type === 'image/png' || type === 'image/jpeg');
-                // 将图像转换成Blob对象
-                const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
-                const reader = new FileReader();
-                reader.readAsDataURL(imageBlob);
-                reader.onload = () => {
-                    let dataUrl = reader.result as string;
-                    console.log(dataUrl, "dataUrl");
-
-                    if (dataUrl) {
-                        let imgEle = new Image();
-                        imgEle.src = dataUrl;
-                        imgEle.onload = () => {
-                            let img = new Img(imgEle, mousPos.x, mousPos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
-                            this.addFeature(img);
+                if (index > -1) {
+                    // 将图像转换成Blob对象
+                    const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(imageBlob);
+                    reader.onload = () => {
+                        let dataUrl = reader.result as string;
+                        console.log(dataUrl, "dataUrl");
+                        if (dataUrl) {
+                            let imgEle = new Image();
+                            imgEle.src = dataUrl;
+                            imgEle.onload = () => {
+                                let img = new Img(imgEle, pos.x, pos.y, this.getRelativeLen(imgEle.width), this.getRelativeLen(imgEle.height))
+                                this.addFeature(img);
+                            }
                         }
                     }
+                    return;
                 }
-                return;
-            }
-            // 判断剪贴板数据类型为文本
-            if (clipboardData && clipboardData[0]?.types.includes('text/plain')) {
-                let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
-                const reader = new FileReader();
-                reader.readAsText(textBlob);
-                reader.onload = () => {
-                    let txt = reader.result as string
-                    if (txt && txt.length > 0) {
-                        let text = new Text(txt, mousPos.x, mousPos.y)
-                        text.fitSize = true;
-                        this.addFeature(text);
+                // 判断剪贴板数据类型为文本
+                if (clipboardData[0]?.types.includes('text/plain')) {
+                    let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
+                    const reader = new FileReader();
+                    reader.readAsText(textBlob);
+                    reader.onload = () => {
+                        let txt = reader.result as string
+                        if (txt && txt.length > 0) {
+                            let text = new Text(txt, pos.x, pos.y)
+                            text.fitSize = true;
+                            this.addFeature(text);
+                        }
                     }
+                    return;
                 }
-                return;
             }
         } catch (error) {
             console.error('Failed to read clipboard content: ', error);

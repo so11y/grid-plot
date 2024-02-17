@@ -371,7 +371,6 @@ const isShowRightClickPanel = ref(false);
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
 const env = import.meta.env;
-
 onMounted(() => {
     reset();
     gl = new GridLine();
@@ -587,7 +586,7 @@ function reset(clear = false) {
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
-    
+
     gls.enableStack();
 }
 
@@ -649,7 +648,6 @@ function modifyFillStyle(color: string) {
         focuseNode.fillStyle = focuseNode.hoverStyle = focuseNode.focusStyle = color;
     }
 }
-
 </script>
 
 <style scoped lang="less">

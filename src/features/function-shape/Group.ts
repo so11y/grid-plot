@@ -15,6 +15,9 @@ export default class Group extends Rect {
         this.closePath = true;
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
+        this.translateEvents.push(()=>{
+            console.log(111);
+        })
     }
 
     toResize(features: BasicFeature[]) {
