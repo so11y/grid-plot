@@ -19,17 +19,17 @@ class Img extends Rect {
                 this.element.src = src;
                 this.element.style.display = "none";
                 this.element.play();
-            } else {
+            } else if(src.indexOf('.png')){
                 this.element = new Image();
                 this.element.src = src;
-                this.element.onload = () => {
-                    // this.ratio = this.element.width / this.element.height;
-                }
+                // this.element.onload = () => {
+                // }
+            }else {
+            throw "参数错误!"
             }
             this.src = this.element;
         } else if (src instanceof HTMLImageElement) {
             this.element = src;
-            // this.ratio = this.element.width / this.element.height;
         } else if (src instanceof HTMLVideoElement) {
             this.element = src;
             document.body.appendChild(this.element);

@@ -14,8 +14,8 @@ class Feature {
     pointArr: IPoint[] = [];
     fillStyle: string = '#ffec99';
     strokeStyle: string = '#f08c00';
-    hoverStyle: string = '#ffec99';
-    focusStyle: string = '#ffec99';
+    hoverStyle: string = '#fff1b5';
+    focusStyle: string = '#fff1b5';
     zIndex: number = 0;
     lineWidth: number = .5;
     lineCap: CanvasLineCap = "round"   // butt, round, square
@@ -267,6 +267,7 @@ class Feature {
 
     addFeature(feature?: BasicFeature, cbSelect = true) {
         if (!feature) return;
+        if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;

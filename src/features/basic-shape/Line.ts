@@ -44,16 +44,17 @@ class Line extends Feature {
                     ctx.stroke();
                 }
             });
-        } else {
-            ctx.beginPath();
-            pointArr.forEach((p, i) => {
-                if (i == 0) {
-                    path.moveTo(p.x, p.y)
-                } else {
-                    path.lineTo(p.x, p.y)
-                }
-            })
-            this.closePath && path.closePath()
+        }
+        ctx.beginPath();
+        pointArr.forEach((p, i) => {
+            if (i == 0) {
+                path.moveTo(p.x, p.y)
+            } else {
+                path.lineTo(p.x, p.y)
+            }
+        })
+        this.closePath && path.closePath()
+        if(!this.isFreeStyle){
             if (this.isPointIn) {
                 ctx.strokeStyle = this.hoverStyle;
                 if (this.gls.focusNode === this) {
@@ -62,15 +63,17 @@ class Line extends Feature {
             } else {
                 ctx.strokeStyle = this.strokeStyle;
             }
-            ctx.lineCap = this.lineCap;
-            ctx.lineJoin = this.lineJoin;
-            ctx.lineDashOffset = this.lineDashOffset;
-            this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr);
-            ctx.lineWidth = lineWidth;
-            ctx.stroke(path);
-            ctx.fillStyle = this.fillStyle
-            this.closePath && ctx.fill(path);
+        }else {
+            ctx.strokeStyle ="transparent"
         }
+        ctx.lineCap = this.lineCap;
+        ctx.lineJoin = this.lineJoin;
+        ctx.lineDashOffset = this.lineDashOffset;
+        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr);
+        ctx.lineWidth = lineWidth;
+        ctx.stroke(path);
+        ctx.fillStyle = this.fillStyle
+        this.closePath && ctx.fill(path);
         this.setPointIn(ctx, path);
         ctx.restore()
         return path;

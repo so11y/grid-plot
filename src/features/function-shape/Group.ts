@@ -11,7 +11,7 @@ export default class Group extends Rect {
         this.toResize(features);
         this.className = 'Group';
         this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
-        this.isStroke = true;
+        this.isStroke = false;
         this.closePath = true;
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;

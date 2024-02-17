@@ -133,6 +133,7 @@ class GridSystem {
             // f.isOverflowHidden && this.ctx.clip(path);
             this.ctx.restore();
         })
+        // console.log(this.features.filter(f => this.isBasicFeature(f)).length, "features");
     }
 
     initEventListener() {
@@ -901,6 +902,7 @@ class GridSystem {
         }
     }
 
+    // ---------------------开启或关闭历史记录, bbox, 区域选择
     enableStack(enabled: boolean = true) {
         if (!enabled) {
             GridSystem.Stack?.destory();
@@ -914,7 +916,6 @@ class GridSystem {
             }
         }
     }
-
     enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
         let bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
@@ -923,7 +924,6 @@ class GridSystem {
             return nbbox;
         }
     }
-
     enableSelectArea(bool = true) {
         let sa = this.features.find(f => f instanceof SelectArea);
         this.removeFeature(sa, false);
@@ -934,9 +934,11 @@ class GridSystem {
         }
     }
 
+    // -------------------创建feature, 修改feature属性, 读取feature属性---------------------------
     createFeature(props: Props, newProps?: Partial<Props>) {
         newProps && (props = Object.assign({}, props, newProps));
         let feature: BasicFeature | undefined;
+        if (this.features.find(f => f.id === props.id)) return;
         switch (props.className) {
             case 'Img':
                 if (props.position && props.size) {
@@ -994,11 +996,12 @@ class GridSystem {
         }
         if (feature) {
             if (props.id) {
-                this.setFeatureProps(feature, props);
+                this.modifyFeature(feature, props);
                 this.addFeature(feature, false);
                 if (props.children) {
                     props.children.forEach(cfProp => {
-                        feature && feature.addFeature(this.createFeature(cfProp), false)
+                        let cf = this.features.find(f => f.id === cfProp.id);
+                        feature && feature.addFeature(cf as BasicFeature || this.createFeature(cfProp), false)
                     })
                     if (feature instanceof Group) {  // gourp添加子元素需要resize
                         feature.toResize(feature.children);
@@ -1011,7 +1014,7 @@ class GridSystem {
         return feature;
     }
 
-    setFeatureProps(feature: BasicFeature, props: Props) {
+    modifyFeature(feature: BasicFeature, props: Props) {
         props.id && (feature.id = props.id);
         props.className && (feature.className = props.className)
         if (props.pointArr) {
@@ -1075,7 +1078,7 @@ class GridSystem {
         return feature;
     }
 
-    recordFeatureProps(f: BasicFeature): Props {
+    recordFeature(f: BasicFeature): Props {
         return {
             id: f.id,
             className: f.className,
@@ -1122,11 +1125,41 @@ class GridSystem {
             isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
             lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
 
-            children: f.children.map(cf => this.recordFeatureProps(cf as BasicFeature)) as Props[],
+            children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
+            // parent: f.parent ? f.parent.id: '',
             // startFeatureId: f instanceof Link ? f.startFeatureId : '',
             // endFeatureId: f instanceof Link ? f.endFeatureId : '',
         }
     }
+    // -------------------保存画布状态,读取画布状态---------------------------
+    save(featurePropsArr: Props[]) {
+        if (!featurePropsArr) {
+            featurePropsArr = [];
+            this.features.forEach(f => {
+                if (this.isBasicFeature(f)) {
+                    let fProps = this.recordFeature(f as BasicFeature);
+                    featurePropsArr.push(fProps)
+                }
+            })
+        }
+        let str = JSON.stringify(featurePropsArr);
+        localStorage.setItem("features", str);
+        return str
+    }
+    loadData(featurePropsArr?: Props[]) {
+        if (!featurePropsArr) {
+            try {
+                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
+            } catch (error) {
+                featurePropsArr = []
+            }
+        }
+        featurePropsArr.forEach(fp => {
+            this.createFeature(fp)
+        })
+    }
+
+    // ----------------------复制到剪切板---------------------------
 
     initAnchorPnts() {
         this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
@@ -1178,33 +1211,61 @@ class GridSystem {
         this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
     }
 
-    save(featurePropsArr: Props[]) {
-        if (!featurePropsArr) {
-            featurePropsArr = [];
-            this.features.forEach(f => {
-                if (this.isBasicFeature(f)) {
-                    let fProps = this.recordFeatureProps(f as BasicFeature);
-                    featurePropsArr.push(fProps)
+    // 复制元素为png到剪贴板
+    copyImageToClipboard(feature?: BasicFeature) {
+        if (!feature) return;
+        // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
+        var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
+            features.forEach(cf => {
+                let pointArr = cf.pointArr.map(p => this.getPixelPos(p))
+                // 将多边形移动到Canvas的左上角  
+                pointArr.forEach(point => {
+                    point.x -= offset.x;  // 水平方向移动到左侧边界
+                    point.y -= offset.y; // 垂直方向移动到顶部边界  
+                });
+                let lineWidth = this.getRatioSize(cf.lineWidth);
+                cf.draw(ctx, pointArr, lineWidth);
+                if (cf.children) {
+                    drawChildren(ctx, cf.children, offset)
                 }
-            })
+            });
         }
-        let str = JSON.stringify(featurePropsArr);
-        localStorage.setItem("features", str);
-        return str
-    }
-
-    loadData(featurePropsArr?: Props[]) {
-        if (!featurePropsArr) {
-            try {
-                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
-            } catch (error) {
-                featurePropsArr = []
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+            let pointArr = feature.pointArr.map(p => this.getPixelPos(p))
+            let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+            canvas.width = Math.abs(rightTop.x - leftTop.x);
+            canvas.height = Math.abs(leftTop.y - leftBottom.y);
+            // 将多边形移动到Canvas的左上角  
+            pointArr.forEach(point => {
+                point.x -= leftTop.x;  // 水平方向移动到左侧边界
+                point.y -= leftTop.y; // 垂直方向移动到顶部边界  
+            });
+            ctx.fillStyle = this.backgroundColor
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+            let lineWidth = this.getRatioSize(feature.lineWidth);
+            feature.draw(ctx, pointArr, lineWidth);
+            if (feature.children) {
+                drawChildren(ctx, feature.children, leftTop);
             }
-        }
-        featurePropsArr.forEach(fp => {
-            this.createFeature(fp)
+            canvas.toBlob(blob => {
+                // 使用剪切板API进行复制
+                const data = [new ClipboardItem({
+                    ['image/png']: blob
+                })];
+
+                navigator.clipboard.write(data).then(() => {
+                    console.log("复制成功!");
+                    resolve(1)
+                }, () => {
+                    reject(0)
+                })
+            });
         })
     }
+    // 复制元素为svg到剪贴板
+    copySvgToClipboard() { }
 
     destroy() {
         cancelAnimationFrame(this.timer);
