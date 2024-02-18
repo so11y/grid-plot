@@ -173,12 +173,12 @@
                         <div class="title">圆角大小</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls?.focusNode && gls.focusNode instanceof Rect && (gls.focusNode.radius = 0) }"
+                                @click="modifyRadius(0)"
                                 title="直角">
                                 <i class="iconfont gls-zhijiao"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls?.focusNode && gls.focusNode instanceof Rect && (gls.focusNode.radius = .5) }"
+                                @click="modifyRadius(0.5)"
                                 title="圆角">
                                 <i class="iconfont gls-yuanjiao"></i>
                             </a-button>
@@ -187,7 +187,7 @@
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" v-model:value="props.radius" :step=".1" :min="0" :max="1"
                                 style="width: 100px;"
-                                @change="(e: any) => { gls?.focusNode && gls.focusNode instanceof Rect && (gls.focusNode.radius = e) }" />
+                                @change="modifyRadius(e)" />
                         </a-row>
                     </li>
                     <li>
@@ -354,6 +354,7 @@ import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 import { BasicFeature } from "@/Interface";
+
 const cvs = ref(null);
 const rPanel = ref(null);
 const activeI = ref(-1);
@@ -419,6 +420,8 @@ function onSelectTool(index = 0, param?: any) {
                 let line = new Line();
                 line.isFreeStyle = true;
                 line.strokeStyle = "#000"
+                line.hoverStyle = "#666"
+                line.focusStyle = "#666"
                 if (!!param) { line.strokeStyle = '#F96363' }
                 cb = gls?.click2DrawByMove(line, !!param, () => {
                     click2DrawByMove();
@@ -551,27 +554,29 @@ function reset(clear = false) {
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
-    let rect = new Rect(100, 100, 100, 100)
+    let rect = new Circle(100, 100, 100, 100)
     // rect.fillStyle = "transparent"
-    // rect.isOverflowHidden = true;
+    rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    const text = new Text("你好世界", 100, 100, 100, 10);
+    const text = new Text("你好世界", 50, 100, 100, 10);
     text.fitSize = true;
     gls.addFeature(text, false);
     rect.addFeature(text);
 
-    let rect2 = new Rect(150, 150, 50, 50)
-    rect2.fillStyle = "transparent"
-    gls.addFeature(rect2, false)
+    // let rect2 = new Rect(150, 150, 50, 50)
+    // rect2.fillStyle = "transparent"
+    // gls.addFeature(rect2, false)
 
-    let rect4 = new Rect(200, 200, 50, 50)
-    gls.addFeature(rect4, false)
+    // let rect4 = new Rect(200, 200, 50, 50)
+    // gls.addFeature(rect4, false)
 
-    let circle = new Circle(180, 180, 30, 30)
-    gls.addFeature(circle, false)
+    // let circle = new Circle(180, 180, 30, 30)
+    // gls.addFeature(circle, false)
 
-    let group = new Group([rect, rect2])
-    gls.addFeature(group, false)
+    // let group = new Group([rect, rect2])
+    // gls.addFeature(group, false)
+    // console.log(group, rect, rect2);
+    
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
@@ -637,6 +642,14 @@ function modifyFillStyle(color: string) {
         focuseNode.fillStyle = focuseNode.hoverStyle = focuseNode.focusStyle = color;
     }
 }
+
+function modifyRadius(radius: number) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && focuseNode instanceof Rect) {
+        focuseNode.radius = radius;
+    }
+}
+
 </script>
 
 <style scoped lang="less">

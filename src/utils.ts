@@ -536,6 +536,13 @@ function isBase64(str: string) {
     }
 }
 
+// 获取字符串大小
+function getSizeInBytes(str:string) {
+    var binaryString = window.atob(str); // 将Base64字符串转换为二进制字符串
+    return binaryString.length; // 返回二进制字符串的长度（单位为字节）
+}
+ 
+
 export {
     getMousePos,
     getUuid,
@@ -572,4 +579,5 @@ export {
     getPntsInEllipse,
     swapElements,
     isBase64,
+    getSizeInBytes,
 }

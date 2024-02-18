@@ -39,7 +39,15 @@ class Line extends Feature {
                     ctx.moveTo(lastX, lastY);
                     ctx.quadraticCurveTo(centerX, centerY, x, y);
                     ctx.lineWidth = this.gls.getRatioSize(this.lineWidthArr[i] || this.lineWidthArr[i - 1] || .2);
-                    ctx.strokeStyle = this.strokeStyle;
+                    if (this.isPointIn) {
+                        ctx.strokeStyle = this.hoverStyle;
+                        if (this.gls.focusNode === this) {
+                            ctx.strokeStyle = this.focusStyle;
+                        }
+                    } else {
+                        ctx.strokeStyle = this.strokeStyle;
+                    }
+                    // ctx.strokeStyle = this.strokeStyle;
                     ctx.lineCap = this.lineCap;
                     ctx.stroke();
                 }

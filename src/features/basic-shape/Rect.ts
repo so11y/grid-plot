@@ -30,6 +30,8 @@ class Rect extends Feature {
         } else {
             this.setChildAngle(ctx, pointArr);
             const { width, height, leftTop } = this.getSize(pointArr);
+            console.log(radius, "radius");
+            // path.roundRect(leftTop.x, leftTop.y, width, height, radius, radius);
             this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
         ctx.save()

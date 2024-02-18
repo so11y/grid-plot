@@ -54,6 +54,7 @@ class Text extends Rect {
                 this.toFitWarpSize(width);
             }
         })
+        this.resize();
     }
 
     // 初始化, 文字自适应宽高

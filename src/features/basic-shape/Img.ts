@@ -1,3 +1,4 @@
+import { getSizeInBytes } from "@/utils";
 import { IPoint, Src } from "../../Interface";
 import Rect from "./Rect";
 
@@ -10,6 +11,22 @@ class Img extends Rect {
      * @param src 如果是html标签就传入.src属性, 如果是base64直接传入, 
      */
     constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
+        console.log(new Path2D());
+        
+        if(encodeURIComponent(src).replace(/%../g,"x").length > 500000){
+            throw "只支持0.5M一下的文件!"   
+        }
+        try {
+            var binaryString = window.atob(src); // 将Base64字符串转换为二进制字符串
+            console.log(binaryString);
+        } catch (error) {
+            console.log(error);
+        }
+        // console.log(src, "getSizeInBytes(src)");
+
+        // if(getSizeInBytes(src)){
+        //     throw "信息量太大,不支持创建!"            
+        // }
         super(x, y, width, height);
         this.className = "Img";
         this.src = src;

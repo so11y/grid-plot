@@ -104,9 +104,10 @@ class GridSystem {
 
     // --------------------以下是私有的方法----------------------------
     // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features) {
+    drawFeatures(features: Feature[] = this.features, isChild?: boolean) {
         features.forEach(f => {
             if (f.hidden) return;
+            if (this.isBasicFeature(f) && f.parent && isChild) return
             let pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
                 let [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
@@ -121,7 +122,7 @@ class GridSystem {
             }
             Feature.TargetRender = this;
             let lineWidth = this.getRatioSize(f.lineWidth);
-            this.ctx.save();
+            // this.ctx.save();
             let path;
             if (f instanceof Rect) {
                 let radius = this.getRatioSize(f.radius);
@@ -129,9 +130,11 @@ class GridSystem {
             } else {
                 path = f.draw(this.ctx, pointArr, lineWidth);
             }
+            f.isOverflowHidden && this.ctx.clip(path);
+            let children = this.features.filter(cf => cf.parent === f && this.isBasicFeature(f));  // 找出子元素
+            if(children.length > 0) this.drawFeatures(children, true);
             f.ondraw && f.ondraw()
-            // f.isOverflowHidden && this.ctx.clip(path);
-            this.ctx.restore();
+            // this.ctx.restore();
         })
         // console.log(this.features.filter(f => this.isBasicFeature(f)).length, "features");
     }
