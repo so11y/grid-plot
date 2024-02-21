@@ -8,34 +8,38 @@ class Rect extends Feature {
     isFixedSize: boolean = false; // 是否固定大小
 
     constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
-        let points = getRectPoint({x, y}, {width, height})
+        let points = getRectPoint({ x, y }, { width, height })
         super(points);
         this.className = "Rect";
         this.position.x = x;
         this.position.y = y;
         this.size.width = width;
         this.size.height = height;
+        this.closePath = true;
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = new Path2D();
-        if (radius == 0) {
-            pointArr.forEach((p, i) => {
-                if (i == 0) {
-                    path.moveTo(p.x, p.y)
-                } else {
-                    path.lineTo(p.x, p.y)
-                }
-            })
+        // if (radius == 0) {
+        //     pointArr.forEach((p, i) => {
+        //         if (i == 0) {
+        //             path.moveTo(p.x, p.y)
+        //         } else {
+        //             path.lineTo(p.x, p.y)
+        //         }
+        //     })
+        // } else {
+        const { width, height, leftTop } = this.getSize(pointArr);
+        if (this.isFixedSize) {
+            path.roundRect(leftTop.x + this.size.width / 2, leftTop.y + this.size.height / 2, this.size.width, this.size.height, this.radius, this.radius);
         } else {
-            this.setChildAngle(ctx, pointArr);
-            const { width, height, leftTop } = this.getSize(pointArr);
-            console.log(radius, "radius");
-            // path.roundRect(leftTop.x, leftTop.y, width, height, radius, radius);
-            this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+            path.roundRect(leftTop.x, leftTop.y, width, height, radius, radius);
+            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+            ctx.lineWidth = lineWidth;
         }
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
-        this.closePath && path.closePath()
+        // this.closePath && path.closePath()
         this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.globalAlpha = this.opacity;
@@ -50,11 +54,9 @@ class Rect extends Feature {
         } else {
             ctx.fillStyle = this.fillStyle;
         }
-        ctx.lineWidth = lineWidth;
+        this.setChildAngle(ctx, pointArr);
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-        
         ctx.restore();
         return path;
     }
@@ -77,7 +79,7 @@ class Rect extends Feature {
         this.position.x = x;
         this.position.y = y;
         this.pointArr = getRectPoint(this.position, this.size);
-    } 
+    }
 
     setSize = (width: number = this.size.width, height: number = this.size.height) => {
         this.size.width = width;
@@ -113,6 +115,32 @@ class Rect extends Feature {
         let { width, height } = this.getSize()
         return width / height;
     }
+
+    getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
+        if (this.isFixedSize) {
+            const leftTop = pointArr[0]
+            pointArr = [
+                { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.height / 4 },
+                { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 4 },
+                { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 2 + this.size.width / 4 },
+                { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.width / 4 },
+            ]
+        }
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (let point of pointArr) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+        }
+
+        return [minX, maxX, minY, maxY];
+    }
+
 }
 
 export default Rect;

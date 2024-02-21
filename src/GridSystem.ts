@@ -86,7 +86,9 @@ class GridSystem {
     }
 
     draw(loop = true, fn?: Function) {
+        // console.log("clear");
         // console.time();
+
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
@@ -104,10 +106,11 @@ class GridSystem {
 
     // --------------------以下是私有的方法----------------------------
     // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features, isChild?: boolean) {
+    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
         features.forEach(f => {
+            const isBasic = this.isBasicFeature(f);
             if (f.hidden) return;
-            if (this.isBasicFeature(f) && f.parent && isChild) return
+            if (isBasic && f.parent && this.isBasicFeature(f.parent) && !isChild) return
             let pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
                 let [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
@@ -122,7 +125,6 @@ class GridSystem {
             }
             Feature.TargetRender = this;
             let lineWidth = this.getRatioSize(f.lineWidth);
-            // this.ctx.save();
             let path;
             if (f instanceof Rect) {
                 let radius = this.getRatioSize(f.radius);
@@ -130,13 +132,15 @@ class GridSystem {
             } else {
                 path = f.draw(this.ctx, pointArr, lineWidth);
             }
-            f.isOverflowHidden && this.ctx.clip(path);
-            let children = this.features.filter(cf => cf.parent === f && this.isBasicFeature(f));  // 找出子元素
-            if(children.length > 0) this.drawFeatures(children, true);
             f.ondraw && f.ondraw()
-            // this.ctx.restore();
+            this.ctx.save();
+            f.isOverflowHidden && this.ctx.clip(path);
+            if (isBasic) {
+                let children = this.features.filter(cf => cf.parent === f && this.isBasicFeature(cf));  // 找出子元素
+                if (children.length > 0) this.drawFeatures(children, true);
+            }
+            this.ctx.restore();
         })
-        // console.log(this.features.filter(f => this.isBasicFeature(f)).length, "features");
     }
 
     initEventListener() {
@@ -174,6 +178,10 @@ class GridSystem {
             x: this.pageSlicePos.x,
             y: this.pageSlicePos.y,
         }
+        let lastTime = Date.now();
+        let velocityX = 0;
+        let velocityY = 0;
+
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
@@ -240,13 +248,22 @@ class GridSystem {
             }
         } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
             mousemove = (e: any) => {
+                const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                let currentTime = Date.now();
+                const deltaTime = currentTime - lastTime;
+                const dx = (px + (moveX - downX) * this.dragingSensitivity) - this.pageSlicePos.x;
+                const dy = (py + (moveY - downY) * this.dragingSensitivity) - this.pageSlicePos.y;
+
+                // 计算速度（单位像素/毫秒）  
+                velocityX = dx / deltaTime;
+                velocityY = dy / deltaTime;
                 GridSystem.lastAndPrevMouseMovePoint.prev_p = GridSystem.lastAndPrevMouseMovePoint.last_p;
                 GridSystem.lastAndPrevMouseMovePoint.last_p = { x: e.clientX, y: e.clientY };
                 this.ondrag && this.ondrag(e);
-                const { x: moveX, y: moveY } = getMousePos(this.dom, e);
                 this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
                 this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
                 this.setPageSliceByExtent(this.extent);
+                lastTime = currentTime;
             }
         }
 
@@ -267,6 +284,33 @@ class GridSystem {
             if (ev.buttons === 2 && this.pageSlicePos.x === curPageSlicePos.x && this.pageSlicePos.y === curPageSlicePos.y) {  // 判断右击
                 document.dispatchEvent(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }));
             }
+
+            // 根据速度计算滑动时间后的最终位置  
+            const slideDuration = 500; // 滑动持续时间，单位毫秒  
+            const finalX = this.pageSlicePos.x + velocityX * slideDuration;
+            const finalY = this.pageSlicePos.y + velocityY * slideDuration;
+
+            // 使用requestAnimationFrame进行平滑过渡  
+            const start = Date.now();
+            console.log(finalX, finalY);
+            
+            // let that = this;
+            // function animate(timestamp) {
+            //     const elapsed = timestamp - start;
+            //     if (elapsed < slideDuration) {
+            //         const progress = elapsed / slideDuration;
+            //         that.pageSlicePos.x = that.pageSlicePos.x + (finalX - that.pageSlicePos.x) * progress
+            //         that.pageSlicePos.y = that.pageSlicePos.y + (finalY - that.pageSlicePos.y) * progress
+            //         // box.style.top = `${box.offsetTop + (finalY - box.offsetTop) * progress}px`;
+            //         requestAnimationFrame(animate);
+            //     } else {
+            //         // 到达最终位置，停止动画  
+            //         that.pageSlicePos.x = finalX;
+            //         that.pageSlicePos.x = finalY;
+            //     }
+            // }
+            requestAnimationFrame(animate);
+
         }
         document.addEventListener("mouseup", mouseup)
         document.addEventListener("mousemove", mousemove)

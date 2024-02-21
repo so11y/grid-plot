@@ -554,12 +554,14 @@ function reset(clear = false) {
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
 
-    let rect = new Circle(100, 100, 100, 100)
+    let rect = new Rect(100, 100, 100, 100)
+    rect.radius = 2;
+    rect.isFixedSize = true;
     // rect.fillStyle = "transparent"
     rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    const text = new Text("你好世界", 50, 100, 100, 10);
-    text.fitSize = true;
+    const text = new Text("测试文本", 60, 80, 100, 10);
+    // text.fitSize = true;
     gls.addFeature(text, false);
     rect.addFeature(text);
 

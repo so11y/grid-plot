@@ -16,7 +16,7 @@ class Text extends Rect {
     fontFamily: FontFamily;
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
-    
+
     fontWeight: number;
     editble: boolean;  // 双击是否可编辑
     alpha: number;
@@ -61,12 +61,12 @@ class Text extends Rect {
     toFitSize() {
         let width = this.gls.getRatioSize(this.fontSize) * this.text.length;
         let height = this.rows * this.gls.getRatioSize(this.fontSize) + this.rows * this.lineHeight;
-        this.setSize(width/2, height/2)
+        this.setSize(width / 2, height / 2)
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
-        ctx.save();
+        // ctx.save();
         this.radius == 0 && this.setChildAngle(ctx, pointArr);
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
@@ -80,7 +80,7 @@ class Text extends Rect {
             this.rows = this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y, lineHeight);
             ctx.restore();
         }
-        ctx.restore();
+        // ctx.restore();
         // if (this.editble) {  // 如果可以编辑, 绘制光标 
         //     ctx.save()
         //     ctx.moveTo(boxInfo.x + ctx.measureText(this.text).width + 5, boxInfo.y - boxInfo.height / 2);
@@ -107,7 +107,7 @@ class Text extends Rect {
             var drawText = (textArr: string[]) => {
                 for (let i = 0; i < textArr.length; i++) {
                     const t = textArr[i];
-                    if (fontSize * (i + 1) > (boxWidth+1)) {
+                    if (fontSize * (i + 1) > (boxWidth + 1)) {
                         liner++;
                         drawText(textArr.slice(i, textArr.length))
                         break;

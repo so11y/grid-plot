@@ -3,6 +3,7 @@ import { BasicFeature, Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
+import Text from "../basic-shape/Text";
 import Feature from "../Feature";
 import AnchorPnt from "./AnchorPnt";
 import BCtrlPnt from "./BCtrlPnt";
@@ -54,6 +55,13 @@ export default class Bbox extends Rect {
 
             let lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             let lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
+            console.log(target);
+            if (target instanceof Text) {
+                target.pntExtentPer.left.push({
+                    x: -lenX / width,
+                    y: -lenY / height,
+                })
+            }
             target.pntExtentPer.left.push({
                 x: lenX / width,
                 y: lenY / height,
@@ -77,11 +85,13 @@ export default class Bbox extends Rect {
     // 初始化添加控制点
     initBCtrlPnt() {
         const pointArr = this.pointArr;
-        pointArr.forEach((p, i) => {
-            let ctrlP = new CtrlPnt(this, i);
-            ctrlP.name = 'ctrl' + i;
-            ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
-        })
+        // if (!this.target.isFixedSize) {
+            pointArr.forEach((p, i) => {
+                let ctrlP = new CtrlPnt(this, i);
+                ctrlP.name = 'ctrl' + i;
+                ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
+            })
+        // }
         // 旋转点
         let bCtrlP1 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
