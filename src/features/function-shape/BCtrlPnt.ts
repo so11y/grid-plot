@@ -25,7 +25,6 @@ class BCtrlPnt extends Rect {
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .2;
-        this.isOnlyCenterAdsorb = true;
         this.dragendEvents.push(this.onUpdateParentVct.bind(this))
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
         this.gls.addFeature(this, false);

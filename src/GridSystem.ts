@@ -852,7 +852,7 @@ class GridSystem {
     // 判断是否时控制点元素
     isCtrlFeature(f?: Feature | null | undefined) {
         if (!f) return false;
-        return f.className == 'CtrlPnt' || f.className == 'BCtrlPnt' || f.className == 'AnchorPnt'
+        return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'CCtrlPnt'
     }
 
     translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {
@@ -957,7 +957,7 @@ class GridSystem {
     enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
         let bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
-        if (f && !f.isFixedSize) {
+        if (f && !f.isFixedSize && f.cbTransform) {
             let nbbox = new Bbox(f);
             return nbbox;
         }

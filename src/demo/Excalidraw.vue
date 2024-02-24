@@ -578,6 +578,21 @@ function reset(clear = false) {
 
     let group = new Group([rect, rect2])
     gls.addFeature(group, false)
+
+    let line = new Line([
+        {x: 10,y: 10},
+        {x: 50,y: 50},
+        {x: 100,y: 70},
+    ])
+    line.cbTransform = false;
+    const text2 = new Text("测试文本", 60, 80, 100, 10);
+    // text2.fitSize = true;
+    gls.addFeature(text2, false);
+    line.addFeature(text2);
+    line.enableCtrlPnts();
+
+    gls.addFeature(line, false)
+
     // console.log(group, rect, rect2);
     
     // setTimeout(() => {

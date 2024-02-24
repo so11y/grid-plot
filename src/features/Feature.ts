@@ -65,6 +65,7 @@ class Feature {
     cbSelect: boolean = true;  // 是否可被选择
     cbMove: boolean = true;  // 是否可被拖拽
     cbAdsorb: boolean = true;
+    cbTransform: boolean = true;  // 是否可被形变
 
     // // 节点事件
     // ondelete: Function | null = null;
@@ -272,7 +273,7 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature?: BasicFeature, cbSelect = true) {
+    addFeature(feature?: BasicFeature, cbSelect = false) {
         if (!feature) return;
         if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
