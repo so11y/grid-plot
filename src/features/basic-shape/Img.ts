@@ -38,7 +38,7 @@ class Img extends Rect {
             this.element.play();
             // 视频加载完成事件
             if (!width && !height) {
-                this.element.addEventListener('loadeddata', () => {
+                this.element.addEventListener('loadeddata', () => {  // 重新设置img大小
                     this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
                 });
             }

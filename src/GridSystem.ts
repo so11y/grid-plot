@@ -153,7 +153,7 @@ class GridSystem {
             e.preventDefault();
         });
         this.dom.ondrop = this.drop2Feature.bind(this);
-        document.ondragover = function (e) { e.preventDefault(); };
+        document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
         GridSystem.Shortcuts.addEvent('del', () => {
@@ -1283,7 +1283,7 @@ class GridSystem {
             let lineWidth = this.getRatioSize(feature.lineWidth);
             canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
             canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
-            // 将多边形移动到Canvas的左上角  
+            // 将多边形移动到Canvas的左上角 
             pointArr.forEach(point => {
                 point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                 point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
@@ -1325,7 +1325,7 @@ class GridSystem {
                     // 将图像转换成Blob对象
                     const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
                     const reader = new FileReader();
-                    reader.readAsDataURL(imageBlob);
+                    reader.readAsDataURL(imageBlob);  // 读取base64
                     reader.onload = () => {
                         let dataUrl = reader.result as string;
                         console.log(dataUrl, "dataUrl");
@@ -1340,7 +1340,7 @@ class GridSystem {
                 if (clipboardData[0]?.types.includes('text/plain')) {
                     let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
                     const reader = new FileReader();
-                    reader.readAsText(textBlob);
+                    reader.readAsText(textBlob);  // 获取文本
                     reader.onload = () => {
                         let txt = reader.result as string
                         if (txt && txt.length > 0) {
@@ -1358,10 +1358,11 @@ class GridSystem {
         }
     }
 
+    // 拖放去添加元素
     drop2Feature(e: any) {
         //取得拖进来的文件
         var data = e.dataTransfer;
-        const files = data.files;
+        const files = data.files;  // file继承与blob
         if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
             let pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
             const reader = new FileReader();
