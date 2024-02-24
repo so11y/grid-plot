@@ -557,13 +557,14 @@ function reset(clear = false) {
     let rect = new Rect(100, 100, 100, 100)
     rect.radius = 2;
     rect.isFixedSize = true;
+    // rect.isFixedPos = true;
     // rect.fillStyle = "transparent"
-    rect.isOverflowHidden = true;
+    // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    const text = new Text("测试文本", 60, 80, 100, 10);
-    // text.fitSize = true;
-    gls.addFeature(text, false);
-    rect.addFeature(text);
+    // const text = new Text("测试文本", 60, 80, 100, 10);
+    // // text.fitSize = true;
+    // gls.addFeature(text, false);
+    // rect.addFeature(text);
 
     // let rect2 = new Rect(150, 150, 50, 50)
     // rect2.fillStyle = "transparent"

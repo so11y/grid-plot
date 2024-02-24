@@ -5,7 +5,6 @@ import Feature from "../Feature";
 class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
-    isFixedSize: boolean = false; // 是否固定大小
 
     constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
         let points = getRectPoint({ x, y }, { width, height })
@@ -35,7 +34,6 @@ class Rect extends Feature {
         } else {
             path.roundRect(leftTop.x, leftTop.y, width, height, radius, radius);
             // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
-            ctx.lineWidth = lineWidth;
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
@@ -54,6 +52,7 @@ class Rect extends Feature {
         } else {
             ctx.fillStyle = this.fillStyle;
         }
+        ctx.lineWidth = lineWidth;
         this.setChildAngle(ctx, pointArr);
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
@@ -126,19 +125,7 @@ class Rect extends Feature {
                 { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.width / 4 },
             ]
         }
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        for (let point of pointArr) {
-            minX = Math.min(minX, point.x);
-            maxX = Math.max(maxX, point.x);
-            minY = Math.min(minY, point.y);
-            maxY = Math.max(maxY, point.y);
-        }
-
-        return [minX, maxX, minY, maxY];
+        return super.getRectWrapExtent(pointArr);
     }
 
 }

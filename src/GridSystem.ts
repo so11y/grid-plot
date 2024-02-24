@@ -47,6 +47,7 @@ class GridSystem {
     dom: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
+    timer2: number = 0;
     backgroundColor: string = '#fff'
 
     hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
@@ -55,6 +56,7 @@ class GridSystem {
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
     dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
+    friction = .9;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
 
@@ -94,8 +96,8 @@ class GridSystem {
         // this.ctx.rotate(30 * Math.PI/180)
         fn && fn()
         this.drawFeatures();
-        // this.ctx.fillStyle = "red"
-        // this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
+        this.ctx.fillStyle = "red"
+        this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
@@ -160,9 +162,9 @@ class GridSystem {
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
-        GridSystem.Shortcuts.addEvent(["ctrl"], () => {
-            console.log(111);
-        })
+        // GridSystem.Shortcuts.addEvent(["ctrl"], () => {
+        //     console.log(111);
+        // })
     }
 
     private mouseMove = (e: any) => {
@@ -174,13 +176,15 @@ class GridSystem {
     }
 
     private mouseDown = (ev: any) => {
+        this.timer2 && cancelAnimationFrame(this.timer2);
         const curPageSlicePos = {
             x: this.pageSlicePos.x,
             y: this.pageSlicePos.y,
         }
-        let lastTime = Date.now();
-        let velocityX = 0;
-        let velocityY = 0;
+        const velocity = {   // 加速度方向
+            x: 0,
+            y: 0
+        };
 
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
@@ -249,21 +253,14 @@ class GridSystem {
         } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
             mousemove = (e: any) => {
                 const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                let currentTime = Date.now();
-                const deltaTime = currentTime - lastTime;
-                const dx = (px + (moveX - downX) * this.dragingSensitivity) - this.pageSlicePos.x;
-                const dy = (py + (moveY - downY) * this.dragingSensitivity) - this.pageSlicePos.y;
-
-                // 计算速度（单位像素/毫秒）  
-                velocityX = dx / deltaTime;
-                velocityY = dy / deltaTime;
                 GridSystem.lastAndPrevMouseMovePoint.prev_p = GridSystem.lastAndPrevMouseMovePoint.last_p;
                 GridSystem.lastAndPrevMouseMovePoint.last_p = { x: e.clientX, y: e.clientY };
+                velocity.x = GridSystem.lastAndPrevMouseMovePoint.last_p.x - GridSystem.lastAndPrevMouseMovePoint.prev_p.x; // 计算dx
+                velocity.y = GridSystem.lastAndPrevMouseMovePoint.last_p.y - GridSystem.lastAndPrevMouseMovePoint.prev_p.y; // 计算dy
                 this.ondrag && this.ondrag(e);
                 this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
                 this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
                 this.setPageSliceByExtent(this.extent);
-                lastTime = currentTime;
             }
         }
 
@@ -285,32 +282,21 @@ class GridSystem {
                 document.dispatchEvent(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }));
             }
 
-            // 根据速度计算滑动时间后的最终位置  
-            const slideDuration = 500; // 滑动持续时间，单位毫秒  
-            const finalX = this.pageSlicePos.x + velocityX * slideDuration;
-            const finalY = this.pageSlicePos.y + velocityY * slideDuration;
-
-            // 使用requestAnimationFrame进行平滑过渡  
-            const start = Date.now();
-            console.log(finalX, finalY);
-            
-            // let that = this;
-            // function animate(timestamp) {
-            //     const elapsed = timestamp - start;
-            //     if (elapsed < slideDuration) {
-            //         const progress = elapsed / slideDuration;
-            //         that.pageSlicePos.x = that.pageSlicePos.x + (finalX - that.pageSlicePos.x) * progress
-            //         that.pageSlicePos.y = that.pageSlicePos.y + (finalY - that.pageSlicePos.y) * progress
-            //         // box.style.top = `${box.offsetTop + (finalY - box.offsetTop) * progress}px`;
-            //         requestAnimationFrame(animate);
-            //     } else {
-            //         // 到达最终位置，停止动画  
-            //         that.pageSlicePos.x = finalX;
-            //         that.pageSlicePos.x = finalY;
-            //     }
-            // }
-            requestAnimationFrame(animate);
-
+            // 摩擦力过渡停止
+            if (this.friction > 0) {
+                let that = this;
+                function animate() {
+                    that.pageSlicePos.x += velocity.x*that.dragingSensitivity;
+                    that.pageSlicePos.y += velocity.y*that.dragingSensitivity;
+                    velocity.x *= that.friction;
+                    velocity.y *= that.friction;
+                    that.timer2 = requestAnimationFrame(animate);
+                    if (Math.abs(velocity.x) < 0.01 && Math.abs(velocity.y) < 0.01) {
+                        cancelAnimationFrame(that.timer2);
+                    }
+                }
+                animate();
+            }
         }
         document.addEventListener("mouseup", mouseup)
         document.addEventListener("mousemove", mousemove)
@@ -1276,7 +1262,7 @@ class GridSystem {
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
-                let pointArr = cf.pointArr.map(p => this.getPixelPos(p))
+                let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
                 // 将多边形移动到Canvas的左上角  
                 pointArr.forEach(point => {
                     point.x -= offset.x;  // 水平方向移动到左侧边界
@@ -1292,7 +1278,7 @@ class GridSystem {
         return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-            let pointArr = feature.pointArr.map(p => this.getPixelPos(p))
+            let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
             let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
             let lineWidth = this.getRatioSize(feature.lineWidth);
             canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;

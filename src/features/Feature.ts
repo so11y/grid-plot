@@ -52,6 +52,7 @@ class Feature {
     isPointIn: boolean = false; //鼠标是否悬浮在元素上
     isFocused: boolean = false; //是否正在操作, 鼠标按在这个元素身上
     isFixedPos: boolean = false;  // 是否固定位置.不跟随网格移动
+    isFixedSize: boolean = false;  // 是否固定大小.不能控制点形变
     isOutScreen: boolean = false;  // 是否在屏幕外
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
@@ -216,6 +217,7 @@ class Feature {
     }
 
     getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
+        console.log(111);
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
