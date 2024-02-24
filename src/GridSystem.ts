@@ -181,7 +181,7 @@ class GridSystem {
             x: this.pageSlicePos.x,
             y: this.pageSlicePos.y,
         }
-        const velocity = {   // 加速度方向
+        const velocity = {   // 速度分量
             x: 0,
             y: 0
         };
@@ -488,7 +488,7 @@ class GridSystem {
      */
     private mouseWheel = (e: any, scale?: number) => {
         if (!this.cbScale) return;
-        let lastgridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
+        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         this.onzoom && this.onzoom(e);
         e.preventDefault();
         let { x, y } = getMousePos(this.dom, e);
@@ -498,7 +498,7 @@ class GridSystem {
                 this.scale = CoordinateSystem.MAX_SCALESIZE
             } else {
                 this.scale = nextScale;
-                this.back2center(x, y, lastgridSize);
+                this.back2center(x, y, lastGirdSize);
             }
         } else {
             let nextScale = scale || this.scale - CoordinateSystem.SCALE_ABILITY
@@ -506,18 +506,18 @@ class GridSystem {
                 this.scale = CoordinateSystem.MIN_SCALESIZE
             } else {
                 this.scale = nextScale;
-                this.back2center(x, y, lastgridSize);
+                this.back2center(x, y, lastGirdSize);
             }
         }
         document.dispatchEvent(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }));
     };
 
     // 以鼠标中心点位置去放大
-    private back2center(x: number, y: number, lastgridSize: number) {
+    private back2center(x: number, y: number, lastGirdSize: number) {
         var gridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 当前单位大小
-        var different = gridSize - lastgridSize;   // 当前单位大小与上一次单位大小之差
-        this.pageSlicePos.x -= ((x - this.pageSlicePos.x) / lastgridSize) * different;
-        this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastgridSize) * different;
+        var different = gridSize - lastGirdSize;   // 当前单位大小与上一次单位大小之差
+        this.pageSlicePos.x -= ((x - this.pageSlicePos.x) / lastGirdSize) * different;
+        this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastGirdSize) * different;
     }
 
     private setPageSliceByExtent(extent: number[] = []) { // 限制拖拽范围
@@ -906,10 +906,10 @@ class GridSystem {
 
     // 缩放至 
     zoomTo(scale: number, point?: IPoint) {
-        let lastgridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
+        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         if (!point) point = this.getCenterPoint()[0]
         this.scale = scale;
-        this.back2center(point.x, point.y, lastgridSize)
+        this.back2center(point.x, point.y, lastGirdSize)
     }
 
     // // 判断某个网格内有没有元素
@@ -1383,17 +1383,7 @@ class GridSystem {
         })
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
-    /**
-* 鼠标松开后的缓动减速
-* @param lastAndPrevMouseMovePoint 
-* @returns 
-*/
-    // private toSlideMove(lastAndPrevMouseMovePoint: {
-    //     last_p: IPoint,
-    //     prev_p: IPoint
-    // }) {
-    //     if (!this.cbSlideTransition) return;
-    // }
+
 }
 
 export default GridSystem;
