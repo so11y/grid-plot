@@ -1,6 +1,7 @@
 import { IPoint } from "../../Interface";
 import { getLenOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
+import Bbox from "../function-shape/Bbox";
 
 class Rect extends Feature {
 
@@ -30,9 +31,10 @@ class Rect extends Feature {
         // } else {
         const { width, height, leftTop } = this.getSize(pointArr);
         if (this.isFixedSize) {
-            path.roundRect(leftTop.x + this.size.width / 2, leftTop.y + this.size.height / 2, this.size.width, this.size.height, this.radius, this.radius);
+            let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
+            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
-            path.roundRect(leftTop.x, leftTop.y, width, height, radius, radius);
+            path.roundRect(leftTop.x, leftTop.y, width, height, radius);
             // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
@@ -115,18 +117,19 @@ class Rect extends Feature {
         return width / height;
     }
 
-    getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
-        if (this.isFixedSize) {
-            const leftTop = pointArr[0]
-            pointArr = [
-                { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.height / 4 },
-                { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 4 },
-                { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 2 + this.size.width / 4 },
-                { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.width / 4 },
-            ]
-        }
-        return super.getRectWrapExtent(pointArr);
-    }
+    // getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
+    //     if (this.isFixedSize) {
+    //         const leftTop = pointArr[0]
+    //         pointArr = [
+    //             { x: leftTop.x + this.gls.getRelativeLen(this.size.width) / 2, y: leftTop.y + this.gls.getRelativeLen(this.size.height) / 2 },
+    //             // { x: leftTop.x + this.size.width, y: leftTop.y + this.size.height / 2 },
+    //             // { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 4 },
+    //             // { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 2 + this.size.width / 4 },
+    //             // { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.width / 4 },
+    //         ]
+    //     }
+    //     return super.getRectWrapExtent(pointArr);
+    // }
 
 }
 

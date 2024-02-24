@@ -37,7 +37,7 @@ class Feature {
     parent: Feature | null = null;  // 父元素
     children: BasicFeature[] = [];  // 子节点
     gls: GridSystem = Feature.Gls;
-    adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
+    adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
     pntDistanceLimit = 2;  // 距离太近的两个点,就不重复添加了
     pntExtentPer: {
         left: IPoint[],
@@ -107,7 +107,7 @@ class Feature {
         this.pointArr = this.pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
-        this.children.forEach(cf => {
+        this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
         this.onrotate && this.onrotate();
@@ -120,6 +120,12 @@ class Feature {
                 y: !this.isOnlyHorizonalDrag ? p.y += offsetY : p.y
             }
         })
+        // 照顾fixedSize元素
+        this.position.x += offsetX;
+        this.position.y += offsetY;
+        if (this.children) {  // 子元素递归偏移
+            this.children.forEach(cf => cf.translate(offsetX, offsetY))
+        }
         this.ontranslate();
     }
 
@@ -217,7 +223,6 @@ class Feature {
     }
 
     getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
-        console.log(111);
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
@@ -273,6 +278,7 @@ class Feature {
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
+        // feature.isFixedSize = this.isFixedSize;
         feature.angle = feature.parent.angle;
         function setProps(f: Feature) {   // 递归设置子元素属性
             f.cbSelect = cbSelect;

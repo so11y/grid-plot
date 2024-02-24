@@ -1,5 +1,5 @@
 import GridSystem from "@/GridSystem";
-import { BasicFeature, Vector } from "../../Interface";
+import { BasicFeature, IPoint, Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
@@ -25,18 +25,12 @@ export default class Bbox extends Rect {
     constructor(target: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
         let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
         let center = target.getCenterPos();
-
         super(center.x, center.y, maxX - minX, maxY - minY);
-        // let pointArr = target.pointArr.map(p => this.gls.getRelativePos(p, true));
-        // let [minX2, maxX2, minY2, maxY2] = target.getRectWrapExtent(pointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
-        // this.gls.test = this.gls.getPixelPos(leftBottom, false)
-        // console.log(target.size.width, minX2, maxX2, "target.size.width");
         this.className = 'Bbox';
-        this.isFixedPos = target.isFixedPos
-        this.isFixedSize = target.isFixedSize
-        this.addFeature(target);
-        // this.setSize(target.size.width, target.size.height)
+        this.isFixedPos = target.isFixedPos;
+        // this.isFixedSize = target.isFixedSize;
 
+        this.addFeature(target);
         this.target = target;
         this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
@@ -49,7 +43,7 @@ export default class Bbox extends Rect {
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
         this.setVct();
-        // this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
+        this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
         this.gls.addFeature(this, false);
     }
 
@@ -63,13 +57,13 @@ export default class Bbox extends Rect {
 
             let lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             let lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
-            console.log(target);
-            if (target instanceof Text) {
-                target.pntExtentPer.left.push({
-                    x: -lenX / width,
-                    y: -lenY / height,
-                })
-            }
+            // console.log(target);
+            // if (target instanceof Text) {
+            //     target.pntExtentPer.left.push({
+            //         x: -lenX / width,
+            //         y: -lenY / height,
+            //     })
+            // }
             target.pntExtentPer.left.push({
                 x: lenX / width,
                 y: lenY / height,
@@ -93,13 +87,11 @@ export default class Bbox extends Rect {
     // 初始化添加控制点
     initBCtrlPnt() {
         const pointArr = this.pointArr;
-        if (!this.target.isFixedSize) {
-            pointArr.forEach((p, i) => {
-                let ctrlP = new CtrlPnt(this, i);
-                ctrlP.name = 'ctrl' + i;
-                ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
-            })
-        }
+        pointArr.forEach((p, i) => {
+            let ctrlP = new CtrlPnt(this, i);
+            ctrlP.name = 'ctrl' + i;
+            ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
+        })
         // 旋转点
         let bCtrlP1 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
@@ -126,142 +118,140 @@ export default class Bbox extends Rect {
         })
 
         // 左边
-        if (!this.target.isFixedSize) {
-            let bCtrlP2 = new BCtrlPnt(this, () => {
-                const pointArr = this.pointArr;
-                const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-                return widthCtrlPnt;
-            });
-            bCtrlP2.translateEvents.push(() => {
-                const pointArr = this.pointArr;
-                const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
-                const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
-                const pnt = getPntInVct(pointArr[1], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
-                const pnt2 = getPntInVct(pointArr[2], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
-                pointArr[0].x = pnt.x;
-                pointArr[0].y = pnt.y;
-                pointArr[3].x = pnt2.x;
-                pointArr[3].y = pnt2.y;
-                if (this.lastLenX) {
-                    var setTranform = (feature: Feature) => {
-                        feature.pointArr.forEach((p, i) => {
-                            let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
-                            p.x = newPntX.x;
-                            p.y = newPntX.y;
-                        })
-                        feature.resize();
-                        feature.children.forEach(f => {
-                            setTranform(f);
-                        })
-                    }
-                    setTranform(this.target);
+        let bCtrlP2 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
+            const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
+            return widthCtrlPnt;
+        });
+        bCtrlP2.translateEvents.push(() => {
+            const pointArr = this.pointArr;
+            const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
+            const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
+            const pnt = getPntInVct(pointArr[1], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
+            const pnt2 = getPntInVct(pointArr[2], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
+            pointArr[0].x = pnt.x;
+            pointArr[0].y = pnt.y;
+            pointArr[3].x = pnt2.x;
+            pointArr[3].y = pnt2.y;
+            if (this.lastLenX) {
+                var setTranform = (feature: Feature) => {
+                    feature.pointArr.forEach((p, i) => {
+                        let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
+                        p.x = newPntX.x;
+                        p.y = newPntX.y;
+                    })
+                    feature.resize();
+                    feature.children.forEach(f => {
+                        setTranform(f);
+                    })
                 }
-                this.lastLenX = lenX;
-                this.ratio = this.getRatio();
-            })
+                setTranform(this.target);
+            }
+            this.lastLenX = lenX;
+            this.ratio = this.getRatio();
+        })
 
-            // 右边
-            let bCtrlP3 = new BCtrlPnt(this, () => {
-                const pointArr = this.pointArr;
-                const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
-                return widthCtrlPnt;
-            });
-            bCtrlP3.translateEvents.push(() => {
-                const pointArr = this.pointArr;
-                const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
-                const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
-                const pnt = getPntInVct(pointArr[0], this.vctX, lenX)  // 关联点长度同步移动
-                const pnt2 = getPntInVct(pointArr[3], this.vctX, lenX)  // 关联点长度同步移动
-                pointArr[1].x = pnt.x;
-                pointArr[1].y = pnt.y;
-                pointArr[2].x = pnt2.x;
-                pointArr[2].y = pnt2.y;
-                if (this.lastLenX) {
-                    var setTranform = (feature: Feature) => {
-                        feature.pointArr.forEach((p, i) => {
-                            let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
-                            p.x = newPntX.x;
-                            p.y = newPntX.y;
-                        })
-                        feature.resize();
-                        feature.children.forEach(f => {
-                            setTranform(f);
-                        })
-                    }
-                    setTranform(this.target);
+        // 右边
+        let bCtrlP3 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
+            const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
+            return widthCtrlPnt;
+        });
+        bCtrlP3.translateEvents.push(() => {
+            const pointArr = this.pointArr;
+            const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
+            const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
+            const pnt = getPntInVct(pointArr[0], this.vctX, lenX)  // 关联点长度同步移动
+            const pnt2 = getPntInVct(pointArr[3], this.vctX, lenX)  // 关联点长度同步移动
+            pointArr[1].x = pnt.x;
+            pointArr[1].y = pnt.y;
+            pointArr[2].x = pnt2.x;
+            pointArr[2].y = pnt2.y;
+            if (this.lastLenX) {
+                var setTranform = (feature: Feature) => {
+                    feature.pointArr.forEach((p, i) => {
+                        let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
+                        p.x = newPntX.x;
+                        p.y = newPntX.y;
+                    })
+                    feature.resize();
+                    feature.children.forEach(f => {
+                        setTranform(f);
+                    })
                 }
-                this.lastLenX = lenX;
-                this.ratio = this.getRatio();
-            })
+                setTranform(this.target);
+            }
+            this.lastLenX = lenX;
+            this.ratio = this.getRatio();
+        })
 
-            // 上边
-            let bCtrlP4 = new BCtrlPnt(this, () => {
-                const pointArr = this.pointArr;
-                const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
-                return heightCtrlPnt;
-            });
-            bCtrlP4.translateEvents.push(() => {
-                const pointArr = this.pointArr;
-                const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
-                const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
-                const pnt = getPntInVct(pointArr[2], this.vctY, -lenY)  // 关联点长度同步移动
-                const pnt2 = getPntInVct(pointArr[3], this.vctY, -lenY)  // 关联点长度同步移动
-                pointArr[1].x = pnt.x;
-                pointArr[1].y = pnt.y;
-                pointArr[0].x = pnt2.x;
-                pointArr[0].y = pnt2.y;
-                if (this.lastLenY) {
-                    var setTranform = (feature: Feature) => {
-                        feature.pointArr.forEach((p, i) => {
-                            let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
-                            p.x = newPntX.x;
-                            p.y = newPntX.y;
-                        })
-                        feature.resize();
-                        feature.children.forEach(f => {
-                            setTranform(f);
-                        })
-                    }
-                    setTranform(this.target);
+        // 上边
+        let bCtrlP4 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
+            const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
+            return heightCtrlPnt;
+        });
+        bCtrlP4.translateEvents.push(() => {
+            const pointArr = this.pointArr;
+            const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
+            const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
+            const pnt = getPntInVct(pointArr[2], this.vctY, -lenY)  // 关联点长度同步移动
+            const pnt2 = getPntInVct(pointArr[3], this.vctY, -lenY)  // 关联点长度同步移动
+            pointArr[1].x = pnt.x;
+            pointArr[1].y = pnt.y;
+            pointArr[0].x = pnt2.x;
+            pointArr[0].y = pnt2.y;
+            if (this.lastLenY) {
+                var setTranform = (feature: Feature) => {
+                    feature.pointArr.forEach((p, i) => {
+                        let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
+                        p.x = newPntX.x;
+                        p.y = newPntX.y;
+                    })
+                    feature.resize();
+                    feature.children.forEach(f => {
+                        setTranform(f);
+                    })
                 }
-                this.lastLenY = lenY;
-                this.ratio = this.getRatio();
-            })
+                setTranform(this.target);
+            }
+            this.lastLenY = lenY;
+            this.ratio = this.getRatio();
+        })
 
-            // 下边
-            let bCtrlP5 = new BCtrlPnt(this, () => {
-                const pointArr = this.pointArr;
-                const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
-                return heightCtrlPnt;
-            });
-            bCtrlP5.translateEvents.push(() => {
-                const pointArr = this.pointArr;
-                const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
-                const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
-                const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
-                const pnt2 = getPntInVct(pointArr[1], this.vctY, lenY)  // 关联点长度同步移动
-                pointArr[3].x = pnt.x;
-                pointArr[3].y = pnt.y;
-                pointArr[2].x = pnt2.x;
-                pointArr[2].y = pnt2.y;
-                if (this.lastLenY) {
-                    var setTranform = (feature: Feature) => {
-                        feature.pointArr.forEach((p, i) => {
-                            let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
-                            p.x = newPntX.x;
-                            p.y = newPntX.y;
-                        })
-                        feature.resize();
-                        feature.children.forEach(f => {
-                            setTranform(f);
-                        })
-                    }
-                    setTranform(this.target);
+        // 下边
+        let bCtrlP5 = new BCtrlPnt(this, () => {
+            const pointArr = this.pointArr;
+            const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
+            return heightCtrlPnt;
+        });
+        bCtrlP5.translateEvents.push(() => {
+            const pointArr = this.pointArr;
+            const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
+            const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
+            const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
+            const pnt2 = getPntInVct(pointArr[1], this.vctY, lenY)  // 关联点长度同步移动
+            pointArr[3].x = pnt.x;
+            pointArr[3].y = pnt.y;
+            pointArr[2].x = pnt2.x;
+            pointArr[2].y = pnt2.y;
+            if (this.lastLenY) {
+                var setTranform = (feature: Feature) => {
+                    feature.pointArr.forEach((p, i) => {
+                        let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
+                        p.x = newPntX.x;
+                        p.y = newPntX.y;
+                    })
+                    feature.resize();
+                    feature.children.forEach(f => {
+                        setTranform(f);
+                    })
                 }
-                this.lastLenY = lenY;
-                this.ratio = this.getRatio();
-            })
-        }
+                setTranform(this.target);
+            }
+            this.lastLenY = lenY;
+            this.ratio = this.getRatio();
+        })
 
         if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
             // 左边 锚点

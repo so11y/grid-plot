@@ -18,6 +18,7 @@ class CtrlPnt extends Rect {
         this.index = i;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
         this.lineWidth = 0;
+        this.radius = .2;
         this.zIndex = Infinity;
         this.isStroke = false;
         this.isOnlyCenterAdsorb = true;

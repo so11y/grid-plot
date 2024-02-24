@@ -58,6 +58,7 @@ const keyCodeMap = new Map([
     ["CAPSLOACK", 20],
     ["DEL", 46],
     ["DElETE", 46],
+    ["ESC", 27],
 ]);
 
 export default class Shortcuts {
