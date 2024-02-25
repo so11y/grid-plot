@@ -229,7 +229,7 @@
                                 <i class="iconfont gls-youduiqi"></i>
                             </a-button>
                         </a-row>
-                        <a-row type="flex" align="middle" class="func-wrap">
+                        <a-row type="flex" align="middle" class="func-wrap" style="margin-bottom: 8px">
                             <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐" @click="toTopAlign">
                                 <i class="iconfont gls-dingduiqi"></i>
                             </a-button>
@@ -238,6 +238,11 @@
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="底对齐" @click="toBottomAlign">
                                 <i class="iconfont gls-diduiqi"></i>
+                            </a-button>
+                        </a-row>
+                        <a-row type="flex" align="middle" class="func-wrap">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐" @click="toSpacebetween">
+                                <i class="iconfont gls-dingduiqi"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -560,38 +565,39 @@ function reset(clear = false) {
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    const text = new Text("测试文本", 60, 80, 100, 10);
-    text.fitSize = true;
-    gls.addFeature(text, false);
-    rect.addFeature(text);
+    // const text = new Text("测试文本", 60, 80, 100, 10);
+    // text.fitSize = true;
+    // gls.addFeature(text, false);
+    // rect.addFeature(text);
 
     let rect2 = new Rect(150, 150, 50, 50)
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2, false)
 
-    let rect4 = new Rect(350, 200, 50, 50)
-    rect4.isFixedSize = true;
-    gls.addFeature(rect4, false)
+    // let rect4 = new Rect(350, 200, 50, 50)
+    // rect4.isFixedSize = true;
+    // gls.addFeature(rect4, false)
 
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
-    let group = new Group([rect, rect2])
+    let group = new Group([rect, rect2, circle])
+    group.cbTransformChild = false;
     gls.addFeature(group, false)
+    // group.resizeEvents.push(group.toSpaceAroud.bind(group))
 
-    let line = new Line([
-        {x: 10,y: 10},
-        {x: 50,y: 50},
-        {x: 100,y: 70},
-    ])
-    line.cbTransform = false;
-    const text2 = new Text("测试文本", 60, 80, 100, 10);
-    // text2.fitSize = true;
-    gls.addFeature(text2, false);
-    line.addFeature(text2);
-    line.enableCtrlPnts();
-
-    gls.addFeature(line, false)
+    // let line = new Line([
+    //     {x: 10,y: 10},
+    //     {x: 50,y: 50},
+    //     {x: 100,y: 70},
+    // ])
+    // line.cbTransform = false;
+    // const text2 = new Text("测试文本", 60, 80, 100, 10);
+    // // text2.fitSize = true;
+    // gls.addFeature(text2, false);
+    // line.addFeature(text2, false);
+    // line.enableCtrlPnts();
+    // gls.addFeature(line, false)
 
     // console.log(group, rect, rect2);
     
@@ -617,35 +623,42 @@ function setCanvasSize(canvasDom: HTMLCanvasElement) {
 }
 
 function toTopAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toTopAlign();
     message.info('顶对齐');
 }
 function toBottomAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toBottomAlign();
     message.info('底对齐');
 }
 function toRightAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toRightAlign();
     message.info('右对齐');
 }
 function toLeftAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toLeftAlign();
     message.info('左对齐');
 }
 function toHorizonalAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toHorizonalAlign();
     message.info('水平对齐');
 }
 function toVerticalAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea) as SelectArea;
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toVerticalAlign();
     message.info('垂直对齐');
 }
+function toSpacebetween() {
+    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    sa && sa.toSpaceAroud();
+    // sa && sa.toSpaceBetween();
+    message.info('均匀分布');
+}
+
 
 function modifyStrokeStyle(color: string) {
     let focuseNode = gls?.getFocusNode();

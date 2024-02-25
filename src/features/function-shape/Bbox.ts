@@ -141,9 +141,11 @@ export default class Bbox extends Rect {
                         p.y = newPntX.y;
                     })
                     feature.resize();
-                    feature.children.forEach(f => {
-                        setTranform(f);
-                    })
+                    if (feature.cbTransformChild) {
+                        feature.children.forEach(f => {
+                            setTranform(f);
+                        })
+                    }
                 }
                 setTranform(this.target);
             }
@@ -175,9 +177,11 @@ export default class Bbox extends Rect {
                         p.y = newPntX.y;
                     })
                     feature.resize();
-                    feature.children.forEach(f => {
-                        setTranform(f);
-                    })
+                    if (feature.cbTransformChild) {
+                        feature.children.forEach(f => {
+                            setTranform(f);
+                        })
+                    }
                 }
                 setTranform(this.target);
             }
@@ -209,9 +213,11 @@ export default class Bbox extends Rect {
                         p.y = newPntX.y;
                     })
                     feature.resize();
-                    feature.children.forEach(f => {
-                        setTranform(f);
-                    })
+                    if (feature.cbTransformChild) {
+                        feature.children.forEach(f => {
+                            setTranform(f);
+                        })
+                    }
                 }
                 setTranform(this.target);
             }
@@ -243,9 +249,11 @@ export default class Bbox extends Rect {
                         p.y = newPntX.y;
                     })
                     feature.resize();
-                    feature.children.forEach(f => {
-                        setTranform(f);
-                    })
+                    if (feature.cbTransformChild) {
+                        feature.children.forEach(f => {
+                            setTranform(f);
+                        })
+                    }
                 }
                 setTranform(this.target);
             }
@@ -331,9 +339,11 @@ export default class Bbox extends Rect {
                                 p.y = newPntY.y;
                             })
                             feature.resize();
-                            feature.children.forEach(f => {
-                                setTranform(f);
-                            })
+                            if (feature.cbTransformChild) {
+                                feature.children.forEach(f => {
+                                    setTranform(f);
+                                })
+                            }
                         }
                         setTranform(bbox.target);
                     }
@@ -373,9 +383,11 @@ export default class Bbox extends Rect {
                                 p.y = newPntY.y;
                             })
                             feature.resize();
-                            feature.children.forEach(f => {
-                                setTranform(f);
-                            })
+                            if (feature.cbTransformChild) {
+                                feature.children.forEach(f => {
+                                    setTranform(f);
+                                })
+                            }
                         }
                         setTranform(bbox.target);
                     }
@@ -415,9 +427,11 @@ export default class Bbox extends Rect {
                                 p.y = newPntY.y;
                             })
                             feature.resize();
-                            feature.children.forEach(f => {
-                                setTranform(f);
-                            })
+                            if (feature.cbTransformChild) {
+                                feature.children.forEach(f => {
+                                    setTranform(f);
+                                })
+                            }
                         }
                         setTranform(bbox.target);
                     }
@@ -457,9 +471,11 @@ export default class Bbox extends Rect {
                                 p.y = newPntY.y;
                             })
                             feature.resize();
-                            feature.children.forEach(f => {
-                                setTranform(f);
-                            })
+                            if (feature.cbTransformChild) {
+                                feature.children.forEach(f => {
+                                    setTranform(f);
+                                })
+                            }
                         }
                         setTranform(bbox.target);
                     }

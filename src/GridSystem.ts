@@ -52,7 +52,7 @@ class GridSystem {
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
     dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
-    friction = .9;  // 摩擦力
+    friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
 
@@ -60,7 +60,7 @@ class GridSystem {
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
     cbSelectFeature: boolean = true;  // 画布中的元素是否可被选中
-    cbAdsorption: boolean = true;  // 元素拖拽是否启用吸附
+    cbAdsorption: boolean = false;  // 元素拖拽是否启用吸附
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
@@ -271,7 +271,7 @@ class GridSystem {
             }
 
             // 摩擦力过渡停止
-            if (this.friction > 0 && (Math.abs(velocity.x) > 1 || Math.abs(velocity.y) > 1)) {  // 有设置摩擦力,and 速度分量要到一定程度才缓动
+            if (this.friction > 0 && (Math.abs(velocity.x) > 3 || Math.abs(velocity.y) > 3)) {  // 有设置摩擦力,and 速度分量要到一定程度才缓动
                 const that = this;
                 const STOP_D = 0.1  // 停止的最小距离条件
                 function animate() {

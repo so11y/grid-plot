@@ -23,7 +23,7 @@ export default class Group extends Rect {
         // })
     }
 
-    toResize(features: BasicFeature[]) {
+    toResize(features: BasicFeature[]) {  // 重新创建后重设大小
         let allPointArr: IPoint[] = [];
         features.map(f => allPointArr.push(...f.pointArr));
         let [minX, maxX, minY, maxY] = this.getRectWrapExtent(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
@@ -33,7 +33,7 @@ export default class Group extends Rect {
     }
 
     // 顶部对齐
-    toTopAlign(features: Feature[] = this.children, minY?: number) {
+    toTopAlign(features: Feature[] = this.children, minY: number = this.getRectWrapExtent()[2]) {
         if (minY == undefined) {
             if (features.length > 1) {
                 let minYs = features.map(f => f.getRectWrapExtent()[2]);
@@ -41,78 +41,73 @@ export default class Group extends Rect {
 
             }
         } else {
-            minY = this.gls.getRelativeY(minY);
+            // minY = this.gls.getRelativeY(minY);
         }
         features.forEach(f => {
             f.translate(0, (minY || 0) - f.getRectWrapExtent()[2])
         })
     }
-    toBottomAlign(features: Feature[] = this.children, maxY?: number) {
+    toBottomAlign(features: Feature[] = this.children, maxY: number = this.getRectWrapExtent()[3]) {
         if (maxY == undefined) {
             if (features.length > 1) {
                 let maxYs = features.map(f => f.getRectWrapExtent()[3]);
                 maxY = maxYs.sort(function (a, b) { return b - a })[0];
             }
         } else {
-            maxY = this.gls.getRelativeY(maxY);
-        }
-        if (features.length > 1 && maxY != undefined) {
-            let maxYs = features.map(f => f.getRectWrapExtent()[3]);
-            maxY = maxYs.sort(function (a, b) { return b - a })[0];
+            // maxY = this.gls.getRelativeY(maxY);
         }
         features.forEach(f => {
             f.translate(0, (maxY || 0) - f.getRectWrapExtent()[3])
         })
     }
-    toLeftAlign(features: Feature[] = this.children, minX?: number) {
+    toLeftAlign(features: Feature[] = this.children, minX: number = this.getRectWrapExtent()[0]) {
         if (minX == undefined) {
             if (features.length > 1) {
                 let minXs = features.map(f => f.getRectWrapExtent()[0]);
                 minX = minXs.sort(function (a, b) { return a - b })[0];
             }
         } else {
-            minX = this.gls.getRelativeY(minX);
+            // minX = this.gls.getRelativeY(minX);
         }
         features.forEach(f => {
             f.translate((minX || 0) - f.getRectWrapExtent()[0], 0)
         })
     }
-    toRightAlign(features: Feature[] = this.children, maxY?: number) {
-        if (maxY == undefined) {
+    toRightAlign(features: Feature[] = this.children, maxX: number = this.getRectWrapExtent()[1]) {
+        if (maxX == undefined) {
             if (features.length > 1) {
                 let maxXs = features.map(f => f.getRectWrapExtent()[1]);
-                maxY = maxXs.sort(function (a, b) { return b - a })[0];
+                maxX = maxXs.sort(function (a, b) { return b - a })[0];
             }
         } else {
-            maxY = this.gls.getRelativeY(maxY);
+            // maxX = this.gls.getRelativeY(maxX);
         }
+
         features.forEach(f => {
-            f.translate((maxY || 0) - f.getRectWrapExtent()[1], 0)
+            f.translate((maxX || 0) - f.getRectWrapExtent()[1], 0)
         })
     }
-    toHorizonalAlign(features: Feature[] = this.children, centerX?: number) {
+    toHorizonalAlign(features: Feature[] = this.children, centerX: number = this.getCenterPos().y) {
         if (centerX == undefined) {
             if (features.length > 1) {
                 let ys = features.map(f => f.getCenterPos().y);
                 centerX = ys.reduce((a, b) => a + b) / ys.length;
             }
         } else {
-            centerX = this.gls.getRelativeY(centerX);
+            // centerX = this.gls.getRelativeY(centerX);
         }
         features.forEach(f => {
             f.translate(0, (centerX || 0) - f.getCenterPos().y)
         })
     }
-    toVerticalAlign(features: Feature[] = this.children, centerY?: number) {
+    toVerticalAlign(features: Feature[] = this.children, centerY: number = this.getCenterPos().x) {
         if (centerY == undefined) {
             if (features.length > 1) {
-                // let center = features[2].getCenterPos();
-                // this.gls.test = this.gls.getPixelPos(center);
                 let xs = features.map(f => f.getCenterPos().x);
                 centerY = xs.reduce((a, b) => a + b) / xs.length;
             }
         } else {
-            centerY = this.gls.getRelativeY(centerY);
+            // centerY = this.gls.getRelativeY(centerY);
         }
         features.forEach(f => {
             f.translate((centerY || 0) - f.getCenterPos().x, 0)
@@ -147,7 +142,7 @@ export default class Group extends Rect {
         if (features.length > 1) {
             features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
             this.toLeftAlign(features);
-            const { width, height, leftTop } = this.getSize();
+            const { width, height, leftTop } = this.getSize();  // group的大小
             let sonWidths = 0;
             features.forEach(f => {
                 let [minX, maxX, minY, maxY] = f.getRectWrapExtent();

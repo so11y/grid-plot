@@ -66,6 +66,7 @@ class Feature {
     cbMove: boolean = true;  // 是否可被拖拽
     cbAdsorb: boolean = true;
     cbTransform: boolean = true;  // 是否可被形变
+    cbTransformChild: boolean = false; // 子元素是否可被形变
 
     // // 节点事件
     // ondelete: Function | null = null;
@@ -273,16 +274,15 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature?: BasicFeature, cbSelect = false) {
+    addFeature(feature?: BasicFeature, cbSelect?:boolean) {
         if (!feature) return;
         if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
-        // feature.isFixedSize = this.isFixedSize;
         feature.angle = feature.parent.angle;
         function setProps(f: Feature) {   // 递归设置子元素属性
-            f.cbSelect = cbSelect;
+            cbSelect != undefined && (f.cbSelect = cbSelect);
             f.children.forEach(cf => { setProps(cf) })
         }
         setProps(feature)
