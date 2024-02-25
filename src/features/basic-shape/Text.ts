@@ -33,36 +33,36 @@ class Text extends Rect {
         this.fontSize = fontSize;
         this.fontWeight = 0;
         this.fillStyle = "#fff";
-        this.hoverStyle = "transparent";
-        this.focusStyle = "transparent";
+        this.hoverStyle = "#fff";
+        this.focusStyle = "#fff";
         this.color = "#000"
         this.fontFamily = FontFamily.HEITI
         this.editble = false;
         this.alpha = 1;
         this.bold = false;
-        this.lineHeight = 1;
+        this.lineHeight = 0;
         this.lineWidth = .2;
         this.inputDom = null;
         this.onChange = null;
         this.rows = 1;
         document.addEventListener(Events.DB_CLICK, this.editText);
         document.addEventListener(Events.MOUSE_DOWN, this.stopEditText);
-        this.toFitSize();
+        // this.toFitSize();
         this.resizeEvents.push(() => {  // 控制点改变大小触发的钩子
             if (this.fitSize) {
-                const { width } = this.getSize(this.pointArr)
+                const { width } = this.getSize()
                 this.toFitWarpSize(width);
             }
         })
         this.resize();
     }
 
-    // 初始化, 文字自适应宽高
-    toFitSize() {
-        let width = this.gls.getRatioSize(this.fontSize) * this.text.length;
-        let height = this.rows * this.gls.getRatioSize(this.fontSize) + this.rows * this.lineHeight;
-        this.setSize(width / 2, height / 2)
-    }
+    // // 初始化, 文字自适应宽高
+    // toFitSize() {
+    //     let width = this.gls.getRatioSize(this.fontSize) * this.text.length;
+    //     let height = this.rows * this.gls.getRatioSize(this.fontSize) + this.rows * this.lineHeight;
+    //     this.setSize(width / 2, height / 2)
+    // }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
@@ -71,13 +71,12 @@ class Text extends Rect {
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
         ctx.lineWidth = this.fontWeight;
-        let lineHeight = this.gls.getRatioSize(this.lineHeight);
         if (Feature.TargetRender) {
             const { width, leftTop } = this.getSize(pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
             ctx.globalAlpha = this.opacity;
-            this.rows = this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y, lineHeight);
+            this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y);
             ctx.restore();
         }
         // ctx.restore();
@@ -95,31 +94,34 @@ class Text extends Rect {
     }
 
     toFitWarpSize(width: number) {  // 文字大小适应宽度
-        this.fontSize = (this.gls.getRelativeLen(width) / this.text.length) - .1;
+        // this.fontSize = this.getSize().width/this.fontSize;
     }
 
     // 自适应换行
-    toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number, lineHeight: number) {
-        if (this.text.length > 1 && fontSize < boxWidth) {
-            let textArr = this.text.split("");
-            let liner = 0;
-            ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
-            var drawText = (textArr: string[]) => {
-                for (let i = 0; i < textArr.length; i++) {
-                    const t = textArr[i];
-                    if (fontSize * (i + 1) > (boxWidth + 1)) {
-                        liner++;
-                        drawText(textArr.slice(i, textArr.length))
-                        break;
-                    } else {
-                        ctx.fillText(t, (startX + fontSize * i), startY + liner * fontSize + liner * lineHeight);
-                    }
-                }
-            }
-            drawText(textArr);
-            return liner + 1;
+    toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number) {
+        ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
+        var totalHeight = 0; //绘制字体距离canvas顶部初始的高度
+        var lastSunStrIndex = 0; //每次开始截取的字符串的索引
+        var contentWidth = 0;
+        var padding = this.gls.getRatioSize(1);
+        if (ctx.measureText(this.text).width <= boxWidth) {
+            ctx.fillText(this.text, startX, startY + totalHeight);
+            return
         }
-        return 1;
+        for (let i = 0; i < this.text.length; i++) {
+            contentWidth += ctx.measureText(this.text[i]).width;
+            if (contentWidth > boxWidth - padding * 3) {
+                ctx.fillText(this.text.substring(lastSunStrIndex, i), startX + padding, startY + totalHeight) //绘制未截取的部分
+                totalHeight += (fontSize + this.gls.getRatioSize(this.lineHeight));
+                contentWidth = 0;
+                lastSunStrIndex = i;
+            }
+            if (i == this.text.length - 1) {
+                ctx.fillText(this.text.substring(lastSunStrIndex, i + 1), startX + padding, startY + totalHeight);
+            }
+        }
+        console.log(totalHeight, this.getSize().height);
+        return totalHeight / fontSize + 1;
     }
 
     editText = () => {

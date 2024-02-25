@@ -565,9 +565,11 @@ function reset(clear = false) {
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    // const text = new Text("测试文本", 60, 80, 100, 10);
+    const text = new Text(`当    内容特别多的时候，canvas不会自动换行，需要特别处理当内
+    容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，
+    canvas不会自动换行，需要特别处理`, 60, 200, 200, 30);
     // text.fitSize = true;
-    // gls.addFeature(text, false);
+    gls.addFeature(text, false);
     // rect.addFeature(text);
 
     let rect2 = new Rect(150, 150, 50, 50)

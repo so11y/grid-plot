@@ -5,6 +5,8 @@ import Feature from "../Feature";
 
 export default class Group extends Rect {
 
+    // flex-column
+
     constructor(features: BasicFeature[]) {   // 相对坐标
         super(0, 0, 0, 0);
         features = features.filter(f => !f.isFixedPos && !f.isFixedSize) // 过滤不合法的元素
@@ -159,4 +161,15 @@ export default class Group extends Rect {
             })
         }
     }
+
+// flex-start：子项在起点位置对齐
+// flex - end：子项在结束位子对齐
+// center：子项在中心位置对齐
+// space - between两端顶对齐
+// between是中间的意思，就是多余的空白间距在元素中间分配
+// space - around：
+// around是环绕的意思，意思是每个flex子项两侧都环绕互不干扰的等宽的空白间距，最终视觉上边缘两侧的空白只有中间空白宽度一半。
+// space - evenly：
+// evenly是匀称、平等的意思。也就是视觉上，每个flex子项两侧空白间距完全相等。
+
 }
