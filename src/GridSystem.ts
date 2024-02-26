@@ -1053,8 +1053,8 @@ class GridSystem {
     }
 
     modifyFeature(feature: BasicFeature, props: Props) {
-        props.id && (feature.id = props.id);
-        props.className && (feature.className = props.className)
+        props.id != undefined && (feature.id = props.id);
+        props.className != undefined && (feature.className = props.className)
         if (props.pointArr) {
             feature.pointArr = []
             props.pointArr.forEach(p => {
@@ -1064,53 +1064,53 @@ class GridSystem {
                 })
             })
         }
-        props.position && (feature.position = props.position)
-        props.size && (feature.size = props.size)
-        props.angle && (feature.angle = props.angle)
-        props.fillStyle && (feature.fillStyle = props.fillStyle)
-        props.focusStyle && (feature.focusStyle = props.focusStyle)
-        props.hoverStyle && (feature.hoverStyle = props.hoverStyle)
-        props.zIndex && (feature.zIndex = props.zIndex)
-        props.lineWidth && (feature.lineWidth = props.lineWidth)
-        props.lineCap && (feature.lineCap = props.lineCap)
-        props.lineJoin && (feature.lineJoin = props.lineJoin)
-        props.opacity && (feature.opacity = props.opacity)
-        props.lineDashArr && (feature.lineDashArr = props.lineDashArr)
-        props.lineDashOffset && (feature.lineDashOffset = props.lineDashOffset)
+        props.position != undefined && (feature.position = props.position)
+        props.size != undefined && (feature.size = props.size)
+        props.angle != undefined && (feature.angle = props.angle)
+        props.fillStyle != undefined && (feature.fillStyle = props.fillStyle)
+        props.focusStyle != undefined && (feature.focusStyle = props.focusStyle)
+        props.hoverStyle != undefined && (feature.hoverStyle = props.hoverStyle)
+        props.zIndex != undefined && (feature.zIndex = props.zIndex)
+        props.lineWidth != undefined && (feature.lineWidth = props.lineWidth)
+        props.lineCap != undefined && (feature.lineCap = props.lineCap)
+        props.lineJoin != undefined && (feature.lineJoin = props.lineJoin)
+        props.opacity != undefined && (feature.opacity = props.opacity)
+        props.lineDashArr != undefined && (feature.lineDashArr = props.lineDashArr)
+        props.lineDashOffset != undefined && (feature.lineDashOffset = props.lineDashOffset)
 
-        props.closePath && (feature.closePath = props.closePath)
-        props.isPointIn && (feature.isPointIn = props.isPointIn)
-        props.isFixedPos && (feature.isFixedPos = props.isFixedPos)
-        props.isOutScreen && (feature.isOutScreen = props.isOutScreen)
-        props.isOverflowHidden && (feature.isOverflowHidden = props.isOverflowHidden)
-        props.isStroke && (feature.isStroke = props.isStroke)
-        props.isShowAdsorbLine && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
-        props.isOnlyCenterAdsorb && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
-        props.isOnlyHorizonalDrag && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
-        props.isOnlyVerticalDrag && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
+        props.closePath != undefined && (feature.closePath = props.closePath)
+        props.isPointIn != undefined && (feature.isPointIn = props.isPointIn)
+        props.isFixedPos != undefined && (feature.isFixedPos = props.isFixedPos)
+        props.isOutScreen != undefined && (feature.isOutScreen = props.isOutScreen)
+        props.isOverflowHidden != undefined && (feature.isOverflowHidden = props.isOverflowHidden)
+        props.isStroke != undefined && (feature.isStroke = props.isStroke)
+        props.isShowAdsorbLine != undefined && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
+        props.isOnlyCenterAdsorb != undefined && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
+        props.isOnlyHorizonalDrag != undefined && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
+        props.isOnlyVerticalDrag != undefined && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
 
         if (feature instanceof Rect) {
-            props.isFixedSize && (feature.isFixedSize = props.isFixedSize);
-            props.radius && (feature.radius = props.radius);
+            props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
+            props.radius != undefined && (feature.radius = props.radius);
         }
 
         if (feature instanceof Img) {
-            props.src && (feature.src = props.src);
+            props.src != undefined && (feature.src = props.src);
         }
 
         if (feature instanceof Text) {
-            props.fitSize && (feature.fitSize = props.fitSize);
-            props.fontWeight && (feature.fontWeight = props.fontWeight);
-            props.color && (feature.color = props.color);
-            props.fontFamily && (feature.fontFamily = props.fontFamily);
-            props.text && (feature.text = props.text);
-            props.lineHeight && (feature.lineHeight = props.lineHeight);
-            props.rows && (feature.rows = props.rows);
+            props.fitSize != undefined && (feature.fitSize = props.fitSize);
+            props.fontWeight != undefined && (feature.fontWeight = props.fontWeight);
+            props.color != undefined && (feature.color = props.color);
+            props.fontFamily != undefined && (feature.fontFamily = props.fontFamily);
+            props.text != undefined && (feature.text = props.text);
+            props.lineHeight != undefined && (feature.lineHeight = props.lineHeight);
+            props.rows != undefined && (feature.rows = props.rows);
         }
 
         if (feature instanceof Line) {
-            props.isFreeStyle && (feature.isFreeStyle = props.isFreeStyle);
-            props.lineWidthArr && (feature.lineWidthArr = props.lineWidthArr);
+            props.isFreeStyle != undefined && (feature.isFreeStyle = props.isFreeStyle);
+            props.lineWidthArr != undefined && (feature.lineWidthArr = props.lineWidthArr);
         }
 
         return feature;
@@ -1200,7 +1200,8 @@ class GridSystem {
     // ----------------------复制到剪切板---------------------------
 
     initAnchorPnts() {
-        this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
+        let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        features.forEach(f => {
             let anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
                 let lAnchorPnt = new AnchorPnt(f, () => {

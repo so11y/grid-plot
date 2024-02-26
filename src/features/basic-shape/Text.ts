@@ -24,8 +24,15 @@ class Text extends Rect {
     animate: any;
     onChange: Function | null;
 
-    constructor(text: string = "默认文本", x: number, y: number, width: number = 10, height: number = 10, fontSize = 2) {
+    constructor(text: string = "默认文本", x: number, y: number, width?: number, height?: number, fontSize = 2) {
         super(x, y, width, height);
+        if(width == undefined){  
+            width = this.gls.getPixelLen(text.length * (fontSize + .01))
+        }
+        if(height == undefined){
+            height = this.gls.getPixelLen(fontSize)
+        }
+        this.setSize(width, height)
         this.className = "Text";
         this.text = text;
         this.fitSize = false;

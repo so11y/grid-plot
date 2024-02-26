@@ -342,7 +342,7 @@
 </template>
     
 <script lang="ts" setup>
-import { Events } from "@/Constants";
+import { AlignType, Events } from "@/Constants";
 import Circle from "@/features/basic-shape/Circle";
 import Img from "@/features/basic-shape/Img";
 import Line from "@/features/basic-shape/Line";
@@ -580,7 +580,7 @@ function reset(clear = false) {
     let rect4 = new Rect(350, 200, 50, 50);
     // rect4.isFixedSize = true;
     gls.addFeature(rect4, false)
-    const text2 = new Text("测试文本", 350, 200, 50, 10);
+    const text2 = new Text("测试文本", 350, 200);
     gls.addFeature(text2, false);
     rect4.addFeature(text2)
     rect4.rotate(45)
@@ -591,7 +591,7 @@ function reset(clear = false) {
     let group = new Group([rect, rect2, circle])
     group.cbTransformChild = false;
     gls.addFeature(group, false)
-    // group.resizeEvents.push(group.toSpaceAroud.bind(group))
+    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
 
     // let line = new Line([
     //     {x: 10,y: 10},
@@ -661,8 +661,8 @@ function toVerticalAlign() {
 }
 function toSpacebetween() {
     let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
-    sa && sa.toSpaceAroud();
-    // sa && sa.toSpaceBetween();
+    // sa && sa.toSpaceAroud();
+    sa && sa.toSpaceBetween();
     message.info('均匀分布');
 }
 
