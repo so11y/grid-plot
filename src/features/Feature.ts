@@ -1,4 +1,4 @@
-import { Orientation } from "../Constants";
+import { CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Size } from "../Interface";
@@ -236,7 +236,8 @@ class Feature {
             minY = Math.min(minY, point.y);
             maxY = Math.max(maxY, point.y);
         }
-
+        this.size.width = Math.abs(maxX - minX);
+        this.size.height = Math.abs(maxY - minY);
         return [minX, maxX, minY, maxY];
     }
 
@@ -274,7 +275,7 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature?: BasicFeature, cbSelect?:boolean) {
+    addFeature(feature?: BasicFeature, cbSelect?: boolean) {
         if (!feature) return;
         if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
@@ -368,9 +369,9 @@ class Feature {
         this.dragendEvents.forEach(f => { f() })
         this.onDragend && this.onDragend();
     }
-    resize() {
-        this.resizeEvents.forEach(f => { f() })
-        this.onResize && this.onResize();
+    resize(type?: CtrlType) {
+        this.resizeEvents.forEach(f => { f(type) })
+        this.onResize && this.onResize(type);
     }
     ondraw() {
         this.drawEvents.forEach(f => { f() })

@@ -1,11 +1,10 @@
 // 绘制自定义文字
 
-import { FontFamily, Events } from "../../Constants";
+import { FontFamily, Events, CtrlType } from "../../Constants";
 import { IPoint } from "../../Interface";
 import gsap from "gsap";
 import Rect from "./Rect";
 import Feature from "../Feature";
-import { getLenOfTwoPnts } from "../../utils";
 
 class Text extends Rect {
 
@@ -47,26 +46,25 @@ class Text extends Rect {
         this.rows = 1;
         document.addEventListener(Events.DB_CLICK, this.editText);
         document.addEventListener(Events.MOUSE_DOWN, this.stopEditText);
-        // this.toFitSize();
-        this.resizeEvents.push(() => {  // 控制点改变大小触发的钩子
-            if (this.fitSize) {
+        let lastWidth = this.getSize().width;
+        this.resizeEvents.push((e: CtrlType) => {  // 控制点改变大小触发的钩子
+            if (this.fitSize && e === CtrlType.SIZE_CTRL) {
                 const { width } = this.getSize()
-                this.toFitWarpSize(width);
+                this.fontSize *= (1 + (width - lastWidth) / width);   // 根据宽度变化的百分比,同步放大fontSize
+                lastWidth = width;
+            }
+            if (e === CtrlType.WIDTH_CTRL) {
+                // this.getRectWrapExtent();
+                // this.pointArr[2].y = this.pointArr[0].y + this.rows*this.gls.getPixelLen(this.fontSize);
+                // this.pointArr[3].y = this.pointArr[0].y + this.rows*this.gls.getPixelLen(this.fontSize);
+                lastWidth = this.getSize().width
             }
         })
-        this.resize();
     }
-
-    // // 初始化, 文字自适应宽高
-    // toFitSize() {
-    //     let width = this.gls.getRatioSize(this.fontSize) * this.text.length;
-    //     let height = this.rows * this.gls.getRatioSize(this.fontSize) + this.rows * this.lineHeight;
-    //     this.setSize(width / 2, height / 2)
-    // }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
-        // ctx.save();
+        ctx.save();
         this.radius == 0 && this.setChildAngle(ctx, pointArr);
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
@@ -76,10 +74,10 @@ class Text extends Rect {
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
             ctx.globalAlpha = this.opacity;
-            this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y);
+            this.rows = this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y);
             ctx.restore();
         }
-        // ctx.restore();
+        ctx.restore();
         // if (this.editble) {  // 如果可以编辑, 绘制光标 
         //     ctx.save()
         //     ctx.moveTo(boxInfo.x + ctx.measureText(this.text).width + 5, boxInfo.y - boxInfo.height / 2);
@@ -93,10 +91,6 @@ class Text extends Rect {
         return path;
     }
 
-    toFitWarpSize(width: number) {  // 文字大小适应宽度
-        // this.fontSize = this.getSize().width/this.fontSize;
-    }
-
     // 自适应换行
     toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number) {
         ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
@@ -106,7 +100,7 @@ class Text extends Rect {
         var padding = this.gls.getRatioSize(1);
         if (ctx.measureText(this.text).width <= boxWidth) {
             ctx.fillText(this.text, startX, startY + totalHeight);
-            return
+            return 1
         }
         for (let i = 0; i < this.text.length; i++) {
             contentWidth += ctx.measureText(this.text[i]).width;
@@ -120,7 +114,6 @@ class Text extends Rect {
                 ctx.fillText(this.text.substring(lastSunStrIndex, i + 1), startX + padding, startY + totalHeight);
             }
         }
-        console.log(totalHeight, this.getSize().height);
         return totalHeight / fontSize + 1;
     }
 

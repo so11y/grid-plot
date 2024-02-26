@@ -1,3 +1,4 @@
+import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { BasicFeature, IPoint, Vector } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
@@ -89,7 +90,7 @@ export default class Bbox extends Rect {
         const pointArr = this.pointArr;
         pointArr.forEach((p, i) => {
             let ctrlP = new CtrlPnt(this, i);
-            ctrlP.name = 'ctrl' + i;
+            ctrlP.name = CtrlType.SIZE_CTRL;
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
         })
         // 旋转点
@@ -100,6 +101,7 @@ export default class Bbox extends Rect {
             const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
             return rotateCtrlPnt;
         });
+        bCtrlP1.name = CtrlType.ANGLE_CTRL;
         bCtrlP1.adsorbTypes = []
         bCtrlP1.translateEvents.push(() => {
             const centerPos = this.getCenterPos(); // 当前控制点的中心点
@@ -123,6 +125,7 @@ export default class Bbox extends Rect {
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
         });
+        bCtrlP1.name = CtrlType.WIDTH_CTRL;
         bCtrlP2.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
@@ -140,7 +143,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize();
+                    feature.resize(CtrlType.WIDTH_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -159,6 +162,7 @@ export default class Bbox extends Rect {
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
         });
+        bCtrlP1.name = CtrlType.WIDTH_CTRL;
         bCtrlP3.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
@@ -176,12 +180,13 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize();
+                    feature.resize(CtrlType.WIDTH_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
                         })
                     }
+                    feature.getRectWrapExtent()
                 }
                 setTranform(this.target);
             }
@@ -195,6 +200,7 @@ export default class Bbox extends Rect {
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
         });
+        bCtrlP1.name = CtrlType.HEIGHT_CTRL;
         bCtrlP4.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
@@ -212,7 +218,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize();
+                    feature.resize(CtrlType.HEIGHT_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -231,6 +237,7 @@ export default class Bbox extends Rect {
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
         });
+        bCtrlP1.name = CtrlType.HEIGHT_CTRL;
         bCtrlP5.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
@@ -248,7 +255,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize();
+                    feature.resize(CtrlType.HEIGHT_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -306,8 +313,8 @@ export default class Bbox extends Rect {
         const bbox = this.parent as Bbox;
         const pointArr = bbox.pointArr;
         const ctrlPos = this.getCenterPos();  // 当前控制点的中心点
-        switch (this.name) {
-            case 'ctrl0':  // 左上角
+        switch (this.index) {
+            case 0:  // 左上角
                 {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[1]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[2], bbox.vctX, -lenX)  // 关联点长度同步移动
@@ -338,7 +345,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize();
+                            feature.resize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -351,7 +358,7 @@ export default class Bbox extends Rect {
                     bbox.lastLenY = lenY;
                     break;
                 }
-            case 'ctrl1':  // 右上角
+            case 1:  // 右上角
                 {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[0]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[3], bbox.vctX, lenX)  // 关联点长度同步移动
@@ -382,7 +389,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize();
+                            feature.resize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -395,7 +402,7 @@ export default class Bbox extends Rect {
                     bbox.lastLenY = lenY;
                     break;
                 }
-            case 'ctrl2':  // 右下角
+            case 2:  // 右下角
                 {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[0], bbox.vctX, lenX)  // 关联点长度同步移动
@@ -426,7 +433,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize();
+                            feature.resize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -439,7 +446,7 @@ export default class Bbox extends Rect {
                     bbox.lastLenY = lenY;
                     break;
                 }
-            case 'ctrl3':  // 左下角
+            case 3:  // 左下角
                 {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[1], bbox.vctX, -lenX)  // 关联点长度同步移动
@@ -470,7 +477,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize();
+                            feature.resize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -491,6 +498,14 @@ export default class Bbox extends Rect {
     getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
         return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
+
+    // // 子元素 宽高发生变化时, 旋转有问题
+    // updateSize(){
+    //     let [minX, maxX, minY, maxY] = this.target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+    //     let center = this.target.getCenterPos();
+    //     this.setSize(maxX - minX, maxY - minY)
+    //     this.setPos(center.x, center.y)
+    // }
 
     destroy() {
         // super.destroy();

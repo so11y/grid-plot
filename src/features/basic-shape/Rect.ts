@@ -1,7 +1,6 @@
 import { IPoint } from "../../Interface";
 import { getLenOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
-import Bbox from "../function-shape/Bbox";
 
 class Rect extends Feature {
 

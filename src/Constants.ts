@@ -21,7 +21,7 @@ enum FontFamily {
 }
 
 // 控制点方位
-enum ControlPoint {
+enum CtrlType {
     SIZE_CTRL = "sizeCtrl",
     ANGLE_CTRL = "angleCtrl",
     WIDTH_CTRL = "widthCtrl",
@@ -45,12 +45,6 @@ enum BlockType {
     POLYGON = "polygon",
     ARROW = "arrow",
     CUSTOM = "custom",
-}
-
-// 元素分类,大类: 点状的,圆形的,线性的
-enum Category {
-    BLOCK = 'block',
-    LINE = 'line'
 }
 
 // 操作的类型
@@ -101,7 +95,7 @@ enum LinkStyle {
     CURVE = 'curve'  // 曲线
 }
 
-// 线段样式
+// 对齐方向
 enum Orientation {
     LEFT = 'left',
     RIGHT = 'right',
@@ -134,12 +128,11 @@ enum AlignType {
 
 export {
     CoordinateSystem,
-    ControlPoint,
+    CtrlType,
     BlockType,
     OperateType,
     LinkMark,
     Events,
-    Category,
     LinkStyle,
     FontFamily,
     Orientation,
