@@ -60,6 +60,9 @@ class Text extends Rect {
                 lastWidth = this.getSize().width
             }
         })
+        this.mousedownEvents.push((e)=>{
+            console.log(11);
+        })
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {

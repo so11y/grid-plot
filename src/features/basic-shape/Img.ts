@@ -12,9 +12,9 @@ class Img extends Rect {
      */
     constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
         console.log(new Path2D());
-        
-        if(encodeURIComponent(src).replace(/%../g,"x").length > 500000){
-            throw "只支持0.5M一下的文件!"   
+
+        if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
+            throw "只支持0.5M一下的文件!"
         }
         try {
             var binaryString = window.atob(src); // 将Base64字符串转换为二进制字符串
@@ -61,12 +61,14 @@ class Img extends Rect {
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.element) {
+            ctx.save();
             const { width, height, leftTop } = this.getSize(pointArr);
             this.radius == 0 && this.setChildAngle(ctx, pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 考虑优化问题
             ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.element, leftTop.x, leftTop.y, width, height);
+            ctx.restore();
             ctx.restore();
         }
         return path;

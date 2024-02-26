@@ -33,13 +33,12 @@ class Rect extends Feature {
             let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
-            path.roundRect(leftTop.x, leftTop.y, width, height, radius);
+            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
             // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
         // this.closePath && path.closePath()
-        this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.globalAlpha = this.opacity;
         this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
@@ -57,6 +56,7 @@ class Rect extends Feature {
         this.setChildAngle(ctx, pointArr);
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
+        this.setPointIn(ctx, path)
         ctx.restore();
         return path;
     }

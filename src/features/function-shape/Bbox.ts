@@ -27,10 +27,10 @@ export default class Bbox extends Rect {
         let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
         let center = target.getCenterPos();
         super(center.x, center.y, maxX - minX, maxY - minY);
+        // this.gls.test = this.gls.getPixelPos(target.pointArr[0])
         this.className = 'Bbox';
         this.isFixedPos = target.isFixedPos;
         // this.isFixedSize = target.isFixedSize;
-
         this.addFeature(target);
         this.target = target;
         this.ctrlPntSize = ctrlPntSize;

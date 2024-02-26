@@ -1,10 +1,11 @@
 import { CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { BasicFeature, IPoint, Size } from "../Interface";
+import { BasicFeature, IPoint, Props, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
+import Text from "./basic-shape/Text";
 
 class Feature {
 
@@ -142,7 +143,6 @@ class Feature {
         })
         ctx.save()
         this.closePath && path.closePath()
-        this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
@@ -161,6 +161,7 @@ class Feature {
         this.isStroke && ctx.stroke(path);
         ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        this.setPointIn(ctx, path)
         ctx.restore();
         return path;
     }
@@ -275,19 +276,22 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature?: BasicFeature, cbSelect?: boolean) {
+    addFeature(feature?: BasicFeature, props?: Props) {
         if (!feature) return;
         if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
-        feature.angle = feature.parent.angle;
         function setProps(f: Feature) {   // 递归设置子元素属性
-            cbSelect != undefined && (f.cbSelect = cbSelect);
+            if(props){
+                props.cbSelect != undefined && (f.cbSelect = props.cbSelect);
+                props.angle != undefined && (f.angle = props.angle);
+            }
             f.children.forEach(cf => { setProps(cf) })
         }
         setProps(feature)
     }
+
     // 删除指定子元素
     removeChild(feature: Feature) {
         feature.parent = null;
@@ -337,53 +341,53 @@ class Feature {
         })
     }
 
-    ontranslate() {
-        this.translateEvents.forEach(f => { f() })
-        this.onTranslate && this.onTranslate();
+    ontranslate(e?:any) {
+        this.translateEvents.forEach(f => { f(e) })
+        this.onTranslate && this.onTranslate(e);
     }
-    onmouseover() {
-        this.mouseoverEvents.forEach(f => { f() })
-        this.onMouseover && this.onMouseover();
+    onmouseover(e?:any) {
+        this.mouseoverEvents.forEach(f => { f(e) })
+        this.onMouseover && this.onMouseover(e);
     }
-    onmousemove() {
-        this.mousemoveEvents.forEach(f => { f() })
-        this.onMousemove && this.onMousemove();
+    onmousemove(e?:any) {
+        this.mousemoveEvents.forEach(f => { f(e) })
+        this.onMousemove && this.onMousemove(e);
     }
-    onmousedown() {
-        this.mousedownEvents.forEach(f => { f() })
-        this.onMousedown && this.onMousedown();
+    onmousedown(e?:any) {
+        this.mousedownEvents.forEach(f => { f(e) })
+        this.onMousedown && this.onMousedown(e);
     }
-    onmouseup() {
-        this.mouseupEvents.forEach(f => { f() })
-        this.onMouseup && this.onMouseup();
+    onmouseup(e?:any) {
+        this.mouseupEvents.forEach(f => { f(e) })
+        this.onMouseup && this.onMouseup(e);
     }
-    onmouseleave() {
-        this.mouseleaveEvents.forEach(f => { f() })
-        this.onMouseleave && this.onMouseleave();
+    onmouseleave(e?:any) {
+        this.mouseleaveEvents.forEach(f => { f(e) })
+        this.onMouseleave && this.onMouseleave(e);
     }
-    ondbclick() {
-        this.dbclickEvents.forEach(f => { f() })
-        this.onDbclick && this.onDbclick();
+    ondbclick(e?:any) {
+        this.dbclickEvents.forEach(f => { f(e) })
+        this.onDbclick && this.onDbclick(e);
     }
-    ondragend() {
-        this.dragendEvents.forEach(f => { f() })
-        this.onDragend && this.onDragend();
+    ondragend(e?:any) {
+        this.dragendEvents.forEach(f => { f(e) })
+        this.onDragend && this.onDragend(e);
     }
     resize(type?: CtrlType) {
         this.resizeEvents.forEach(f => { f(type) })
         this.onResize && this.onResize(type);
     }
-    ondraw() {
-        this.drawEvents.forEach(f => { f() })
-        this.onDraw && this.onDraw();
+    ondraw(e?:any) {
+        this.drawEvents.forEach(f => { f(e) })
+        this.onDraw && this.onDraw(e);
     }
-    onrotate() {
-        this.rotateEvents.forEach(f => { f() })
-        this.onRotate && this.onRotate();
+    onrotate(e?:any) {
+        this.rotateEvents.forEach(f => { f(e) })
+        this.onRotate && this.onRotate(e);
     }
-    ondelete() {
-        this.deleteEvents.forEach(f => { f() })
-        this.onDelete && this.onDelete();
+    ondelete(e?:any) {
+        this.deleteEvents.forEach(f => { f(e) })
+        this.onDelete && this.onDelete(e);
     }
 
     destroy() {

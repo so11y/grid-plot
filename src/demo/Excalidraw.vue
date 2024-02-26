@@ -565,10 +565,11 @@ function reset(clear = false) {
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
+    
     const text = new Text(`当    内容特别多的时候，canvas不会自动换行，需要特别处理当内
     容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，
     canvas不会自动换行，需要特别处理`, 460, 100, 200, 30);
-    // text.fitSize = true;
+    text.fitSize = true;
     gls.addFeature(text, false);
     // rect.addFeature(text);
 
@@ -576,9 +577,13 @@ function reset(clear = false) {
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2, false)
 
-    // let rect4 = new Rect(350, 200, 50, 50)
+    let rect4 = new Rect(350, 200, 50, 50);
     // rect4.isFixedSize = true;
-    // gls.addFeature(rect4, false)
+    gls.addFeature(rect4, false)
+    const text2 = new Text("测试文本", 350, 200, 50, 10);
+    gls.addFeature(text2, false);
+    rect4.addFeature(text2)
+    rect4.rotate(45)
 
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
