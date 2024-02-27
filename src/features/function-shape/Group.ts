@@ -6,13 +6,11 @@ import Feature from "../Feature";
 
 export default class Group extends Rect {
 
-    // flex-column
-
     constructor(features: BasicFeature[]) {   // 相对坐标
         super(0, 0, 0, 0);
         features = features.filter(f => !f.isFixedPos && !f.isFixedSize) // 过滤不合法的元素
         features.forEach(f => {
-            this.addFeature(f, false);
+            this.addFeature(f, {cbSelect: false});
         })
         this.toResize(features);
         this.className = 'Group';
@@ -21,6 +19,7 @@ export default class Group extends Rect {
         this.closePath = true;
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
+        this.cbTransformChild = false;
         // this.translateEvents.push(() => {
         //     console.log(111);
         // })

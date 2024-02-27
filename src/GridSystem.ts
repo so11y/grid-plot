@@ -197,7 +197,7 @@ class GridSystem {
         if (ev.buttons != 1) {
             this.focusNode = focusNode;
         } else {  // 左键点击
-            focusNode?.onmousedown && focusNode.onmousedown();
+            focusNode?.onmousedown && focusNode.onmousedown(ev);
             if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                 this.enableBbox(null);
                 if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {

@@ -67,7 +67,7 @@ class Feature {
     cbMove: boolean = true;  // 是否可被拖拽
     cbAdsorb: boolean = true;
     cbTransform: boolean = true;  // 是否可被形变
-    cbTransformChild: boolean = false; // 子元素是否可被形变
+    cbTransformChild: boolean = true; // 子元素是否可被形变
 
     // // 节点事件
     // ondelete: Function | null = null;
@@ -219,6 +219,12 @@ class Feature {
                 } else if (this.isPointIn && !isPointIn) {
                     this.onmouseleave && this.onmouseleave();
                 }
+                // if(!this.isPointIn && isPointIn){
+                //     this.onFocus();
+                // }
+                // if(this.isPointIn && isPointIn){
+
+                // }
                 this.isPointIn = isPointIn;
                 this.isPointIn && this.onmousemove && this.onmousemove();
             }
@@ -276,7 +282,7 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature?: BasicFeature, props?: Props) {
+    addFeature(feature?: BasicFeature, props?: Partial<Props>) {
         if (!feature) return;
         if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
@@ -356,6 +362,9 @@ class Feature {
     onmousedown(e?:any) {
         this.mousedownEvents.forEach(f => { f(e) })
         this.onMousedown && this.onMousedown(e);
+        this.children.forEach(cf=>{
+            cf.onmousedown(e)
+        })
     }
     onmouseup(e?:any) {
         this.mouseupEvents.forEach(f => { f(e) })

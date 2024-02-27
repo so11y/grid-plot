@@ -566,9 +566,7 @@ function reset(clear = false) {
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
     
-    const text = new Text(`当    内容特别多的时候，canvas不会自动换行，需要特别处理当内
-    容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，canvas不会自动换行，需要特别处理当内容特别多的时候，
-    canvas不会自动换行，需要特别处理`, 460, 100, 200, 30);
+    const text = new Text(`当内容特别多的时候，canvas不会自动换行，canvas需要特别处理当内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 30);
     text.fitSize = true;
     gls.addFeature(text, false);
     // rect.addFeature(text);
@@ -581,6 +579,7 @@ function reset(clear = false) {
     // rect4.isFixedSize = true;
     gls.addFeature(rect4, false)
     const text2 = new Text("测试文本", 350, 200);
+    text.fitSize = true;
     gls.addFeature(text2, false);
     rect4.addFeature(text2)
     rect4.rotate(45)
