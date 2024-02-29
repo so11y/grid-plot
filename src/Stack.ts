@@ -61,7 +61,7 @@ class Stack {
         this.pointer--;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.resize())
+        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
@@ -93,7 +93,7 @@ class Stack {
         this.pointer++;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.resize())
+        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 

@@ -10,7 +10,7 @@ class AdsorbPnt extends Rect {
     cbCrossLine: boolean = true;
     crossLineStrokeStyle: string;
 
-    constructor(width: number = 5, cbAdsorption = false, cbCrossLine = false) {   // 相对坐标
+    constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff";
         this.className = "AdsorbPnt";
@@ -28,20 +28,20 @@ class AdsorbPnt extends Rect {
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius?: number): Path2D {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
-        let center = this.getCenterPos(pointArr);
-        if (this.cbCrossLine) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.lineWidth = .5;
-            ctx.strokeStyle = this.crossLineStrokeStyle;
-            ctx.moveTo(0, center.y);
-            ctx.lineTo(ctx.canvas.width, center.y);
-            ctx.moveTo(center.x, 0)
-            ctx.lineTo(center.x, ctx.canvas.height)
-            ctx.setLineDash([8, 10])
-            ctx.stroke();
-            ctx.restore();
-        }
+        // let center = this.getCenterPos(pointArr);
+        // if (this.cbCrossLine) {
+        //     ctx.save();
+        //     ctx.beginPath();
+        //     ctx.lineWidth = .5;
+        //     ctx.strokeStyle = this.crossLineStrokeStyle;
+        //     ctx.moveTo(0, center.y);
+        //     ctx.lineTo(ctx.canvas.width, center.y);
+        //     ctx.moveTo(center.x, 0)
+        //     ctx.lineTo(center.x, ctx.canvas.height)
+        //     ctx.setLineDash([8, 10])
+        //     ctx.stroke();
+        //     ctx.restore();
+        // }
         return path;
     }
 

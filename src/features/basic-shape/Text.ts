@@ -11,6 +11,7 @@ class Text extends Rect {
 
     static mousePos: IPoint = { x: 0, y: 0 }
     static cursorPos: IPoint = { x: 0, y: 0 }
+    static lastDate = Date.now()
     static inputDom: HTMLInputElement | null;
 
     text: string;
@@ -50,7 +51,7 @@ class Text extends Rect {
         this.editble = false;
         this.alpha = 1;
         this.bold = false;
-        this.lineHeight = 0;
+        this.lineHeight = .4;
         this.lineWidth = .2;
         this.rows = 1;
         let lastWidth = this.getSize().width;
@@ -61,38 +62,26 @@ class Text extends Rect {
                 lastWidth = width;
             }
             if (e === CtrlType.WIDTH_CTRL) {
-                // this.getRectWrapExtent();
-                // this.pointArr[2].y = this.pointArr[0].y + this.rows*this.gls.getPixelLen(this.fontSize);
-                // this.pointArr[3].y = this.pointArr[0].y + this.rows*this.gls.getPixelLen(this.fontSize);
                 lastWidth = this.getSize().width
             }
         })
-        this.mousedownEvents.push((e: any) => {
-            // if(this.isFocused || this.parent?.isFocused){
+        this.dbclickEvents.push((e: any) => {
             this.cursorIndex = -1;
             this.editble = true;
             Text.mousePos = getMousePos(this.gls.dom, e);
             this.editText(Text.mousePos)
-            // }else {
-            //     this.editble = false;
-            //     this.cursorIndex = -1;
-            //     Text.mousePos = {x: 0, y: 0}
-            // }
         })
-        document.addEventListener("keydown", (e) => {
-            if (e.keyCode == 8 && this.cursorIndex > 0) {
-                this.text = this.text.slice(0, this.cursorIndex - 1) + this.text.slice(this.cursorIndex);
-                this.cursorIndex--;
-            }
-            // console.log(e.keyCode);
-            // if (e.keyCode == 8 && this.cursorIndex > 0) {
-            //     this.text = this.text.slice(0, this.cursorIndex - 1) + this.text.slice(this.cursorIndex);
-            //     this.cursorIndex--;
-            // }
+        this.blurEvents.push((e: any) => {
+            this.cursorIndex = -1;
+            this.editble = false;
+            Text.mousePos = { x: 0, y: 0 };
+            this.removeInputDom();
         })
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+        console.log();
+        // Text.cursorVisible
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         ctx.save();
         this.radius == 0 && this.setChildAngle(ctx, pointArr);
@@ -107,11 +96,15 @@ class Text extends Rect {
             const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
             this.rows = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
 
-            if (this.editble) {
-                ctx.fillStyle = "red";
-                ctx.fillRect(Text.cursorPos.x, Text.cursorPos.y, 2, fontSize)
+            if (this.editble) {  // 光标闪烁
+                if (Date.now() - Text.lastDate > 600) {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(Text.cursorPos.x, Text.cursorPos.y, 2, fontSize)
+                    if(Date.now() - Text.lastDate > 1300){
+                        Text.lastDate = Date.now();
+                    }
+                }
             }
-
             ctx.restore();
         }
 
@@ -130,7 +123,7 @@ class Text extends Rect {
         return path;
     }
 
-    // 自适应换行
+    // 自适应换行  57
     toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number) {
         ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
         var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
@@ -142,8 +135,7 @@ class Text extends Rect {
         let breakI = 0;  // 换行触的字符下标
         for (let i = 0; i < this.text.length; i++) {
             const curFontWidth = ctx.measureText(this.text[i]).width;
-            contentWidth += curFontWidth;
-            if (contentWidth > (boxWidth - padding * 2) || this.text[i] === '\n') {
+            if ((contentWidth + curFontWidth) > (boxWidth - padding * 2) || this.text[i] === '\n') {
                 breakI = i;
                 ctx.fillText(this.text.substring(lastSunStrIndex, i), startX + padding, startY + contentHeight) //绘制未截取的部分
                 contentHeight += (fontSize + lineHeight);
@@ -155,29 +147,29 @@ class Text extends Rect {
             }
 
             if (this.cursorIndex == i) {
-                let contentWidth2 = 0;
-                while (breakI < i) {
-                    contentWidth2 += ctx.measureText(this.text[breakI]).width;
-                    breakI++;
-                }
-                Text.cursorPos.x = (startX + padding + contentWidth2);
+                Text.cursorPos.x = (startX + padding + contentWidth);
                 Text.cursorPos.y = startY + contentHeight;
             }
-            if (this.cursorIndex <= 0) {
-                if ((Text.mousePos.y - startY) > contentHeight && (Text.mousePos.y - startY) < contentHeight + fontSize) {
+            if (this.cursorIndex == this.text.length) {  // 末尾文字处理
+                Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
+                Text.cursorPos.y = startY + contentHeight;
+            }
+            if (this.cursorIndex < 0) {
+                const realMousePosY = Text.mousePos.y - startY;
+                if (realMousePosY > contentHeight && realMousePosY < contentHeight + fontSize) {
                     Text.cursorPos.y = startY + contentHeight;
-                    let realMousePos = Text.mousePos.x - startX - padding;
-                    if (realMousePos > contentWidth - curFontWidth / 2 && realMousePos < contentWidth + ctx.measureText(this.text[i + 1]).width / 2) {
-                        let contentWidth2 = 0;
-                        while (breakI < i) {
-                            contentWidth2 += ctx.measureText(this.text[breakI]).width;
-                            breakI++;
-                        }
-                        Text.cursorPos.x = (startX + padding + contentWidth2);
+                    const realMousePosX = Text.mousePos.x - startX - padding;
+                    if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
+                        Text.cursorPos.x = (startX + padding + contentWidth);
                         this.cursorIndex = i;
+                    }
+                    if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
+                        Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
+                        this.cursorIndex = i + 1;
                     }
                 }
             }
+            contentWidth += curFontWidth;
         }
         return contentHeight / fontSize + 1;
     }
@@ -199,7 +191,7 @@ class Text extends Rect {
             if (Text.inputDom) {
                 Text.inputDom.focus();
                 // Text.inputDom.addEventListener("keydown", (e: any)=>{
-                //     console.log(e.keyCode);
+                //     console.log(e.keyCode, "keydow");
                 // })
                 Text.inputDom.onchange = () => {
                     if (Text.inputDom) {
@@ -209,7 +201,7 @@ class Text extends Rect {
                     }
                 }
             }
-        }, 500)
+        }, 100)
         // this.editble = true;
         // this.animate = gsap.to(this, {
         //     alpha: 0,
@@ -222,6 +214,14 @@ class Text extends Rect {
         // })
         // }
     }
+
+    removeInputDom() {
+        if (Text.inputDom) {
+            document.body.removeChild(Text.inputDom);
+            Text.inputDom = null;
+        }
+    }
+
     // 元素删除时需要做的事情
     destroy() {
         super.destroy();

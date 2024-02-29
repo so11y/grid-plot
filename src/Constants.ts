@@ -7,7 +7,8 @@ enum CoordinateSystem {
     SCALE_ABILITY = .8,  // 缩放快慢
     NATIVE_SCALE = 10,  // 原始缩放大小
     AREA_FILL_COLOR = "rgba(145,202,255, .5)",  // 区域选择的rect填充色
-    DB_CLICK_DURATION = 250  // 双击间隔的时间
+    DB_CLICK_DURATION = 250,  // 双击间隔的时间
+    DRAG_TRANSITION_MIN_DIST = 5  // 拖拽滑动最小距离
 }
 
 // 控制点方位

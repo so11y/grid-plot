@@ -143,7 +143,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize(CtrlType.WIDTH_CTRL);
+                    feature.onresize(CtrlType.WIDTH_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -180,7 +180,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize(CtrlType.WIDTH_CTRL);
+                    feature.onresize(CtrlType.WIDTH_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -218,7 +218,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize(CtrlType.HEIGHT_CTRL);
+                    feature.onresize(CtrlType.HEIGHT_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -255,7 +255,7 @@ export default class Bbox extends Rect {
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
-                    feature.resize(CtrlType.HEIGHT_CTRL);
+                    feature.onresize(CtrlType.HEIGHT_CTRL);
                     if (feature.cbTransformChild) {
                         feature.children.forEach(f => {
                             setTranform(f);
@@ -345,7 +345,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize(CtrlType.SIZE_CTRL);
+                            feature.onresize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -389,7 +389,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize(CtrlType.SIZE_CTRL);
+                            feature.onresize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -433,7 +433,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize(CtrlType.SIZE_CTRL);
+                            feature.onresize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -477,7 +477,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.resize(CtrlType.SIZE_CTRL);
+                            feature.onresize(CtrlType.SIZE_CTRL);
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);

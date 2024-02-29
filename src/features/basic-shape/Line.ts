@@ -21,8 +21,6 @@ class Line extends Feature {
         super(pointArr);
         this.className = "Line";
         this.closePath = false;
-        this.lineCap = "round"
-        this.lineJoin = "round";
         this.hoverStyle = '#F8EA7A'
     }
 

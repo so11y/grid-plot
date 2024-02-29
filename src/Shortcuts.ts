@@ -59,6 +59,7 @@ const keyCodeMap = new Map([
     ["DEL", 46],
     ["DElETE", 46],
     ["ESC", 27],
+    ["BACKSPACE", 8],
 ]);
 
 export default class Shortcuts {
@@ -91,23 +92,25 @@ export default class Shortcuts {
             mainKey: keyNames.find(ka => ka !== 'CTRL' && ka !== 'SHIFT' && ka !== 'ALT') as string,
             cb,
         })
-        console.log(this.typeArr);
     }
 
     handleEvents = (e: any) => {
+        if (e.keyCode != 116) {  // 白名单 f5 
+            e.preventDefault();
+        }
         this.typeArr.forEach(ta => {
-            if(ta.ctrl){
-                if(!e.ctrlKey){
+            if (ta.ctrl) {
+                if (!e.ctrlKey) {
                     return
                 }
             }
-            if(ta.shift){
-                if(!e.shiftKey){
+            if (ta.shift) {
+                if (!e.shiftKey) {
                     return
                 }
             }
-            if(ta.alt){
-                if(!e.altKey){
+            if (ta.alt) {
+                if (!e.altKey) {
                     return
                 }
             }

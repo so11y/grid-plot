@@ -151,16 +151,16 @@
                     <li>
                         <div class="title">边框样式</div>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineDashArr = []) }" title="实线">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="() => { modifyBorderStyle([]) }"
+                                title="实线">
                                 <i class="iconfont gls-xi-zhixian"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineDashArr = [5, 12]) }" title="虚线">
+                                @click="() => { modifyBorderStyle([5, 12]) }" title="虚线">
                                 <i class="iconfont gls-xuxian"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineDashArr = [5, 20]) }" title="特虚">
+                                @click="() => { modifyBorderStyle([5, 20]) }" title="特虚">
                                 <i class="iconfont gls-xuxian1"></i>
                             </a-button>
                             <a-divider type="vertical"></a-divider>
@@ -172,22 +172,17 @@
                     <li>
                         <div class="title">圆角大小</div>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="modifyRadius(0)"
-                                title="直角">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyRadius(0)" title="直角">
                                 <i class="iconfont gls-zhijiao"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="modifyRadius(0.5)"
-                                title="圆角">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyRadius(0.5)" title="圆角">
                                 <i class="iconfont gls-yuanjiao"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%);visibility: hidden;" title="圆角">
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" v-model:value="props.radius" :step=".1" :min="0" :max="1"
-                                style="width: 100px;"
-                                @change="modifyRadius(e)" />
+                                style="width: 100px;" @change="modifyRadius(e)" />
                         </a-row>
                     </li>
                     <li>
@@ -376,6 +371,8 @@ const isShowPropTab = ref(false);
 const isShowRightClickPanel = ref(false);
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
+const globalStrokeColor = ref("")
+const globalBorderStyle = ref([])
 const env = import.meta.env;
 onMounted(() => {
     reset();
@@ -415,8 +412,12 @@ function onSelectTool(index = 0, param?: any) {
             break;
         case 3: // 点击创建Line
             message.info("点击画布创建吧!")
-            let line1 = new Line();
-            cb = gls?.click2DrawByContinuousClick(line1)
+            let line = new Line();
+            
+            console.log(globalBorderStyle.value, "globalBorderStyle.value");
+            
+            line.lineDashArr = globalBorderStyle.value;
+            cb = gls?.click2DrawByContinuousClick(line)
             break;
         case 4: // 自由笔
             message.info("点击移动绘制吧!")
@@ -424,11 +425,11 @@ function onSelectTool(index = 0, param?: any) {
             function click2DrawByMove() {
                 let line = new Line();
                 line.isFreeStyle = true;
-                line.strokeStyle = "#000"
+                line.strokeStyle = globalStrokeColor.value || "red"
                 line.hoverStyle = "#666"
                 line.focusStyle = "#666"
-                if (!!param) { line.strokeStyle = '#F96363' }
                 cb = gls?.click2DrawByMove(line, !!param, () => {
+                    line.strokeStyle = globalStrokeColor.value || "red"
                     click2DrawByMove();
                 })
             }
@@ -565,8 +566,8 @@ function reset(clear = false) {
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
-    
-    const text = new Text(`当内容特别多的时候，canvas不会自动换行，canvas需要特别处理当内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 30);
+
+    const text = new Text(`当内容特别多的时候，canvas不会自动换行，canvas需要特别处理当内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
     text.fitSize = true;
     gls.addFeature(text, false);
     // rect.addFeature(text);
@@ -592,21 +593,21 @@ function reset(clear = false) {
     gls.addFeature(group, false)
     group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
 
-    // let line = new Line([
-    //     {x: 10,y: 10},
-    //     {x: 50,y: 50},
-    //     {x: 100,y: 70},
-    // ])
+    let line = new Line([
+        {x: 10,y: 10},
+        {x: 50,y: 50},
+        {x: 100,y: 70},
+    ])
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
     // // text2.fitSize = true;
     // gls.addFeature(text2, false);
     // line.addFeature(text2, false);
-    // line.enableCtrlPnts();
-    // gls.addFeature(line, false)
+    line.enableCtrlPnts();
+    gls.addFeature(line, false)
 
     // console.log(group, rect, rect2);
-    
+
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
@@ -667,6 +668,7 @@ function toSpacebetween() {
 
 
 function modifyStrokeStyle(color: string) {
+    globalStrokeColor.value = color;
     let focuseNode = gls?.getFocusNode();
     if (focuseNode) {
         focuseNode.strokeStyle = color;
@@ -677,6 +679,13 @@ function modifyFillStyle(color: string) {
     let focuseNode = gls?.getFocusNode();
     if (focuseNode) {
         focuseNode.fillStyle = focuseNode.hoverStyle = focuseNode.focusStyle = color;
+    }
+}
+
+function modifyBorderStyle(arr: number[]) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode) {
+        focuseNode.lineDashArr = arr;
     }
 }
 

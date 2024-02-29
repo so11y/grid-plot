@@ -96,6 +96,9 @@ class Feature {
     rotateEvents: Function[] = [];
     onDelete: Function | null = null;  // 删除的时候
     deleteEvents: Function[] = [];
+    onBlur: Function | null = null;  // 删除的时候
+    blurEvents: Function[] = [];
+    
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
@@ -347,56 +350,97 @@ class Feature {
         })
     }
 
-    ontranslate(e?:any) {
-        this.translateEvents.forEach(f => { f(e) })
-        this.onTranslate && this.onTranslate(e);
-    }
+    // --------------------元素鼠标事件相关----------------
     onmouseover(e?:any) {
+        this.children.forEach(cf=>{
+            cf.onmouseover(e)
+        })
         this.mouseoverEvents.forEach(f => { f(e) })
         this.onMouseover && this.onMouseover(e);
     }
     onmousemove(e?:any) {
+        this.children.forEach(cf=>{
+            cf.onmousemove(e)
+        })
         this.mousemoveEvents.forEach(f => { f(e) })
         this.onMousemove && this.onMousemove(e);
     }
     onmousedown(e?:any) {
-        this.mousedownEvents.forEach(f => { f(e) })
-        this.onMousedown && this.onMousedown(e);
         this.children.forEach(cf=>{
             cf.onmousedown(e)
         })
+        this.mousedownEvents.forEach(f => { f(e) })
+        this.onMousedown && this.onMousedown(e);
     }
     onmouseup(e?:any) {
+        this.children.forEach(cf=>{
+            cf.onmouseup(e)
+        })
         this.mouseupEvents.forEach(f => { f(e) })
         this.onMouseup && this.onMouseup(e);
     }
     onmouseleave(e?:any) {
+        this.children.forEach(cf=>{
+            cf.onmouseleave(e)
+        })
         this.mouseleaveEvents.forEach(f => { f(e) })
         this.onMouseleave && this.onMouseleave(e);
     }
     ondbclick(e?:any) {
+        this.children.forEach(cf=>{
+            cf.ondbclick(e)
+        })
         this.dbclickEvents.forEach(f => { f(e) })
         this.onDbclick && this.onDbclick(e);
     }
-    ondragend(e?:any) {
-        this.dragendEvents.forEach(f => { f(e) })
-        this.onDragend && this.onDragend(e);
+    // --------------------元素绘制相关----------------
+    ontranslate(e?:any) {
+        this.children.forEach(cf=>{
+            cf.ontranslate(e)
+        })
+        this.translateEvents.forEach(f => { f(e) })
+        this.onTranslate && this.onTranslate(e);
     }
-    resize(type?: CtrlType) {
+    onresize(type?: CtrlType) {
+        this.children.forEach(cf=>{
+            cf.onresize(type)
+        })
         this.resizeEvents.forEach(f => { f(type) })
         this.onResize && this.onResize(type);
     }
     ondraw(e?:any) {
+        this.children.forEach(cf=>{
+            cf.ondraw(e)
+        })
         this.drawEvents.forEach(f => { f(e) })
         this.onDraw && this.onDraw(e);
     }
     onrotate(e?:any) {
+        this.children.forEach(cf=>{
+            cf.onrotate(e)
+        })
         this.rotateEvents.forEach(f => { f(e) })
         this.onRotate && this.onRotate(e);
     }
+    ondragend(e?:any) {
+        this.children.forEach(cf=>{
+            cf.ondragend(e)
+        })
+        this.dragendEvents.forEach(f => { f(e) })
+        this.onDragend && this.onDragend(e);
+    }
+    // --------------------元素操作相关----------------
     ondelete(e?:any) {
+        this.children.forEach(cf=>{
+            cf.ondelete(e)
+        })
         this.deleteEvents.forEach(f => { f(e) })
         this.onDelete && this.onDelete(e);
+    }
+    // 只作用于基础元素
+    onblur(e?:any) {
+        this.blurEvents.forEach(f => { f(e) })
+        this.onBlur && this.onBlur(e);
     }
 
     destroy() {

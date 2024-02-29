@@ -153,14 +153,48 @@ class GridSystem {
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
         GridSystem.Shortcuts.addEvent('del', () => {
-            this.removeFeature(this.getFocusNode(), true)
+            const feature = this.getFocusNode();
+            if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
+                if (feature.cursorIndex < feature.text.length) {
+                    feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
+                }
+            } else {
+                this.removeFeature(feature, true);
+            }
+        })
+        GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
+            const feature = this.getFocusNode();
+            if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
+                feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
+                feature.cursorIndex--;
+            }
         })
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
+        GridSystem.Shortcuts.addEvent(["ctrl", "u"], () => {
+            const feature = this.getFocusNode();
+            if(feature instanceof SelectArea){
+                let group = new Group(feature.children);
+                this.addFeature(group)
+            }
+        })
         GridSystem.Shortcuts.addEvent("esc", () => {
             let sa = this.features.find(f => f instanceof SelectArea) as SelectArea;
             this.removeFeature(sa)
+        })
+        GridSystem.Shortcuts.addEvent("left", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                feature.cursorIndex > 0 && feature.cursorIndex--;
+                console.log(feature.cursorIndex, "feature.cursorIndex");
+            }
+        })
+        GridSystem.Shortcuts.addEvent("right", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                feature.cursorIndex < feature.text.length && feature.cursorIndex++;
+            }
         })
     }
 
@@ -173,6 +207,7 @@ class GridSystem {
     }
 
     private mouseDown = (ev: any) => {
+        const lastFocusNode = this.getFocusNode();
         this.timer2 && cancelAnimationFrame(this.timer2);
         const curPageSlicePos = {
             x: this.pageSlicePos.x,
@@ -208,6 +243,9 @@ class GridSystem {
             // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
             if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
                 this.enableSelectArea(false)
+            }
+            if (lastFocusNode && this.getFocusNode() !== lastFocusNode) {
+                lastFocusNode.onblur();
             }
         }
         if (focusNode && ev.buttons == 1) {  // 拖拽元素
@@ -271,7 +309,7 @@ class GridSystem {
             }
 
             // 摩擦力过渡停止
-            if (this.friction > 0 && (Math.abs(velocity.x) > 3 || Math.abs(velocity.y) > 3)) {  // 有设置摩擦力,and 速度分量要到一定程度才缓动
+            if (this.friction > 0 && (Math.abs(velocity.x) > CoordinateSystem.DRAG_TRANSITION_MIN_DIST || Math.abs(velocity.y) > CoordinateSystem.DRAG_TRANSITION_MIN_DIST)) {  // 有设置摩擦力,and 速度分量要到一定程度才缓动
                 const that = this;
                 const STOP_D = 0.1  // 停止的最小距离条件
                 function animate() {
@@ -292,6 +330,9 @@ class GridSystem {
         // 判断双击事件
         if (new Date().getTime() - this.lastClickTime < CoordinateSystem.DB_CLICK_DURATION) {  // 如果是双击
             this.ondbclick && this.ondbclick(ev);
+            if (focusNode) {
+                focusNode.ondbclick && focusNode.ondbclick(ev);
+            }
             document.dispatchEvent(new CustomEvent(Events.DB_CLICK, { detail: ev }));
         }
         this.lastClickTime = new Date().getTime();
@@ -963,9 +1004,11 @@ class GridSystem {
         }
     }
     enableSelectArea(bool = true) {
+        this.cbSelectFeature = true;
         let sa = this.features.find(f => f instanceof SelectArea);
         this.removeFeature(sa, false);
         if (bool) {
+            this.cbSelectFeature = false;
             sa = new SelectArea();
             this.addFeature(sa, false);
             return sa;
