@@ -174,7 +174,7 @@ class GridSystem {
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
         GridSystem.Shortcuts.addEvent(["ctrl", "u"], () => {
             const feature = this.getFocusNode();
-            if(feature instanceof SelectArea){
+            if (feature instanceof SelectArea) {
                 let group = new Group(feature.children);
                 this.addFeature(group)
             }
@@ -194,6 +194,20 @@ class GridSystem {
             const feature = this.getFocusNode();
             if (feature instanceof Text) {
                 feature.cursorIndex < feature.text.length && feature.cursorIndex++;
+            }
+        })
+        GridSystem.Shortcuts.addEvent("up", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                Text.mousePos.y -= this.getRatioSize(feature.fontSize);
+                feature.cursorIndex = -1;
+            }
+        })
+        GridSystem.Shortcuts.addEvent("down", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                Text.mousePos.y += this.getRatioSize(feature.fontSize)
+                feature.cursorIndex = -1;
             }
         })
     }
@@ -229,67 +243,68 @@ class GridSystem {
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);  // 寻找鼠标悬浮元素
         let moveFlag = false;
         var mousemove = (e: any) => { };
-        if (ev.buttons != 1) {
-            this.focusNode = focusNode;
-        } else {  // 左键点击
-            focusNode?.onmousedown && focusNode.onmousedown(ev);
-            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
-                this.enableBbox(null);
-                if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
-                    let bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
-                    bbox && (focusNode = bbox);
-                }
-            };
-            // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-            if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
-                this.enableSelectArea(false)
-            }
-            if (lastFocusNode && this.getFocusNode() !== lastFocusNode) {
-                lastFocusNode.onblur();
-            }
-        }
-        if (focusNode && ev.buttons == 1) {  // 拖拽元素
-            focusNode.isFocused = true;
-            mousemove = (e: any) => {
-                if (focusNode && focusNode.cbMove) {
-                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                    const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
-                    if (lastMove.x && lastMove.y) {  // 移动元素
-                        focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
-                        // if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
-                        //     let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
-                        //         gridCompute: focusNode.adsorbTypes.includes("grid"),
-                        //         featureCompute: focusNode.adsorbTypes.includes("feature"),
-                        //         onlyCenter: focusNode.isOnlyCenterAdsorb
-                        //     });
-                        //     // if(offsetX>0 || offsetY > 0){
-                        //     //     focusNode.translate(offsetX, offsetY)
-                        //     //     focusNode._orientations = orientations;
-                        //     // }else {
-                        //     // focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
-                        //     // }
-                        // }
-                        moveFlag = true;
+        if (this.cbSelectFeature) {
+            if (ev.buttons != 1) {
+                this.focusNode = focusNode;
+            } else {  // 左键点击
+                focusNode?.onmousedown && focusNode.onmousedown(ev);
+                if (!(focusNode instanceof Bbox) && this.focusedTransform && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
+                    this.enableBbox(null);
+                    if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                        let bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
+                        bbox && (focusNode = bbox);
                     }
-                    lastMove.x = mx;
-                    lastMove.y = my;
+                };
+                // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
+                if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
+                    this.enableSelectArea(false)
+                }
+                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) {
+                    lastFocusNode.onblur();
                 }
             }
-        } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
-            mousemove = (e: any) => {
-                const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                this.ondrag && this.ondrag(e);
-                this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
-                this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
-                this.setPageSliceByExtent(this.extent);
+            if (focusNode && ev.buttons == 1) {  // 拖拽元素
+                focusNode.isFocused = true;
+                mousemove = (e: any) => {
+                    if (focusNode && focusNode.cbMove) {
+                        const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                        const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
+                        if (lastMove.x && lastMove.y) {  // 移动元素
+                            focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
+                            // if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
+                            //     let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
+                            //         gridCompute: focusNode.adsorbTypes.includes("grid"),
+                            //         featureCompute: focusNode.adsorbTypes.includes("feature"),
+                            //         onlyCenter: focusNode.isOnlyCenterAdsorb
+                            //     });
+                            //     // if(offsetX>0 || offsetY > 0){
+                            //     //     focusNode.translate(offsetX, offsetY)
+                            //     //     focusNode._orientations = orientations;
+                            //     // }else {
+                            //     // focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
+                            //     // }
+                            // }
+                            moveFlag = true;
+                        }
+                        lastMove.x = mx;
+                        lastMove.y = my;
+                    }
+                }
+            } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
+                mousemove = (e: any) => {
+                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                    this.ondrag && this.ondrag(e);
+                    this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
+                    this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
+                    this.setPageSliceByExtent(this.extent);
 
-                velocity.x = moveX - lastMove.x; // 计算dx
-                velocity.y = moveY - lastMove.y; // 计算dy
-                lastMove.x = moveX;
-                lastMove.y = moveY;
+                    velocity.x = moveX - lastMove.x; // 计算dx
+                    velocity.y = moveY - lastMove.y; // 计算dy
+                    lastMove.x = moveX;
+                    lastMove.y = moveY;
+                }
             }
         }
-
         var mouseup = (e: any) => {
             this.onmouseup && this.onmouseup(e);
             document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
@@ -643,7 +658,7 @@ class GridSystem {
             }
             if (this.isCtrlFeature(this.focusNode)) {
                 if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
-                    return this.focusNode.parent.parent as BasicFeature;
+                    return this.focusNode.parent.children[0] as BasicFeature;
                 } else {  // 比如线段的ctrlNode
                     return this.focusNode.parent as BasicFeature;
                 }
@@ -1004,13 +1019,10 @@ class GridSystem {
         }
     }
     enableSelectArea(bool = true) {
-        this.cbSelectFeature = true;
         let sa = this.features.find(f => f instanceof SelectArea);
         this.removeFeature(sa, false);
         if (bool) {
-            this.cbSelectFeature = false;
             sa = new SelectArea();
-            this.addFeature(sa, false);
             return sa;
         }
     }

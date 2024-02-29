@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.woff2?t=1708167481150') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.woff?t=1708167481150') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.ttf?t=1708167481150') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_7dxu8uorvdn.svg?t=1708167481150#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.woff2?t=1709209696820') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.woff?t=1709209696820') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.ttf?t=1709209696820') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.svg?t=1709209696820#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,18 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-scale-same:before {
+  content: "\e6b4";
+}
+
+.gls-shuiping-flex:before {
+  content: "\e636";
+}
+
+.gls-chuizhi-flex:before {
+  content: "\e639";
 }
 
 .gls-hebing:before {
@@ -213,6 +225,7 @@
 .gls-wenzi:before {
   content: "\e616";
 }
+
 
 
 ul, li, body {

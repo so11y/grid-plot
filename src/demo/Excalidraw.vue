@@ -236,8 +236,13 @@
                             </a-button>
                         </a-row>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)" title="顶对齐" @click="toSpacebetween">
-                                <i class="iconfont gls-dingduiqi"></i>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="水平-弹性布局"
+                                @click="toSpacebetween(AlignType.HORIZONAL)">
+                                <i class="iconfont gls-chuizhi-flex"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直-弹性布局"
+                                @click="toSpacebetween(AlignType.VERTICAL)">
+                                <i class="iconfont gls-shuiping-flex"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -263,6 +268,9 @@
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制为图片到剪贴板"
                                 @click="gls?.copyImageToClipboard(gls.getFocusNode())">
                                 <i class="iconfont gls-fuzhitupian"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="同步缩放" @click="setTranformChild">
+                                <i class="iconfont gls-scale-same"></i>
                             </a-button>
                         </a-row>
                     </li>
@@ -413,9 +421,9 @@ function onSelectTool(index = 0, param?: any) {
         case 3: // 点击创建Line
             message.info("点击画布创建吧!")
             let line = new Line();
-            
+
             console.log(globalBorderStyle.value, "globalBorderStyle.value");
-            
+
             line.lineDashArr = globalBorderStyle.value;
             cb = gls?.click2DrawByContinuousClick(line)
             break;
@@ -582,7 +590,7 @@ function reset(clear = false) {
     const text2 = new Text("测试文本", 350, 200);
     text.fitSize = true;
     gls.addFeature(text2, false);
-    rect4.addFeature(text2)
+    rect4.addFeature(text2, { cbSelect: false })
     rect4.rotate(45)
 
     let circle = new Circle(280, 180, 30, 30)
@@ -594,9 +602,9 @@ function reset(clear = false) {
     group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
 
     let line = new Line([
-        {x: 10,y: 10},
-        {x: 50,y: 50},
-        {x: 100,y: 70},
+        { x: 10, y: 10 },
+        { x: 50, y: 50 },
+        { x: 100, y: 70 },
     ])
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
@@ -659,10 +667,10 @@ function toVerticalAlign() {
     sa && sa.toVerticalAlign();
     message.info('垂直对齐');
 }
-function toSpacebetween() {
+function toSpacebetween(flexFLow = AlignType.HORIZONAL) {
     let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     // sa && sa.toSpaceAroud();
-    sa && sa.toSpaceBetween();
+    sa && sa.toSpaceBetween(sa.children, flexFLow);
     message.info('均匀分布');
 }
 
@@ -694,6 +702,15 @@ function modifyRadius(radius: number) {
     if (focuseNode && focuseNode instanceof Rect) {
         focuseNode.radius = radius;
     }
+}
+
+function setTranformChild() {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode) {
+        focuseNode.cbTransformChild = !focuseNode.cbTransformChild;
+        console.log(focuseNode.cbTransformChild, "focuseNode.cbTransformChild");
+    }
+    message.info('同步缩放');
 }
 
 </script>

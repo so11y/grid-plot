@@ -21,6 +21,7 @@ class Text extends Rect {
     fontFamily: FontFamily;
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
+    contentHeight: number;
     padding: number = 0;
 
     fontWeight: number;
@@ -54,6 +55,7 @@ class Text extends Rect {
         this.lineHeight = .4;
         this.lineWidth = .2;
         this.rows = 1;
+        this.contentHeight = 0;
         let lastWidth = this.getSize().width;
         this.resizeEvents.push((e: CtrlType) => {  // 控制点改变大小触发的钩子
             if (this.fitSize && e === CtrlType.SIZE_CTRL) {
@@ -94,13 +96,15 @@ class Text extends Rect {
             this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
             ctx.globalAlpha = this.opacity;
             const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
-            this.rows = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
+            let { rows, contentHeight } = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
+            this.rows = rows;
+            this.contentHeight = contentHeight;
 
             if (this.editble) {  // 光标闪烁
                 if (Date.now() - Text.lastDate > 600) {
                     ctx.fillStyle = "red";
                     ctx.fillRect(Text.cursorPos.x, Text.cursorPos.y, 2, fontSize)
-                    if(Date.now() - Text.lastDate > 1300){
+                    if (Date.now() - Text.lastDate > 1300) {
                         Text.lastDate = Date.now();
                     }
                 }
@@ -146,32 +150,47 @@ class Text extends Rect {
                 ctx.fillText(this.text.substring(lastSunStrIndex, i + 1), startX + padding, startY + contentHeight);
             }
 
-            if (this.cursorIndex == i) {
-                Text.cursorPos.x = (startX + padding + contentWidth);
-                Text.cursorPos.y = startY + contentHeight;
-            }
-            if (this.cursorIndex == this.text.length) {  // 末尾文字处理
-                Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
-                Text.cursorPos.y = startY + contentHeight;
-            }
-            if (this.cursorIndex < 0) {
-                const realMousePosY = Text.mousePos.y - startY;
-                if (realMousePosY > contentHeight && realMousePosY < contentHeight + fontSize) {
+            if (this.editble) {
+                if (this.cursorIndex == i) {
+                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth);
                     Text.cursorPos.y = startY + contentHeight;
-                    const realMousePosX = Text.mousePos.x - startX - padding;
-                    if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
-                        Text.cursorPos.x = (startX + padding + contentWidth);
-                        this.cursorIndex = i;
+                }
+                if (this.cursorIndex == this.text.length) {  // 末尾文字处理
+                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth + curFontWidth);
+                    Text.cursorPos.y = startY + contentHeight;
+                }
+                if (this.cursorIndex < 0) {
+                    let realMousePosY = 0;
+                    const mouseY = Text.mousePos.y - startY;
+                    if (mouseY < 0) {
+                        realMousePosY = 0;
+                        Text.mousePos.y = startY;
+                    } else if (mouseY > this.contentHeight) {
+                        realMousePosY = this.contentHeight;
+                        Text.mousePos.y = startY + this.contentHeight;
+                    } else {
+                        realMousePosY = mouseY;
                     }
-                    if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
-                        Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
-                        this.cursorIndex = i + 1;
+                    if (realMousePosY >= contentHeight && realMousePosY <= contentHeight + fontSize) {
+                        Text.cursorPos.y = startY + contentHeight;
+                        const realMousePosX = Text.mousePos.x - startX - padding;
+                        if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
+                            Text.cursorPos.x = (startX + padding + contentWidth);
+                            this.cursorIndex = i;
+                        }
+                        if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
+                            Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
+                            this.cursorIndex = i + 1;
+                        }
                     }
                 }
             }
             contentWidth += curFontWidth;
         }
-        return contentHeight / fontSize + 1;
+        return {
+            rows: contentHeight / (fontSize + lineHeight) + 1,
+            contentHeight,
+        };
     }
 
 
@@ -202,17 +221,6 @@ class Text extends Rect {
                 }
             }
         }, 100)
-        // this.editble = true;
-        // this.animate = gsap.to(this, {
-        //     alpha: 0,
-        //     duration: .45,
-        //     yoyo: true,
-        //     repeat: -1,
-        //     // onUpdate(e) {
-        //     //     // console.log(111, that.alpha);
-        //     // }
-        // })
-        // }
     }
 
     removeInputDom() {

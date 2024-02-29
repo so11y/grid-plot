@@ -41,21 +41,6 @@ function getUuid(): string {
 }
 
 /**
- * 一个点相对另一个点旋转后的坐标
- * @param point // 要旋转的点
- * @param originPoint // 相对的原点,不动的点
- * @param angle // 旋转的角度
- * @returns 
- */
-function getRotatePoint(point: IPoint, originPoint: IPoint = { x: 0, y: 0 }, angle: number) {
-    const cosA = Math.cos(angle * Math.PI / 180);
-    const sinA = Math.sin(angle * Math.PI / 180);
-    const rx = originPoint.x + (point.x - originPoint.x) * cosA - (point.y - originPoint.y) * sinA;
-    const ry = originPoint.y + (point.x - originPoint.x) * sinA + (point.y - originPoint.y) * cosA;
-    return { x: rx, y: ry };
-}
-
-/**
  * 三次贝赛尔曲线, 两个控制点
  * @param t // 第几段,
  * @param p0 // 起始点
@@ -70,92 +55,6 @@ function calculateBezierPointForCubic(t: number, p0: IPoint, p1: IPoint, p2: IPo
     point.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
     point.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
     return point;
-}
-
-/**
- * 点与线的最短距离
- * @param x 点
- * @param y 
- * @param x1 两点连成的线
- * @param y1 
- * @param x2 
- * @param y2 
- * @returns 
- */
-function distanceOfPoint2Line(x: number, y: number, x1: number, y1: number, x2: number, y2: number) {
-    var A = x - x1;
-    var B = y - y1;
-    var C = x2 - x1;
-    var D = y2 - y1;
-
-    var dot = A * C + B * D;
-    var len_sq = C * C + D * D;
-    var param = -1;
-    if (len_sq != 0) //线段长度不能为0
-        param = dot / len_sq;
-
-    var xx, yy;
-
-    if (param < 0) {
-        xx = x1;
-        yy = y1;
-    }
-    else if (param > 1) {
-        xx = x2;
-        yy = y2;
-    }
-    else {
-        xx = x1 + param * C;
-        yy = y1 + param * D;
-    }
-
-    var dx = x - xx;
-    var dy = y - yy;
-    return Math.sqrt(dx * dx + dy * dy);
-}
-
-function getMinDistLine(point: IPoint, lines: any[]) {
-    if (lines.length <= 0) return;
-    let dists: number[] = []
-    lines.forEach(item => {
-        let xdist1 = item[0].x - point.x;
-        let ydist1 = item[0].y - point.y;
-
-        let xdist2 = item[1].x - point.x;
-        let ydist2 = item[1].y - point.y;
-
-        dists.push(Math.sqrt(xdist1 * xdist1 + ydist1 * ydist1) + Math.sqrt(xdist2 * xdist2 + ydist2 * ydist2));
-    })
-
-    let minDist = Math.min(...dists);
-    let index = dists.findIndex(item => item == minDist)
-    return lines[index]
-}
-
-//点P到线段AB的距离
-//使用矢量算法，计算线AP在线段AB方向上的投影
-function point2SegDist(point: IPoint, point1: IPoint, point2: IPoint) {
-    let x = point.x, x1 = point1.x, x2 = point2.x
-    let y = point.y, y1 = point1.y, y2 = point2.y
-
-    //线段AB 为一个点
-    if (x1 == x2 && y1 == y2) return {
-        type: true,
-        point: point1,
-        dist: 0
-    }
-
-    let cross = (x2 - x1) * (x - x1) + (y2 - y1) * (y - y1);
-    let d2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-    //r = 0 垂足为point1  r = 1 垂足为point2
-    let r = cross / d2;
-    let px = x1 + (x2 - x1) * r;
-    let py = y1 + (y2 - y1) * r;
-    return {
-        type: r >= 0 && r <= 1, //true  垂足在线段内   false 垂足在线段外
-        point: { x: px, y: py },
-        dist: Math.sqrt((x - px) * (x - px) + (py - y) * (py - y))
-    };
 }
 
 // 根据两点获取向量
@@ -231,38 +130,6 @@ function rgb2Hex(rgb: string) {
     return hexRes += hexArr.join('')  // #EDEDED
 }
 
-function getRandomChineseWord() {
-    var _rsl = "";
-    var _randomUniCode = Math.floor(Math.random() * (40870 - 19968) + 19968).toString(16);
-    eval("_rsl=" + '"\\u' + _randomUniCode + '"');
-    return _rsl;
-}
-
-function calculateCenter(lnglatarr: IPoint[]) {
-    var total = lnglatarr.length;
-    var X = 0, Y = 0, Z = 0;
-    lnglatarr.forEach(function (lnglat: IPoint) {
-        var lng = lnglat.x * Math.PI / 180;
-        var lat = lnglat.y * Math.PI / 180;
-        var x, y, z;
-        x = Math.cos(lat) * Math.cos(lng);
-        y = Math.cos(lat) * Math.sin(lng);
-        z = Math.sin(lat);
-        X += x;
-        Y += y;
-        Z += z;
-    });
-    X = X / total;
-    Y = Y / total;
-    Z = Z / total;
-
-    var Lng = Math.atan2(Y, X);
-    var Hyp = Math.sqrt(X * X + Y * Y);
-    var Lat = Math.atan2(Z, Hyp);
-    console.log(Lng, Lat, Hyp);
-    return { x: Lng * 180 / Math.PI, y: Lat * 180 / Math.PI };
-}
-
 
 /**
  * 获取随机数,指定范围内
@@ -276,36 +143,6 @@ function randomNum(minNum: number, maxNum: number) {
         default:
             return 0;
     }
-}
-
-
-//四个坐标 两条直线 求交叉点
-function segmentsIntr(a: Vector, b: Vector, c: Vector, d: Vector) {
-    /** 1 解线性方程组, 求线段交点. **/
-    // 如果分母为0 则平行或共线, 不相交
-    var denominator = (b[1] - a[1]) * (d[0] - c[0]) - (a[0] - b[0]) * (c[1] - d[1]);
-    if (denominator == 0) {
-        return false;
-    }
-    // 线段所在直线的交点坐标 (x , y)
-    var x = ((b[0] - a[0]) * (d[0] - c[0]) * (c[1] - a[1])
-        + (b[1] - a[1]) * (d[0] - c[0]) * a[0]
-        - (d[1] - c[1]) * (b[0] - a[0]) * c[0]) / denominator;
-    var y = -((b[1] - a[1]) * (d[1] - c[1]) * (c[0] - a[0])
-        + (b[0] - a[0]) * (d[1] - c[1]) * a[1]
-        - (d[0] - c[0]) * (b[1] - a[1]) * c[1]) / denominator;
-    /** 2 判断交点是否在两条线段上 **/
-    if (
-        // 交点在线段1上
-        (x - a[0]) * (x - b[0]) <= 0 && (y - a[1]) * (y - b[1]) <= 0
-        // 且交点也在线段2上
-        && (x - c[0]) * (x - d[0]) <= 0 && (y - c[1]) * (y - d[1]) <= 0
-    ) {
-        // 返回交点p
-        return [x, y]
-    }
-    //否则不相交
-    return false
 }
 
 function createVctor(start: IPoint, end: IPoint): Vector {
@@ -546,23 +383,16 @@ function getSizeInBytes(str:string) {
 export {
     getMousePos,
     getUuid,
-    getRotatePoint,
     calculateBezierPointForCubic,
-    distanceOfPoint2Line,
-    getMinDistLine,
     getVectorLength,
     getVectorCenter,
     get2vectorAngle,
-    point2SegDist,
     getVector,
     crossMul,
     getCenterPoint,
     hex2Rgba,
     rgb2Hex,
-    getRandomChineseWord,
-    calculateCenter,
     randomNum,
-    segmentsIntr,
     getRotateVct,
     getLenOfPntToLine,
     getLenOfTwoPnts,

@@ -87,6 +87,7 @@ class SelectArea extends Group {
     }
 
     destroy() {
+        this.gls.cbSelectFeature = true;
         this.children.forEach(cf => cf.parent = null)
     }
 }

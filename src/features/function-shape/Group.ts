@@ -20,9 +20,6 @@ export default class Group extends Rect {
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
         this.cbTransformChild = false;
-        // this.translateEvents.push(() => {
-        //     console.log(111);
-        // })
     }
 
     toResize(features: BasicFeature[]) {  // 重新创建后重设大小
