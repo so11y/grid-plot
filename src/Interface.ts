@@ -45,8 +45,9 @@ interface IBBox {
 
 type Src = string | HTMLImageElement | HTMLVideoElement | null
 
-type Props = Partial<Feature & Text & Img & Link> & {
-    id: string
+type Props = Partial<Feature & Text & Img & Link & Group> & {
+    id: string,
+    children: Props[]
 }
 
 type BasicFeature = Line | Rect | Circle | Group

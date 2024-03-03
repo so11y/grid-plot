@@ -1,13 +1,18 @@
 // 绘制自定义文字
 
-import { FontFamily, Events } from "../../Constants";
+import { FontFamily, Events, CtrlType } from "../../Constants";
 import { IPoint } from "../../Interface";
 import gsap from "gsap";
 import Rect from "./Rect";
 import Feature from "../Feature";
-import { getLenOfTwoPnts } from "../../utils";
+import { getMousePos } from "@/utils";
 
 class Text extends Rect {
+
+    static mousePos: IPoint = { x: 0, y: 0 }
+    static cursorPos: IPoint = { x: 0, y: 0 }
+    static lastDate = Date.now()
+    static inputDom: HTMLInputElement | null;
 
     text: string;
     fitSize: boolean;
@@ -16,51 +21,64 @@ class Text extends Rect {
     fontFamily: FontFamily;
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
-    
+    contentHeight: number;
+    padding: number = 1;
+
     fontWeight: number;
     editble: boolean;  // 双击是否可编辑
     alpha: number;
     bold: boolean;
-    inputDom: HTMLElement | null;
-    animate: any;
-    onChange: Function | null;
+    cursorIndex: number = -1;
 
-    constructor(text: string = "默认文本", x: number, y: number, width: number = 10, height: number = 10, fontSize = 2) {
+    constructor(text: string = "默认文本", x: number, y: number, width?: number, height?: number, fontSize = 2) {
         super(x, y, width, height);
+        if (width == undefined) {
+            width = this.gls.getPixelLen(text.length * (fontSize + .01))
+        }
+        if (height == undefined) {
+            height = this.gls.getPixelLen(fontSize)
+        }
+        this.setSize(width, height)
         this.className = "Text";
         this.text = text;
         this.fitSize = false;
         this.fontSize = fontSize;
         this.fontWeight = 0;
         this.fillStyle = "#fff";
-        this.hoverStyle = "transparent";
-        this.focusStyle = "transparent";
+        this.hoverStyle = "#fff";
+        this.focusStyle = "#fff";
         this.color = "#000"
         this.fontFamily = FontFamily.HEITI
         this.editble = false;
         this.alpha = 1;
         this.bold = false;
-        this.lineHeight = 1;
+        this.lineHeight = .4;
         this.lineWidth = .2;
-        this.inputDom = null;
-        this.onChange = null;
         this.rows = 1;
-        document.addEventListener(Events.DB_CLICK, this.editText);
-        document.addEventListener(Events.MOUSE_DOWN, this.stopEditText);
-        this.toFitSize();
-        this.resizeEvents.push(() => {  // 控制点改变大小触发的钩子
-            if (this.fitSize) {
-                const { width } = this.getSize(this.pointArr)
-                this.toFitWarpSize(width);
+        this.contentHeight = 0;
+        let lastWidth = this.getSize().width;
+        this.resizeEvents.push((e: CtrlType) => {  // 控制点改变大小触发的钩子
+            if (this.fitSize && e === CtrlType.SIZE_CTRL) {
+                const { width } = this.getSize()
+                this.fontSize *= (1 + (width - lastWidth) / width);   // 根据宽度变化的百分比,同步放大fontSize
+                lastWidth = width;
+            }
+            if (e === CtrlType.WIDTH_CTRL) {
+                lastWidth = this.getSize().width
             }
         })
-    }
-
-    // 初始化, 文字自适应宽高
-    toFitSize() {
-        let width = this.gls.getRatioSize(this.fontSize) * this.text.length;
-        let height = this.rows * this.gls.getRatioSize(this.fontSize) + this.rows * this.lineHeight;
-        this.setSize(width/2, height/2)
+        this.dbclickEvents.push((e: any) => {
+            this.cursorIndex = -1;
+            this.editble = true;
+            Text.mousePos = getMousePos(this.gls.dom, e);
+            this.editText(Text.mousePos)
+        })
+        this.blurEvents.push((e: any) => {
+            this.cursorIndex = -1;
+            this.editble = false;
+            Text.mousePos = { x: 0, y: 0 };
+            this.removeInputDom();
+        })
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
@@ -70,120 +88,182 @@ class Text extends Rect {
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
         ctx.lineWidth = this.fontWeight;
-        let lineHeight = this.gls.getRatioSize(this.lineHeight);
         if (Feature.TargetRender) {
             const { width, leftTop } = this.getSize(pointArr);
             ctx.save();
             this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
             ctx.globalAlpha = this.opacity;
-            this.rows = this.toFormateStr(ctx, Feature.TargetRender.getRatioSize(this.fontSize), width, leftTop.x, leftTop.y, lineHeight);
+            const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
+            let { rows, contentHeight } = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
+            this.rows = rows;
+            this.contentHeight = contentHeight;
+            if (this.editble) {  // 光标闪烁
+                if (Date.now() - Text.lastDate > 600) {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(Text.cursorPos.x, Text.cursorPos.y, 2, fontSize)
+                    if (Date.now() - Text.lastDate > 1300) {
+                        Text.lastDate = Date.now();
+                    }
+                }
+            }
             ctx.restore();
         }
+
         ctx.restore();
-        // if (this.editble) {  // 如果可以编辑, 绘制光标 
-        //     ctx.save()
-        //     ctx.moveTo(boxInfo.x + ctx.measureText(this.text).width + 5, boxInfo.y - boxInfo.height / 2);
-        //     ctx.lineTo(boxInfo.x + ctx.measureText(this.text).width + 5, boxInfo.y + boxInfo.height / 2);
-        //     ctx.lineWidth = 4;
-        //     ctx.strokeStyle = `rgba(0,0,0,${this.alpha})`;
-        //     ctx.stroke();
-        //     ctx.restore();
-        //     // let rgba = hex2Rgba(ctx.fillStyle, .5)
-        // }
         return path;
     }
 
-    toFitWarpSize(width: number) {  // 文字大小适应宽度
-        this.fontSize = (this.gls.getRelativeLen(width) / this.text.length) - .1;
-    }
-
     // 自适应换行
-    toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number, lineHeight: number) {
-        if (this.text.length > 1 && fontSize < boxWidth) {
-            let textArr = this.text.split("");
-            let liner = 0;
-            ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
-            var drawText = (textArr: string[]) => {
-                for (let i = 0; i < textArr.length; i++) {
-                    const t = textArr[i];
-                    if (fontSize * (i + 1) > (boxWidth+1)) {
-                        liner++;
-                        drawText(textArr.slice(i, textArr.length))
-                        break;
+    toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number) {
+        ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
+        var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
+        var lastSunStrIndex = 0; //每次开始截取的字符串的索引
+        var contentWidth = 0;
+        const padding = this.gls.getRatioSize(this.padding);
+        startY += padding;
+        const lineHeight = this.gls.getRatioSize(this.lineHeight);
+
+        for (let i = 0; i < this.text.length; i++) {
+            const curFontWidth = ctx.measureText(this.text[i]).width;
+            if ((contentWidth + curFontWidth) > (boxWidth - padding * 2) || this.text[i] === '\n') {
+                ctx.fillText(this.text.substring(lastSunStrIndex, i), startX + padding, startY + contentHeight) //绘制未截取的部分
+                contentHeight += (fontSize + lineHeight);
+                contentWidth = 0;
+                lastSunStrIndex = i;
+            }
+            if (i == this.text.length - 1) {
+                ctx.fillText(this.text.substring(lastSunStrIndex, i + 1), startX + padding, startY + contentHeight);
+            }
+
+            if (this.editble) {
+                if (this.cursorIndex == i) {
+                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth);
+                    Text.cursorPos.y = startY + contentHeight;
+                }
+                if (this.cursorIndex == this.text.length) {  // 末尾文字处理
+                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth + curFontWidth);
+                    Text.cursorPos.y = startY + contentHeight;
+                }
+                if (this.cursorIndex < 0) {
+                    let realMousePosY = 0;
+                    const mouseY = Text.mousePos.y - startY;
+                    if (mouseY < 0) {
+                        realMousePosY = 0;
+                        Text.mousePos.y = startY;
+                    } else if (mouseY > this.contentHeight) {
+                        realMousePosY = this.contentHeight;
+                        Text.mousePos.y = startY + this.contentHeight;
                     } else {
-                        ctx.fillText(t, (startX + fontSize * i), startY + liner * fontSize + liner * lineHeight);
+                        realMousePosY = mouseY;
+                    }
+                    if (realMousePosY >= contentHeight && realMousePosY <= contentHeight + fontSize) {
+                        Text.cursorPos.y = startY + contentHeight;
+                        const realMousePosX = Text.mousePos.x - startX - padding;
+                        if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
+                            Text.cursorPos.x = (startX + padding + contentWidth);
+                            this.cursorIndex = i;
+                        }
+                        if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
+                            Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
+                            this.cursorIndex = i + 1;
+                        }
                     }
                 }
             }
-            drawText(textArr);
-            return liner + 1;
+            contentWidth += curFontWidth;
         }
-        return 1;
+        return {
+            rows: contentHeight / (fontSize + lineHeight) + 1,
+            contentHeight,
+        };
     }
 
-    editText = () => {
-        if (this.isPointIn) {
-            this.inputDom = document.createElement("input") as HTMLInputElement;
-            let { left, top } = this.gls.dom.getBoundingClientRect();
-            let { x, y } = this.gls.getPixelPos(this);
-            this.inputDom.style.position = "fixed";
-            this.inputDom.style.opacity = '0';
-            this.inputDom.style.pointerEvents = 'none';
-            this.inputDom.style.top = `${y + top}px`;
-            this.inputDom.style.left = `${x + left}px`;
-            this.inputDom.value = this.text;
-            document.body.appendChild(this.inputDom);
-            // new Shortcuts("enter", this.enter2Stop.bind(this))
-            setTimeout(() => {
-                if (this.inputDom) {
-                    this.inputDom.focus();
-                    this.inputDom.oninput = () => {
-                        this.text = this.inputDom?.value;
-                        // console.log(this.width, this.height * this.text.length, "");
-                        // if (textWidth > this.width) {
-                        //     this.width = textWidth;
-                        // }
+
+    editText = (pos: IPoint) => {
+        // if (this.isPointIn) {
+        Text.inputDom = document.createElement("input") as HTMLInputElement;
+        let { left, top } = this.gls.dom.getBoundingClientRect();
+        Text.inputDom.style.position = "fixed";
+        Text.inputDom.style.opacity = '0';
+        Text.inputDom.style.pointerEvents = 'none';
+        Text.inputDom.style.top = `${pos.y + top}px`;
+        Text.inputDom.style.left = `${pos.x + left}px`;
+        // Text.inputDom.value = this.text;
+        document.body.appendChild(Text.inputDom);
+        // new Shortcuts("enter", this.enter2Stop.bind(this))
+        setTimeout(() => {
+            if (Text.inputDom) {
+                Text.inputDom.focus();
+                // Text.inputDom.addEventListener("keydown", (e: any)=>{
+                //     console.log(e.keyCode, "keydow");
+                // })
+                Text.inputDom.onchange = () => {
+                    if (Text.inputDom) {
+                        this.text = this.text.slice(0, this.cursorIndex) + Text.inputDom.value + this.text.slice(this.cursorIndex);
+                        this.cursorIndex += Text.inputDom.value.length;
+                        Text.inputDom.value = ''
                     }
                 }
-            }, 500)
-            this.editble = true;
-            this.animate = gsap.to(this, {
-                alpha: 0,
-                duration: .45,
-                yoyo: true,
-                repeat: -1,
-                // onUpdate(e) {
-                //     // console.log(111, that.alpha);
-                // }
-            })
+            }
+        }, 100)
+    }
+
+    removeInputDom() {
+        if (Text.inputDom) {
+            document.body.removeChild(Text.inputDom);
+            Text.inputDom = null;
         }
     }
 
-    // enter2Stop() {
-    //     setTimeout(() => {
-    //         console.log(1111);
-    //         this.stopEditText();
-    //     }, 500)
-    // }
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+        var offscreenCanvas = document.createElement('canvas');
+        // 获取离屏Canvas的2D渲染上下文  
+        var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
 
-    stopEditText = () => {
-        if (this.editble) {
-            this.onChange && this.onChange(this.text, this);
-            this.editble = false;
-            this.alpha = 1;
-            if (this.inputDom) {
-                document.body.removeChild(this.inputDom);
+        const padding = this.gls.getRatioSize(this.padding);
+        const lineHeight = this.gls.getRatioSize(this.lineHeight);
+
+        let { width, height, leftTop } = this.getSize(pointArr);
+        let svgStr = super.getSvg(pointArr, lineWidth, radius);
+        let fontSize = this.gls.getRatioSize(this.fontSize)
+
+        var textArr = ''
+        var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
+        var lastSunStrIndex = 0; //每次开始截取的字符串的索引
+        var contentWidth = 0;
+
+        ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
+
+        // 文本的起始坐标
+        const startX = leftTop.x + lineWidth / 2 + padding;
+        const startY = leftTop.y + lineWidth / 2 + padding + lineHeight;
+
+        for (let i = 0; i < this.text.length; i++) {  // 去换行
+            const curFontWidth = ctx.measureText(this.text[i]).width;
+            contentWidth += curFontWidth;
+            if (contentWidth > (width - padding * 2 - lineWidth * 2)) {
+                textArr += `<text x="${startX}" y="${startY + contentHeight}" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize}; font-weight:${this.bold ? 'bold' : ''};"
+                >${this.text.substring(lastSunStrIndex, i)}</text>`
+                contentHeight += (fontSize + lineHeight);
+                contentWidth = 0;
+                lastSunStrIndex = i;
             }
-            this.inputDom = null;
-            this.animate && this.animate.kill();
+            if (i == this.text.length - 1) {
+                textArr += `<text x="${startX}" y="${startY + contentHeight}" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize}; font-weight:${this.bold ? 'bold' : ''};"
+                >${this.text.substring(lastSunStrIndex, i + 1)}</text>`
+            }
         }
+
+        return svgStr + `
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})">
+            ${textArr} 
+        </g>
+        `
     }
 
     // 元素删除时需要做的事情
     destroy() {
         super.destroy();
-        document.removeEventListener(Events.DB_CLICK, this.editText);
-        document.removeEventListener(Events.MOUSE_DOWN, this.stopEditText);
     }
 
 }

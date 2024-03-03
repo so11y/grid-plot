@@ -1,3 +1,4 @@
+import { BasicFeature } from "@/Interface";
 import { DrawAreaMode, SelectMode } from "../../Constants";
 import { isPointInPolygon, getMousePos } from "../../utils";
 import Group from "./Group";
@@ -12,6 +13,7 @@ class SelectArea extends Group {
         super([]);
         this.callback = fn;
         this.className = "SelectArea";
+        this.cbTransformChild = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "rgba(220, 233, 126, .4)"
         document.addEventListener("mousedown", this.setPointArr);
     }
@@ -51,9 +53,9 @@ class SelectArea extends Group {
             var mouseUp = () => {
                 let featuresIn = this.getSelectFeature();
                 featuresIn.forEach(fi => {
-                    this.addFeature(fi)
+                    this.addFeature(fi as BasicFeature)
                 })
-                this.gls.enableTranform(this, true)
+                this.gls.enableBbox(this)
                 this.callback(featuresIn);
                 document.removeEventListener("mousedown", this.setPointArr)
                 document.removeEventListener("mousemove", mouseMove)
@@ -81,13 +83,12 @@ class SelectArea extends Group {
             }
             return []
         })
-        console.log(featureIn, "featureIn");
         return featureIn
     }
 
     destroy() {
+        this.gls.cbSelectFeature = true;
         this.children.forEach(cf => cf.parent = null)
-
     }
 }
 

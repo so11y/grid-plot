@@ -1,40 +1,41 @@
 import GridSystem from "./GridSystem";
-import { Props } from "./Interface";
+import { BasicFeature, Props } from "./Interface";
 
 class Stack {
 
-    statusList: Props[][];  // gls中所有的元素放到stackList中
-    pointer: number;  // 指针,下标
+    statusList: Props[][] = [];  // gls中所有的元素放到stackList中
+    pointer: number = -1;  // 指针,下标
     gls: GridSystem;
+    isLocal = true;
 
     constructor() {
-        this.statusList = []
-        this.pointer = this.statusList.length - 1;
         this.gls = GridSystem.Gls;
         this.record();
     }
 
     record() {
-        // console.log("记录一下");
         let featurePropsArr: Props[] = [];
         while (this.pointer != this.statusList.length - 1) {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
             this.statusList.pop();
         }
-        this.gls.features.forEach(f => {
-            let fProps = this.gls.recordFeatureProps(f);
+        let features = this.gls.features.filter(f => this.gls.isBasicFeature(f)) as BasicFeature[]
+        features.forEach(f => {
+            let fProps = this.gls.recordFeature(f);
             featurePropsArr.push(fProps)
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
+        // console.log("记录一下", featurePropsArr);
     }
     // [featuresArr1, featuresArr2, featuresArr3]
 
     undo() {
+        console.log(111);
+        
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
-        console.log(curFeaturesPropsArr, prevFeaturesPropsArr);
-        
         if (!prevFeaturesPropsArr) return;
         if (curFeaturesPropsArr.length >= prevFeaturesPropsArr.length) {  // 有修改或是新增元素,撤销需要修改或删除元素
             curFeaturesPropsArr.forEach(cs => {
@@ -43,7 +44,7 @@ class Stack {
                     let id = ps.id;
                     let feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.setFeatureProps(feature, ps);
+                        this.gls.modifyFeature(feature as BasicFeature, ps);
                     }
                 } else {  // 说明之前没有这个元素，撤销需要删除该元素
                     this.gls.removeFeature(cs.id, false);
@@ -58,6 +59,10 @@ class Stack {
             })
         }
         this.pointer--;
+        this.gls.enableBbox(null)
+        this.gls.enableSelectArea(false)
+        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
     restore() {
@@ -78,7 +83,7 @@ class Stack {
                     let id = ns.id;
                     let feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.setFeatureProps(feature, ns);
+                        this.gls.modifyFeature(feature as BasicFeature, ns);
                     }
                 } else {  // 说明之前没有这个元素，恢复需要重新创建这些元素
                     this.gls.createFeature(ns)
@@ -86,6 +91,10 @@ class Stack {
             })
         }
         this.pointer++;
+        this.gls.enableBbox(null)
+        this.gls.enableSelectArea(false)
+        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
     destory() {

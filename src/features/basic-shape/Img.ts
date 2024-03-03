@@ -1,51 +1,67 @@
-import { IBBox, IPoint, Src } from "../../Interface";
-import { getLenOfTwoPnts, toBase64 } from "../../utils";
+import { getSizeInBytes } from "@/utils";
+import { IPoint, Src } from "../../Interface";
 import Rect from "./Rect";
 
 class Img extends Rect {
 
-    element: HTMLImageElement | HTMLVideoElement  // 图片对象
-    src: Src // 图片地址
-    base64Str: string = '';
+    element: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
+    src: string // 图片/视频的地址
 
-    constructor(src: Src, x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
+    /**
+     * @param src 如果是html标签就传入.src属性, 如果是base64直接传入, 
+     */
+    constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
+        console.log(new Path2D());
+
+        if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
+            throw "只支持0.5M一下的文件!"
+        }
+        try {
+            var binaryString = window.atob(src); // 将Base64字符串转换为二进制字符串
+            console.log(binaryString);
+        } catch (error) {
+            console.log(error);
+        }
+        // console.log(src, "getSizeInBytes(src)");
+
+        // if(getSizeInBytes(src)){
+        //     throw "信息量太大,不支持创建!"            
+        // }
         super(x, y, width, height);
         this.className = "Img";
         this.src = src;
-        if (typeof (src) == 'string') {
-            if (src.indexOf(".mp4") != -1) {
-                this.element = document.createElement("video");
-                document.body.appendChild(this.element);
-                this.element.src = src;
-                this.element.style.display = "none";
-                this.element.play();
-            } else {
-                this.element = new Image();
-                this.element.src = src;
-                this.element.onload = () => {
-                    // this.ratio = this.element.width / this.element.height;
-                }
-            }
-            this.src = this.element;
-        } else if (src instanceof HTMLImageElement) {
-            this.element = src;
-            // this.ratio = this.element.width / this.element.height;
-        } else if (src instanceof HTMLVideoElement) {
-            this.element = src;
+        if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
+            const video = this.element = document.createElement("video") as HTMLVideoElement;
             document.body.appendChild(this.element);
+            this.element.src = src;
             this.element.style.display = "none";
             this.element.play();
+            // 视频加载完成事件
+            if (!width && !height) {
+                this.element.addEventListener('loadeddata', () => {  // 重新设置img大小
+                    this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
+                });
+            }
+            this.mousedownEvents.push(() => {
+                video.play();
+            })
+        } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
+            const image = this.element = new Image();
+            this.element.src = src;
+            if (!width && !height) {
+                this.element.onload = () => {
+                    this.setSize(this.gls.getRelativeLen(image.width), this.gls.getRelativeLen(image.height))
+                }
+            }
         } else {
             throw "参数错误!"
-        }
-        if (this.element instanceof HTMLImageElement) {
-            this.base64Str = toBase64(this.element);
         }
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.element) {
+            ctx.save();
             const { width, height, leftTop } = this.getSize(pointArr);
             this.radius == 0 && this.setChildAngle(ctx, pointArr);
             ctx.save();
@@ -53,8 +69,20 @@ class Img extends Rect {
             ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.element, leftTop.x, leftTop.y, width, height);
             ctx.restore();
+            ctx.restore();
         }
         return path;
+    }
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+        let { width, height, leftTop } = this.getSize(pointArr);
+        let svgStr = super.getSvg(pointArr, lineWidth, radius);
+        return svgStr + `
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})">
+            <image href="${this.src}" x="${leftTop.x}" y="${leftTop.y}"  width="${width}" height="${height}"
+            />
+        </g>
+        `
     }
 }
 

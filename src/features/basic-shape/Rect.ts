@@ -5,36 +5,40 @@ import Feature from "../Feature";
 class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
-    isFixedSize: boolean = false; // 是否固定大小
 
     constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
-        let points = getRectPoint({x, y}, {width, height})
+        let points = getRectPoint({ x, y }, { width, height })
         super(points);
         this.className = "Rect";
         this.position.x = x;
         this.position.y = y;
         this.size.width = width;
         this.size.height = height;
+        this.closePath = true;
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = new Path2D();
-        if (radius == 0) {
-            pointArr.forEach((p, i) => {
-                if (i == 0) {
-                    path.moveTo(p.x, p.y)
-                } else {
-                    path.lineTo(p.x, p.y)
-                }
-            })
+        // if (radius == 0) {
+        //     pointArr.forEach((p, i) => {
+        //         if (i == 0) {
+        //             path.moveTo(p.x, p.y)
+        //         } else {
+        //             path.lineTo(p.x, p.y)
+        //         }
+        //     })
+        // } else {
+        const { width, height, leftTop } = this.getSize(pointArr);
+        if (this.isFixedSize) {
+            let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
+            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
-            this.setChildAngle(ctx, pointArr);
-            const { width, height, leftTop } = this.getSize(pointArr);
-            this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
+            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
-        this.closePath && path.closePath()
-        this.setPointIn(ctx, path)
+        // this.closePath && path.closePath()
         ctx.lineCap = this.lineCap;
         ctx.globalAlpha = this.opacity;
         this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
@@ -49,10 +53,10 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
+        this.setChildAngle(ctx, pointArr);
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-        
+        this.setPointIn(ctx, path)
         ctx.restore();
         return path;
     }
@@ -75,7 +79,7 @@ class Rect extends Feature {
         this.position.x = x;
         this.position.y = y;
         this.pointArr = getRectPoint(this.position, this.size);
-    } 
+    }
 
     setSize = (width: number = this.size.width, height: number = this.size.height) => {
         this.size.width = width;
@@ -110,6 +114,15 @@ class Rect extends Feature {
     getRatio() {
         let { width, height } = this.getSize()
         return width / height;
+    }
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+        let { width, height, leftTop } = this.getSize(pointArr);
+        return `
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
+            <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
+        </g>
+        `
     }
 }
 

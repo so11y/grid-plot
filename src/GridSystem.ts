@@ -5,28 +5,23 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
 import { BasicFeature, IPoint, Props } from "./Interface";
 import Stack from "./Stack";
-import { getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
+import { beautifyHTML, getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
-import CtrlPnt from "./features/function-shape/CtrlPnt";
 import Img from "./features/basic-shape/Img";
 import Text from "./features/basic-shape/Text";
-import BCtrlPnt from "./features/function-shape/BCtrlPnt";
 import Bbox from "./features/function-shape/Bbox";
 import Circle from "./features/basic-shape/Circle";
 import SelectArea from "./features/function-shape/SelectArea";
 import AnchorPnt from "./features/function-shape/AnchorPnt";
+import Group from "./features/function-shape/Group";
 
 class GridSystem {
     static Gls: GridSystem;
     static Stack: Stack | null;
     static Bbox: Bbox | null;
-    static SelectArea: SelectArea | null;
-    static lastAndPrevMouseMovePoint = {
-        last_p: { x: 0, y: 0 },
-        prev_p: { x: 0, y: 0 },
-    }
+    static Shortcuts: Shortcuts | null;
 
     className = 'GridSystem';
     scale: number = 10;
@@ -48,33 +43,27 @@ class GridSystem {
     dom: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
+    timer2: number = 0;
     backgroundColor: string = '#fff'
 
     hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
-    features2: Feature[] = [];  // 所有元素的集合
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
     dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
+    friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
 
     cbOverlap: boolean = true;  // 元素间是否可重叠
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
-    cbSelectFeature: boolean = true;  // 画布中的元素是否可被拖拽
+    cbSelectFeature: boolean = true;  // 画布中的元素是否可被选中
     cbAdsorption: boolean = false;  // 元素拖拽是否启用吸附
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
-
-    freeLineConfig = {  // 自由画笔线条粗细参数配置
-        maxWidth: .3,
-        minWidth: .03,
-        maxSpeed: 1.5,
-        minSpeed: 0.1,
-    }
 
     // 提供的事件
     ondrag: Function = () => { };
@@ -95,14 +84,16 @@ class GridSystem {
     }
 
     draw(loop = true, fn?: Function) {
+        // console.log("clear");
         // console.time();
+
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
         fn && fn()
         this.drawFeatures();
-        // this.ctx.fillStyle = "red"
-        // this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
+        this.ctx.fillStyle = "red"
+        this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
@@ -113,9 +104,11 @@ class GridSystem {
 
     // --------------------以下是私有的方法----------------------------
     // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features) {
+    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
         features.forEach(f => {
+            const isBasic = this.isBasicFeature(f);
             if (f.hidden) return;
+            if (isBasic && f.parent && this.isBasicFeature(f.parent) && !isChild) return
             let pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
                 let [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
@@ -129,19 +122,21 @@ class GridSystem {
                 })) return
             }
             Feature.TargetRender = this;
-            let lineWidth = this.getRatioSize(f.lineWidth);
-            this.ctx.save();
+            let lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
             let path;
             if (f instanceof Rect) {
-                let radius = this.getRatioSize(f.radius);
+                let radius = this.getRatioSize(f.radius, f.isFixedSize);
                 path = f.draw(this.ctx, pointArr, lineWidth, radius)
             } else {
                 path = f.draw(this.ctx, pointArr, lineWidth);
             }
             f.ondraw && f.ondraw()
+            this.ctx.save();
             f.isOverflowHidden && this.ctx.clip(path);
-            // console.log(children, "children");
-            // this.drawFeatures(children);
+            if (isBasic) {
+                let children = this.features.filter(cf => cf.parent === f && this.isBasicFeature(cf));  // 找出子元素
+                if (children.length > 0) this.drawFeatures(children, true);
+            }
             this.ctx.restore();
         })
     }
@@ -153,14 +148,68 @@ class GridSystem {
         this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        // document.addEventListener("drop", this.fileDrop);
-        window.addEventListener("mouseup", this.mouseUp.bind(this));
-        document.addEventListener(Events.DB_CLICK, this.dbclick.bind(this));
-        // window.addEventListener("resize", this.setCanvasSize.bind(this))
-        new Shortcuts(["del"], () => {
-            this.removeFeature(this.getBasicFocusNode() as Feature, true)
-            this.enableTranform(this.getBasicFocusNode(), false)
-        });
+        this.dom.ondrop = this.drop2Feature.bind(this);
+        document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
+        document.ondrop = function (e) { e.preventDefault(); };
+        GridSystem.Shortcuts = new Shortcuts();
+        GridSystem.Shortcuts.addEvent('del', () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
+                if (feature.cursorIndex < feature.text.length) {
+                    feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
+                }
+            } else {
+                this.removeFeature(feature, true);
+            }
+        })
+        GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
+            const feature = this.getFocusNode();
+            if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
+                feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
+                feature.cursorIndex--;
+            }
+        })
+        GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
+        GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
+        GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
+        GridSystem.Shortcuts.addEvent(["ctrl", "u"], () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof SelectArea) {
+                let group = new Group(feature.children);
+                this.addFeature(group)
+            }
+        })
+        GridSystem.Shortcuts.addEvent("esc", () => {
+            let sa = this.features.find(f => f instanceof SelectArea) as SelectArea;
+            this.removeFeature(sa)
+        })
+        GridSystem.Shortcuts.addEvent("left", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                feature.cursorIndex > 0 && feature.cursorIndex--;
+                console.log(feature.cursorIndex, "feature.cursorIndex");
+            }
+        })
+        GridSystem.Shortcuts.addEvent("right", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                feature.cursorIndex < feature.text.length && feature.cursorIndex++;
+            }
+        })
+        GridSystem.Shortcuts.addEvent("up", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                Text.mousePos.y -= this.getRatioSize(feature.fontSize);
+                feature.cursorIndex = -1;
+            }
+        })
+        GridSystem.Shortcuts.addEvent("down", () => {
+            const feature = this.getFocusNode();
+            if (feature instanceof Text) {
+                Text.mousePos.y += this.getRatioSize(feature.fontSize)
+                feature.cursorIndex = -1;
+            }
+        })
     }
 
     private mouseMove = (e: any) => {
@@ -172,115 +221,134 @@ class GridSystem {
     }
 
     private mouseDown = (ev: any) => {
+        const lastFocusNode = this.getFocusNode();
+        this.timer2 && cancelAnimationFrame(this.timer2);
         const curPageSlicePos = {
             x: this.pageSlicePos.x,
             y: this.pageSlicePos.y,
         }
+        const velocity = {   // 速度分量
+            x: 0,
+            y: 0
+        };
+        const lastMove = {  // 上一次鼠标位置
+            x: 0,
+            y: 0
+        }
+
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);  // 寻找鼠标悬浮元素
-        let lastMovePos = { x: 0, y: 0 }   // 记录上一次鼠标移动的坐标
+        let moveFlag = false;
         var mousemove = (e: any) => { };
-        if (ev.buttons != 1) {
-            this.focusNode = focusNode;
-        } else {  // 左键点击
-            focusNode?.onmousedown && focusNode.onmousedown();
-            if (!(focusNode instanceof Bbox) && this.focusedTransform && this.cbSelectFeature) {  // 点击了就加控制点,没点击就去除所有控制点
-                this.enableTranform(null, false);
-                if ((this.isBasicFeature(focusNode) || focusNode instanceof SelectArea)) {
-                    this.enableTranform(focusNode, true);
-                    focusNode = GridSystem.Bbox as Bbox;
-                }
-            };
-            // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-            if (!(this.getBasicFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
-                let sa = this.features.find(f => f instanceof SelectArea)
-                sa && this.removeFeature(sa);
-            }
-        }
-        if (focusNode && ev.buttons == 1) {  // 拖拽元素
-            focusNode.isFocused = true;
-            // this.toMaxIndex(this.getBasicFocusNode() as BasicFeature);
-            let pointArr = JSON.parse(JSON.stringify(focusNode.pointArr));
-            let { x: dx, y: dy } = this.getRelativePos({ x: downX, y: downY }, focusNode.isFixedPos);
-            function translateChild(children: Feature[], move: IPoint) {
-                children.forEach(cf => {
-                    cf.translate(move.x, move.y);
-                    translateChild(cf.children, move)
-                })
-            }
-            mousemove = (e: any) => {
-                if (focusNode && focusNode.cbMove) {
-                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                    const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
-                    if (lastMovePos.x && lastMovePos.y) {  // 移动元素
-                        // focusNode.translate(mx - lastMovePos.x, my - lastMovePos.y)
-                        focusNode.pointArr.forEach((p, i) => {   // 拖动元素
-                            if (!focusNode?.isOnlyVerticalDrag) {
-                                p.x = pointArr[i].x + (mx - dx)
-                            }
-                            if (!focusNode?.isOnlyHorizonalDrag) {
-                                p.y = pointArr[i].y + (my - dy)
-                            };
-                        })
-                        translateChild(focusNode.children, { x: mx - lastMovePos.x, y: my - lastMovePos.y });   // 递归的移动所有子元素
-                        if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
-                            let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
-                                gridCompute: focusNode.adsorbTypes.includes("grid"),
-                                featureCompute: focusNode.adsorbTypes.includes("feature"),
-                                onlyCenter: focusNode.isOnlyCenterAdsorb
-                            });
-                            focusNode.translate(offsetX, offsetY)
-                            focusNode._orientations = orientations;
-                        }
-
+        if (this.cbSelectFeature) {
+            if (ev.buttons != 1) {
+                this.focusNode = focusNode;
+            } else {  // 左键点击
+                focusNode?.onmousedown && focusNode.onmousedown(ev);
+                if (!(focusNode instanceof Bbox) && this.focusedTransform && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
+                    this.enableBbox(null);
+                    if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                        let bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
+                        bbox && (focusNode = bbox);
                     }
-                    focusNode.ontranslate();
-                    this.dom.onmouseup = () => {
-                        document.onmousemove = null;
-                        this.dom.onmouseup = null;
-                    };
-                    lastMovePos = { x: mx, y: my }
+                };
+                // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
+                if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
+                    this.enableSelectArea(false)
+                }
+                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) {
+                    lastFocusNode.onblur();
                 }
             }
-        } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
-            mousemove = (e: any) => {
-                GridSystem.lastAndPrevMouseMovePoint.prev_p = GridSystem.lastAndPrevMouseMovePoint.last_p;
-                GridSystem.lastAndPrevMouseMovePoint.last_p = { x: e.clientX, y: e.clientY };
-                this.ondrag && this.ondrag(e);
-                const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
-                this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
-                this.setPageSliceByExtent(this.extent);
+            if (focusNode && ev.buttons == 1) {  // 拖拽元素
+                focusNode.isFocused = true;
+                mousemove = (e: any) => {
+                    if (focusNode && focusNode.cbMove) {
+                        const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                        const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
+                        if (lastMove.x && lastMove.y) {  // 移动元素
+                            focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
+                            // if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
+                            //     let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
+                            //         gridCompute: focusNode.adsorbTypes.includes("grid"),
+                            //         featureCompute: focusNode.adsorbTypes.includes("feature"),
+                            //         onlyCenter: focusNode.isOnlyCenterAdsorb
+                            //     });
+                            //     // if(offsetX>0 || offsetY > 0){
+                            //     //     focusNode.translate(offsetX, offsetY)
+                            //     //     focusNode._orientations = orientations;
+                            //     // }else {
+                            //     // focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
+                            //     // }
+                            // }
+                            moveFlag = true;
+                        }
+                        lastMove.x = mx;
+                        lastMove.y = my;
+                    }
+                }
+            } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
+                mousemove = (e: any) => {
+                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                    this.ondrag && this.ondrag(e);
+                    this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
+                    this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
+                    this.setPageSliceByExtent(this.extent);
+
+                    velocity.x = moveX - lastMove.x; // 计算dx
+                    velocity.y = moveY - lastMove.y; // 计算dy
+                    lastMove.x = moveX;
+                    lastMove.y = moveY;
+                }
             }
         }
-
-        var mouseup = () => {
+        var mouseup = (e: any) => {
+            this.onmouseup && this.onmouseup(e);
+            document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
             if (focusNode) {
                 focusNode.isFocused = false;
                 focusNode._orientations = null;
                 focusNode.onmouseup && focusNode.onmouseup();
                 focusNode.ondragend && focusNode.ondragend();
-                GridSystem.Stack && GridSystem.Stack.record();
+                if (this.isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
+                    GridSystem.Stack && GridSystem.Stack.record();
+                }
             }
             document.removeEventListener("mousemove", mousemove)
             document.removeEventListener("mouseup", mouseup);
             if (ev.buttons === 2 && this.pageSlicePos.x === curPageSlicePos.x && this.pageSlicePos.y === curPageSlicePos.y) {  // 判断右击
                 document.dispatchEvent(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }));
             }
+
+            // 摩擦力过渡停止
+            if (this.friction > 0 && (Math.abs(velocity.x) > CoordinateSystem.DRAG_TRANSITION_MIN_DIST || Math.abs(velocity.y) > CoordinateSystem.DRAG_TRANSITION_MIN_DIST)) {  // 有设置摩擦力,and 速度分量要到一定程度才缓动
+                const that = this;
+                const STOP_D = 0.1  // 停止的最小距离条件
+                function animate() {
+                    that.pageSlicePos.x += velocity.x * that.dragingSensitivity;
+                    that.pageSlicePos.y += velocity.y * that.dragingSensitivity;
+                    velocity.x *= that.friction;
+                    velocity.y *= that.friction;
+                    that.timer2 = requestAnimationFrame(animate);
+                    if (Math.abs(velocity.x) < STOP_D && Math.abs(velocity.y) < STOP_D) {
+                        cancelAnimationFrame(that.timer2);
+                    }
+                }
+                animate();
+            }
         }
         document.addEventListener("mouseup", mouseup)
         document.addEventListener("mousemove", mousemove)
         // 判断双击事件
         if (new Date().getTime() - this.lastClickTime < CoordinateSystem.DB_CLICK_DURATION) {  // 如果是双击
-            // if (focusNode) {
-            //     focusNode.ondbclick && focusNode.ondbclick()
-            // } else {
             this.ondbclick && this.ondbclick(ev);
+            if (focusNode) {
+                focusNode.ondbclick && focusNode.ondbclick(ev);
+            }
             document.dispatchEvent(new CustomEvent(Events.DB_CLICK, { detail: ev }));
-            // }
         }
         this.lastClickTime = new Date().getTime();
     }
@@ -458,11 +526,6 @@ class GridSystem {
         return { x: offsetX, y: offsetY, orientations };
     }
 
-    private mouseUp = (e: any) => {
-        this.onmouseup && this.onmouseup(e);
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
-    }
-
     /**
      * 滚轮滚动事件,重绘网格
      * @param e 
@@ -470,8 +533,7 @@ class GridSystem {
      */
     private mouseWheel = (e: any, scale?: number) => {
         if (!this.cbScale) return;
-        let lastgridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
-        // let lastPageSlicePos = this.pageSlicePos
+        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         this.onzoom && this.onzoom(e);
         e.preventDefault();
         let { x, y } = getMousePos(this.dom, e);
@@ -481,7 +543,7 @@ class GridSystem {
                 this.scale = CoordinateSystem.MAX_SCALESIZE
             } else {
                 this.scale = nextScale;
-                this.back2center(x, y, lastgridSize);
+                this.back2center(x, y, lastGirdSize);
             }
         } else {
             let nextScale = scale || this.scale - CoordinateSystem.SCALE_ABILITY
@@ -489,20 +551,19 @@ class GridSystem {
                 this.scale = CoordinateSystem.MIN_SCALESIZE
             } else {
                 this.scale = nextScale;
-                this.back2center(x, y, lastgridSize);
+                this.back2center(x, y, lastGirdSize);
             }
         }
         document.dispatchEvent(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }));
     };
-    // 以鼠标中心点位置去放大
-    private back2center(x: number, y: number, lastgridSize: number) {
-        var gridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 当前单位大小
-        var different = gridSize - lastgridSize;   // 当前单位大小与上一次单位大小之差
-        this.pageSlicePos.x -= ((x - this.pageSlicePos.x) / lastgridSize) * different;
-        this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastgridSize) * different;
-    }
 
-    dbclick = (e: any) => { }
+    // 以鼠标中心点位置去放大
+    private back2center(x: number, y: number, lastGirdSize: number) {
+        var gridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 当前单位大小
+        var different = gridSize - lastGirdSize;   // 当前单位大小与上一次单位大小之差
+        this.pageSlicePos.x -= ((x - this.pageSlicePos.x) / lastGirdSize) * different;
+        this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastGirdSize) * different;
+    }
 
     private setPageSliceByExtent(extent: number[] = []) { // 限制拖拽范围
         if (extent?.length > 0) {
@@ -528,52 +589,37 @@ class GridSystem {
 
     // --------------------以下是暴露的方法----------------------------
     // --------------------画布内元素的增删查API----------------------------
-    removeFeature(f: Feature | string, isRecord = true) {
+    removeFeature(f: Feature | string | undefined, isRecord = true) {
+        if (!f) return;
         let feature: Feature | null | undefined = null;
         if (f instanceof Feature) {
             feature = f;
         } else {
-            feature = this.features.find(f => f.id === String(f))
+            feature = this.features.find(ff => ff.id == f)
         }
         if (feature) {
-            if (feature.parent && feature.parent instanceof Bbox) {
+            let bbox = this.features.find(f => f instanceof Bbox) as Bbox | undefined;
+            if (bbox && bbox.target === feature) {
+                setTimeout(() => {
+                    this.enableBbox(null)
+                }, 10);
             }
             feature.destroy();
             feature.ondelete();
             this.features = this.features.filter(f => f != feature);
             feature = null;
-            isRecord && GridSystem.Stack && GridSystem.Stack.record();
+            isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 删除元素记录
         }
-        return null;
     }
-    /**
-     * 根据id 寻找子元素
-     * @param id 
-     * @returns 
-     */
-    findFeatureById(id: string | null | undefined): Feature | undefined {
-        for (let index = 0; index < this.features.length; index++) {
-            const f = this.features[index];
-            if (f.id === id) {
-                return f;
-            } else if (f.children.length > 0) {
-                return this.findFeatureById(id);
-            }
-        }
-        return undefined;
-    }
-
     addFeature(feature: Feature, isRecord = true) {
-        // if (isRecord) {
         this.focusNode = feature;
-        // }
         this.features.push(feature);
         if (!feature.zIndex) {
-            let features = this.features.filter(f => !this.isCtrlFeature(f));
+            let features = this.features.filter(f => !this.isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
             feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
-        isRecord && GridSystem.Stack && GridSystem.Stack.record();
+        isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
     toMinusIndex(feature: BasicFeature) {
         let index = this.features.findIndex(f => f === feature);
@@ -598,21 +644,21 @@ class GridSystem {
         this.features.push(feature);
         this.resetIndex();
     }
-    resetIndex(){
+    resetIndex() {
         let features = this.features.filter(f => this.isBasicFeature(f));
         features.forEach((f, i) => f.zIndex = i);
         this.features.sort((a, b) => a.zIndex - b.zIndex);
     }
 
     // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
-    getBasicFocusNode() {
+    getFocusNode() {
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as BasicFeature;
             }
             if (this.isCtrlFeature(this.focusNode)) {
                 if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
-                    return this.focusNode.parent.parent as BasicFeature;
+                    return this.focusNode.parent.children[0] as BasicFeature;
                 } else {  // 比如线段的ctrlNode
                     return this.focusNode.parent as BasicFeature;
                 }
@@ -665,43 +711,58 @@ class GridSystem {
         return len / CoordinateSystem.GRID_SIZE;
     }
 
-    getRatioSize(size: number): number {  // 获取像素宽度， 比如lineWidth， fontSize, 随网格缩放而缩放
-        return size * this.scale;
+    getRatioSize(size: number, isFixedSize?: boolean): number {  // 获取像素宽度， 比如lineWidth， fontSize, 随网格缩放而缩放
+        if (isFixedSize) {
+            return size;
+        } else {
+            return size * this.scale;
+        }
         // return size / this.scale;
     }
 
     // ------------------ 鼠标点击方式去创建元素-----------------
-    click2DrawByClick(rect: Rect | Circle) {
-        this.addFeature(rect);
+    click2DrawByClick(rect: Rect | Circle, fn?: Function) {
+        this.addFeature(rect, false);
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         this.cbSelectFeature = false;
-        var click2draw = (e: any) => {
-            if (e.detail.button === 0) {
-                this.cbSelectFeature = true;
-                rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
-                this.removeFeature(adsorbPnt, false);
-                document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-                document.removeEventListener(Events.MOUSE_MOVE, move2draw);
-            }
-        }
-        var move2draw = (e: any) => {
-            rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
-        }
-        document.addEventListener(Events.MOUSE_DOWN, click2draw);
-        document.addEventListener(Events.MOUSE_MOVE, move2draw);
-        return (remove = true) => {
+        var clear = (remove = true) => {
             this.cbSelectFeature = true;
             remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
             document.removeEventListener(Events.MOUSE_DOWN, click2draw);
             document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
+        var click2draw = (e: any) => {
+            if (e.detail.button === 0) {
+                rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y);
+                clear(false);
+                fn && fn();
+            } else {
+                throw "请用左键绘制!"
+            }
+        }
+        var move2draw = () => {
+            rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
+        }
+        document.addEventListener(Events.MOUSE_DOWN, click2draw);
+        document.addEventListener(Events.MOUSE_MOVE, move2draw);
+        return clear;
     }
 
     // 鼠标点一下添加一个点去画折线
     click2DrawByContinuousClick(line: Line, fn?: Function) {
         this.cbSelectFeature = false;
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
+        var clear = (remove = true) => {
+            this.cbSelectFeature = true;
+            remove && this.removeFeature(line, false);
+            this.removeFeature(adsorbPnt, false);
+            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.RIGHT_CLICK, overDraw);
+            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
+        }
         var move2draw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
         }
@@ -711,28 +772,19 @@ class GridSystem {
                 if (line.pointArr.length == 1) {
                     line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
-                this.addFeature(line);
-                this.dom.addEventListener('mousemove', move2draw);
+                this.addFeature(line, false);
+                document.addEventListener(Events.MOUSE_MOVE, move2draw);
+            } else {
+                throw "请用左键绘制!"
             }
         }
-        let over2draw = () => {
-            this.cbSelectFeature = true;
-            this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.DB_CLICK, over2draw);
-            this.dom.removeEventListener('mousemove', move2draw);
+        let overDraw = () => {
+            clear(false);
             fn && fn();
         }
-        document.addEventListener(Events.DB_CLICK, over2draw);
+        document.addEventListener(Events.RIGHT_CLICK, overDraw);
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
-
-        return () => {
-            this.cbSelectFeature = true;
-            this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.DB_CLICK, over2draw);
-            this.dom.removeEventListener('mousemove', move2draw);
-        }
+        return clear;
     }
 
     // 鼠标按住不放持续画线
@@ -741,8 +793,16 @@ class GridSystem {
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         let lastLineWidth = 0
         let lastTime = 0
-
-        var move2draw = (e: any) => {
+        var clear = (remove = true) => {
+            this.cbSelectFeature = true;
+            remove && this.removeFeature(line, false);
+            this.removeFeature(adsorbPnt, false);
+            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            document.removeEventListener(Events.MOUSE_UP, overDraw);
+            !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
+        }
+        var move2draw = () => {
             let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
             line.addPoint({ x, y });
             if (line.pointArr.length > 1) {
@@ -753,12 +813,12 @@ class GridSystem {
                 let distance = Math.pow(diffx * diffx + diffy * diffy, 0.5);
 
                 let speed = distance / (Date.now() - lastTime) // 0.1 - 3
-                if (speed >= this.freeLineConfig.maxSpeed) {
-                    lineWidth = this.freeLineConfig.minWidth
-                } else if (speed <= this.freeLineConfig.minSpeed) {
-                    lineWidth = this.freeLineConfig.maxWidth
+                if (speed >= Line.freeLineConfig.maxSpeed) {
+                    lineWidth = Line.freeLineConfig.minWidth
+                } else if (speed <= Line.freeLineConfig.minSpeed) {
+                    lineWidth = Line.freeLineConfig.maxWidth
                 } else {
-                    lineWidth = this.freeLineConfig.maxWidth - (speed / this.freeLineConfig.maxSpeed) * this.freeLineConfig.maxWidth
+                    lineWidth = Line.freeLineConfig.maxWidth - (speed / Line.freeLineConfig.maxSpeed) * Line.freeLineConfig.maxWidth
                 }
                 lineWidth = lineWidth * (1 / 3) + lastLineWidth * (2.8 / 3)
                 lastLineWidth = lineWidth
@@ -766,7 +826,7 @@ class GridSystem {
                 line.lineWidthArr.push(lineWidth);
             }
         }
-        let over2draw = () => {
+        let overDraw = () => {
             if (isLaserPen) {  // 激光笔
                 let timer = 0, timer2 = 0;
                 timer = setTimeout(() => {
@@ -775,35 +835,28 @@ class GridSystem {
                         if (line.pointArr.length <= 0) {
                             clearInterval(timer2)
                             clearTimeout(timer)
-                            this.removeFeature(line);
+                            this.removeFeature(line, false);
                         }
                     }, 20)
                 }, 350)
             }
-            this.cbSelectFeature = true;
-            this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
-            document.removeEventListener(Events.MOUSE_UP, over2draw);
+            clear(false);
             fn && fn();
         }
-        var click2draw = (e: any) => {
+        var click2draw = (e: any) => {  // 
             if (e.detail.button === 0) {
                 let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
                 line.addPoint({ x, y });
                 document.addEventListener(Events.MOUSE_MOVE, move2draw);
-                document.addEventListener(Events.MOUSE_UP, over2draw);
-                this.addFeature(line);
+                document.addEventListener(Events.MOUSE_UP, overDraw);
+                this.addFeature(line, false);
+            } else {
+                throw "请用左键绘制!"
             }
         }
+        // document.addEventListener(Events.MOUSE_UP, overDraw);
         document.addEventListener(Events.MOUSE_DOWN, click2draw);
-        return () => {
-            this.cbSelectFeature = true;
-            this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
-            document.removeEventListener(Events.MOUSE_UP, over2draw);
-        }
+        return clear;
     }
 
 
@@ -846,6 +899,29 @@ class GridSystem {
         }
     }
 
+    // 判断是否时基础元素
+    isBasicFeature(f?: Feature | null | undefined) {
+        if (!f) return false;
+        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    }
+    // 判断是否时控制点元素
+    isCtrlFeature(f?: Feature | null | undefined) {
+        if (!f) return false;
+        return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'CCtrlPnt'
+    }
+
+    translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {
+        gsap.to(this.pageSlicePos, {
+            duration,
+            x: offsetX,
+            y: offsetY,
+            ease: "slow.out",
+        })
+        // this.pageSlicePos.x += offsetX;
+        // this.pageSlicePos.y += offsetY;
+    }
+
     // 加载字体
     loadFont(fontFamily: FontFamily) {
         const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
@@ -879,51 +955,24 @@ class GridSystem {
 
     // 缩放至 
     zoomTo(scale: number, point?: IPoint) {
-        let lastgridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
+        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         if (!point) point = this.getCenterPoint()[0]
         this.scale = scale;
-        this.back2center(point.x, point.y, lastgridSize)
+        this.back2center(point.x, point.y, lastGirdSize)
     }
 
-    // 将元素移动到画中间
-    toCenter(feature: Feature) {
-        let { x, y } = this.getPixelPos(feature.getCenterPos());
-        let { x: distX, y: distY } = this.getCenterDist({ x, y })
-        gsap.to(this.pageSlicePos, {
-            duration: 0.25,
-            x: this.pageSlicePos.x + distX,
-            y: this.pageSlicePos.y + distY,
-            ease: "slow.out",
-        })
-    }
-
-    /**
-     * 移动画布到指定位置
-     * @param position 
-     * @param duration 
-     */
-    movePageto(position: IPoint, duration: number = .25) {
-        gsap.to(this.pageSlicePos, {
-            duration,
-            x: position.x,
-            y: position.y,
-            ease: "slow.out",
-        })
-    }
-
-    // 判断某个网格内有没有元素
-    hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
-        let target: Feature | undefined;
-        for (let index = 0; index < pool.length; index++) {
-            const block = pool[index];
-            if (block.gridPos.x == gx && block.gridPos.y == gy) {
-                target = block;
-                break;
-            }
-        }
-        return target;
-    }
-
+    // // 判断某个网格内有没有元素
+    // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
+    //     let target: Feature | undefined;
+    //     for (let index = 0; index < pool.length; index++) {
+    //         const block = pool[index];
+    //         if (block.gridPos.x == gx && block.gridPos.y == gy) {
+    //             target = block;
+    //             break;
+    //         }
+    //     }
+    //     return target;
+    // }
     // 根据相对坐标获取网格坐标
     getGridPosByRelativePos(x: number, y: number): IPoint {
         let gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
@@ -947,6 +996,7 @@ class GridSystem {
         }
     }
 
+    // ---------------------开启或关闭历史记录, bbox, 区域选择
     enableStack(enabled: boolean = true) {
         if (!enabled) {
             GridSystem.Stack?.destory();
@@ -957,33 +1007,31 @@ class GridSystem {
                 GridSystem.Stack = null;
             } else {
                 GridSystem.Stack = new Stack();
-                new Shortcuts(["shift", "z"], GridSystem.Stack.undo.bind(this));
-                new Shortcuts(["shift", "y"], GridSystem.Stack.restore.bind(this));
             }
         }
     }
-
-    enableTranform(f: BasicFeature | SelectArea | null | undefined, enabled: boolean = true) {
-        if (!f && this.focusNode && (this.focusNode instanceof CtrlPnt || this.focusNode instanceof BCtrlPnt || this.focusNode instanceof AnchorPnt)) return  // 如果是控制点,那么先不要清除bbox
-        if (!enabled || !f) {
-            if (GridSystem.Bbox) {
-                this.removeFeature(GridSystem.Bbox);
-                GridSystem.Bbox = null;
-            }
-        } else {
-            if (GridSystem.Bbox) {
-                if (GridSystem.Bbox.parent == f) return;
-                this.removeFeature(GridSystem.Bbox);
-                GridSystem.Bbox = null;
-            } else {
-                GridSystem.Bbox = new Bbox(f);
-            }
+    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
+        let bbox = this.features.find(f => f instanceof Bbox);
+        this.removeFeature(bbox, false);
+        if (f && !f.isFixedSize && f.cbTransform) {
+            let nbbox = new Bbox(f);
+            return nbbox;
+        }
+    }
+    enableSelectArea(bool = true) {
+        let sa = this.features.find(f => f instanceof SelectArea);
+        this.removeFeature(sa, false);
+        if (bool) {
+            sa = new SelectArea();
+            return sa;
         }
     }
 
+    // -------------------创建feature, 修改feature属性, 读取feature属性---------------------------
     createFeature(props: Props, newProps?: Partial<Props>) {
         newProps && (props = Object.assign({}, props, newProps));
-        let feature: Feature | null = null;
+        let feature: BasicFeature | undefined;
+        if (this.features.find(f => f.id === props.id)) return;
         switch (props.className) {
             case 'Img':
                 if (props.position && props.size) {
@@ -1002,6 +1050,20 @@ class GridSystem {
             case 'Text':
                 if (props.position && props.size) {
                     feature = new Text(props.text, props.position.x, props.position.y, props.size.width, props.size.height)
+                } else {
+                    throw "参数异常"
+                }
+                break;
+            case 'Circle':
+                if (props.position && props.size) {
+                    feature = new Circle(props.position.x, props.position.y, props.size.width, props.size.height)
+                } else {
+                    throw "参数异常"
+                }
+                break;
+            case 'Group':
+                if (props.position && props.size) {
+                    feature = new Group([])
                 } else {
                     throw "参数异常"
                 }
@@ -1027,16 +1089,27 @@ class GridSystem {
         }
         if (feature) {
             if (props.id) {
-                this.setFeatureProps(feature, props);
+                this.modifyFeature(feature, props);
                 this.addFeature(feature, false);
+                if (props.children) {
+                    props.children.forEach(cfProp => {
+                        let cf = this.features.find(f => f.id === cfProp.id);
+                        feature && feature.addFeature(cf as BasicFeature || this.createFeature(cfProp), false)
+                    })
+                    if (feature instanceof Group) {  // gourp添加子元素需要resize
+                        feature.toResize(feature.children);
+                    }
+                }
             } else {
-                throw "参数异常"
+                throw "参数异常,缺少id"
             }
         }
+        return feature;
     }
 
-    setFeatureProps(feature: Feature, props: Props) {
-        props.id && (feature.id = props.id);
+    modifyFeature(feature: BasicFeature, props: Props) {
+        props.id != undefined && (feature.id = props.id);
+        props.className != undefined && (feature.className = props.className)
         if (props.pointArr) {
             feature.pointArr = []
             props.pointArr.forEach(p => {
@@ -1046,47 +1119,59 @@ class GridSystem {
                 })
             })
         }
-        props.fillStyle && (feature.fillStyle = props.fillStyle)
-        props.focusStyle && (feature.focusStyle = props.focusStyle)
-        props.hoverStyle && (feature.hoverStyle = props.hoverStyle)
-        props.zIndex && (feature.zIndex = props.zIndex)
-        props.lineWidth && (feature.lineWidth = props.lineWidth)
-        props.lineCap && (feature.lineCap = props.lineCap)
-        props.opacity && (feature.opacity = props.opacity)
-        props.lineDashArr && (feature.lineDashArr = props.lineDashArr)
-        props.lineDashOffset && (feature.lineDashOffset = props.lineDashOffset)
+        props.position != undefined && (feature.position = props.position)
+        props.size != undefined && (feature.size = props.size)
+        props.angle != undefined && (feature.angle = props.angle)
+        props.fillStyle != undefined && (feature.fillStyle = props.fillStyle)
+        props.focusStyle != undefined && (feature.focusStyle = props.focusStyle)
+        props.hoverStyle != undefined && (feature.hoverStyle = props.hoverStyle)
+        props.zIndex != undefined && (feature.zIndex = props.zIndex)
+        props.lineWidth != undefined && (feature.lineWidth = props.lineWidth)
+        props.lineCap != undefined && (feature.lineCap = props.lineCap)
+        props.lineJoin != undefined && (feature.lineJoin = props.lineJoin)
+        props.opacity != undefined && (feature.opacity = props.opacity)
+        props.lineDashArr != undefined && (feature.lineDashArr = props.lineDashArr)
+        props.lineDashOffset != undefined && (feature.lineDashOffset = props.lineDashOffset)
 
-        props.closePath && (feature.closePath = props.closePath)
-        props.isPointIn && (feature.isPointIn = props.isPointIn)
-        props.isFixedPos && (feature.isFixedPos = props.isFixedPos)
-        props.isOutScreen && (feature.isOutScreen = props.isOutScreen)
-        props.isObstacle && (feature.isObstacle = props.isObstacle)
-        props.isOverflowHidden && (feature.isOverflowHidden = props.isOverflowHidden)
-        props.isTransform && (feature.isTransform = props.isTransform)
-        props.isShowAdsorbLine && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
-        props.isOnlyCenterAdsorb && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
-        props.isOnlyHorizonalDrag && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
-        props.isOnlyVerticalDrag && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
+        props.closePath != undefined && (feature.closePath = props.closePath)
+        props.isPointIn != undefined && (feature.isPointIn = props.isPointIn)
+        props.isFixedPos != undefined && (feature.isFixedPos = props.isFixedPos)
+        props.isOutScreen != undefined && (feature.isOutScreen = props.isOutScreen)
+        props.isOverflowHidden != undefined && (feature.isOverflowHidden = props.isOverflowHidden)
+        props.isStroke != undefined && (feature.isStroke = props.isStroke)
+        props.isShowAdsorbLine != undefined && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
+        props.isOnlyCenterAdsorb != undefined && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
+        props.isOnlyHorizonalDrag != undefined && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
+        props.isOnlyVerticalDrag != undefined && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
+
+        if (feature instanceof Rect) {
+            props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
+            props.radius != undefined && (feature.radius = props.radius);
+        }
+
+        if (feature instanceof Img) {
+            props.src != undefined && (feature.src = props.src);
+        }
 
         if (feature instanceof Text) {
-            props.fitSize && (feature.fitSize = props.fitSize);
-            props.fontWeight && (feature.fontWeight = props.fontWeight);
-            props.color && (feature.color = props.color);
-            props.fontFamily && (feature.fontFamily = props.fontFamily);
-            props.text && (feature.text = props.text);
-            props.lineHeight && (feature.lineHeight = props.lineHeight);
-            props.rows && (feature.rows = props.rows);
+            props.fitSize != undefined && (feature.fitSize = props.fitSize);
+            props.fontWeight != undefined && (feature.fontWeight = props.fontWeight);
+            props.color != undefined && (feature.color = props.color);
+            props.fontFamily != undefined && (feature.fontFamily = props.fontFamily);
+            props.text != undefined && (feature.text = props.text);
+            props.lineHeight != undefined && (feature.lineHeight = props.lineHeight);
+            props.rows != undefined && (feature.rows = props.rows);
         }
 
         if (feature instanceof Line) {
-            props.isFreeStyle && (feature.isFreeStyle = props.isFreeStyle);
-            props.lineWidthArr && (feature.lineWidthArr = props.lineWidthArr);
+            props.isFreeStyle != undefined && (feature.isFreeStyle = props.isFreeStyle);
+            props.lineWidthArr != undefined && (feature.lineWidthArr = props.lineWidthArr);
         }
 
         return feature;
     }
 
-    recordFeatureProps(f: Feature) {
+    recordFeature(f: BasicFeature): Props {
         return {
             id: f.id,
             className: f.className,
@@ -1099,6 +1184,7 @@ class GridSystem {
             zIndex: f.zIndex,
             lineWidth: f.lineWidth,
             lineCap: f.lineCap,
+            lineJoin: f.lineJoin,
             opacity: f.opacity,
             lineDashArr: f.lineDashArr,
             lineDashOffset: f.lineDashOffset,
@@ -1107,35 +1193,69 @@ class GridSystem {
             isPointIn: f.isPointIn, //鼠标是否悬浮在元素上
             isFixedPos: f.isFixedPos,  // 是否绝对位置.不跟随网格移动
             isOutScreen: f.isOutScreen,  // 是否在屏幕外
-            isObstacle: f.isObstacle,  // 是否是障碍物
             isOverflowHidden: f.isOverflowHidden,  // 子元素超出是否隐藏
             isStroke: f.isStroke,  // 是否渲染边框
-            isTransform: f.isTransform, // 是否形变
             isShowAdsorbLine: f.isShowAdsorbLine,  // 是否显示吸附辅助线
             isOnlyCenterAdsorb: f.isOnlyCenterAdsorb,  // 是否只以中心对其
             isOnlyHorizonalDrag: f.isOnlyHorizonalDrag,  // 是否只能 水平 方向拖拽
             isOnlyVerticalDrag: f.isOnlyVerticalDrag,  // 是否只能 垂直 方向拖拽
 
-            src: f instanceof Img ? f.base64Str : '',
             pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
+
+            isFixedSize: f instanceof Rect ? f.isFixedSize : false,
+            radius: f instanceof Rect ? f.radius : 0,
+
+            src: f instanceof Img ? f.src : '',
+
             text: f instanceof Text ? f.text : '',
-            fitSize: f instanceof Text ? f.fitSize : '',
-            fontWeight: f instanceof Text ? f.fontWeight : '',
+            fitSize: f instanceof Text ? f.fitSize : false,
+            fontWeight: f instanceof Text ? f.fontWeight : 0,
             color: f instanceof Text ? f.color : '',
-            fontFamily: f instanceof Text ? f.fontFamily : '',
-            lineHeight: f instanceof Text ? f.lineHeight : '',
-            rows: f instanceof Text ? f.rows : '',
+            fontFamily: f instanceof Text ? f.fontFamily : undefined,
+            lineHeight: f instanceof Text ? f.lineHeight : 0,
+            rows: f instanceof Text ? f.rows : 1,
 
-            isFreeStyle: f instanceof Line ? f.isFreeStyle : '',
-            lineWidthArr: f instanceof Line ? f.lineWidthArr : '',
+            isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
+            lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
 
+            children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
+            // parent: f.parent ? f.parent.id: '',
             // startFeatureId: f instanceof Link ? f.startFeatureId : '',
             // endFeatureId: f instanceof Link ? f.endFeatureId : '',
         }
     }
+    // -------------------保存画布状态,读取画布状态---------------------------
+    save(featurePropsArr?: Props[]) {
+        if (!featurePropsArr) {
+            featurePropsArr = [];
+            this.features.forEach(f => {
+                if (this.isBasicFeature(f)) {
+                    let fProps = this.recordFeature(f as BasicFeature);
+                    featurePropsArr && featurePropsArr.push(fProps)
+                }
+            })
+        }
+        let str = JSON.stringify(featurePropsArr);
+        localStorage.setItem("features", str);
+        return str
+    }
+    loadData(featurePropsArr?: Props[]) {
+        if (!featurePropsArr) {
+            try {
+                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
+            } catch (error) {
+                featurePropsArr = []
+            }
+        }
+        featurePropsArr.forEach(fp => {
+            this.createFeature(fp)
+        })
+    }
 
+    // ----------------------复制到剪切板---------------------------
     initAnchorPnts() {
-        this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)).forEach(f => {
+        let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        features.forEach(f => {
             let anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
                 let lAnchorPnt = new AnchorPnt(f, () => {
@@ -1184,65 +1304,204 @@ class GridSystem {
         this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
     }
 
-    save() {
-        let featurePropsArr: Props[] = [];
-        this.features.forEach(f => {
-            if (this.isBasicFeature(f)) {
-                let fProps = this.recordFeatureProps(f);
-                featurePropsArr.push(fProps)
+    // 复制元素为png到剪贴板
+    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> {
+        // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
+        var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
+            features.forEach(cf => {
+                if (this.isBasicFeature(cf)) {
+                    let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
+                    // 将多边形移动到Canvas的左上角  
+                    pointArr.forEach(point => {
+                        point.x -= offset.x;  // 水平方向移动到左侧边界
+                        point.y -= offset.y; // 垂直方向移动到顶部边界  
+                    });
+                    let lineWidth = this.getRatioSize(cf.lineWidth);
+                    if (cf instanceof Rect) {
+                        cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
+                    } else {
+                        cf.draw(ctx, pointArr, lineWidth);
+                    }
+                    drawChildren(ctx, cf.children, offset)
+                }
+            });
+        }
+        return new Promise((resolve, reject) => {
+            if (feature) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
+                let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                let lineWidth = this.getRatioSize(feature.lineWidth);
+                canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
+                canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
+                // 将多边形移动到Canvas的左上角 
+                pointArr.forEach(point => {
+                    point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
+                });
+                ctx.fillStyle = this.backgroundColor
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (feature instanceof Rect) {
+                    feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                } else {
+                    feature.draw(ctx, pointArr, lineWidth);
+                }
+                drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
+                canvas.toBlob(blob => {
+                    // 使用剪切板API进行复制
+                    if (blob) {
+                        const data = [new ClipboardItem({
+                            [blob.type]: blob
+                        })];
+                        navigator.clipboard.write(data).then(() => {
+                            console.log("复制成功!");
+                            resolve(blob)
+                        }, (err) => {
+                            reject("复制失败:" + err)
+                        })
+                    }
+                });
             }
         })
-        let str = JSON.stringify(featurePropsArr);
-        sessionStorage.setItem("features", str);
-        return str
     }
-
-    // 判断是否时基础元素
-    isBasicFeature(f?: Feature) {
-        if (!f) return false;
-        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
-    }
-    // 判断是否时基础元素
-    isCtrlFeature(f?: Feature) {
-        if (!f) return false;
-        return f.className == 'CtrlPnt' || f.className == 'BCtrlPnt' || f.className == 'AnchorPnt'
-    }
-
-    translate(offsetX: number = 0, offsetY: number = 0) {
-        this.pageSlicePos.x += offsetX;
-        this.pageSlicePos.y += offsetY;
-    }
-
-    loadData(featurePropsArr: Props[]) {
-        if (!featurePropsArr) {
-            featurePropsArr = JSON.parse(sessionStorage.getItem("features") || '') as Props[];
+    // 复制元素为svg到剪贴板
+    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {
+        let svgstr = '';
+        // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
+        var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
+            features.forEach(cf => {
+                if (this.isBasicFeature(cf)) {
+                    let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
+                    // 将多边形移动到Canvas的左上角  
+                    pointArr.forEach(point => {
+                        point.x -= offset.x;  // 水平方向移动到左侧边界
+                        point.y -= offset.y; // 垂直方向移动到顶部边界  
+                    });
+                    let lineWidth = this.getRatioSize(cf.lineWidth);
+                    if (cf instanceof Rect) {
+                        svgstr += cf.getSvg(pointArr, lineWidth, this.getRatioSize(cf.radius));   // svg旋转默认围绕viewBox左上角
+                    } else {
+                        svgstr += cf.getSvg(pointArr, lineWidth);   // svg旋转默认围绕viewBox左上角
+                    }
+                    if (cf.children) {
+                        addChildrenSvg(cf.children, offset, padding)
+                    }
+                }
+            });
         }
-        console.log(featurePropsArr, "featurePropsArr");
+        return new Promise((resolve, reject) => {
+            if (feature) {
+                let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
+                let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const width = Math.abs(rightTop.x - leftTop.x) + padding;
+                const height = Math.abs(leftTop.y - leftBottom.y) + padding;
+                let lineWidth = this.getRatioSize(feature.lineWidth);
+                // 将多边形移动到SVG的左上角
+                pointArr.forEach(point => {
+                    point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界 
+                });
+                this.test = pointArr[1];
+                if (feature instanceof Rect) {
+                    svgstr += feature.getSvg(pointArr, lineWidth, this.getRatioSize(feature.radius));   // svg旋转默认围绕viewBox左上角
+                } else {
+                    svgstr += feature.getSvg(pointArr, lineWidth);   // svg旋转默认围绕viewBox左上角
+                }
+                addChildrenSvg(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
+                const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+                <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
+                    ${svgstr}
+                </svg>`)
+                // 使用剪切板API进行复制
+                var blob = new Blob([svgStr], { type: 'text/plain' });
+                const data = [new ClipboardItem({
+                    [blob.type]: blob
+                })];
 
-        featurePropsArr.forEach(fp => {
-            this.createFeature(fp)
+                navigator.clipboard.write(data).then(() => {
+                    console.log("复制成功!");
+                    resolve(svgStr)
+                }, (err) => {
+                    reject("复制失败:" + err)
+                })
+            }
         })
+    }
+
+    // 读取剪贴板内容生成文字或图片
+    async clipboard2Feature(pos = getMousePos(this.dom, this.mousePos)) {
+        try {
+            const clipboardData = await navigator.clipboard.read();
+            pos = this.getRelativePos(pos)
+            // 判断剪贴板数据类型为图像
+            if (clipboardData) {
+                console.log(clipboardData, "clipboardData");
+                let index = clipboardData[0].types.findIndex(type => type === 'image/png' || type === 'image/jpeg');
+                if (index > -1) {
+                    // 将图像转换成Blob对象
+                    const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(imageBlob);  // 读取base64
+                    reader.onload = () => {
+                        let dataUrl = reader.result as string;
+                        console.log(dataUrl, "dataUrl");
+                        if (dataUrl) {
+                            let img = new Img(dataUrl, pos.x, pos.y)
+                            this.addFeature(img);
+                        }
+                    }
+                    return;
+                }
+                // 判断剪贴板数据类型为文本
+                if (clipboardData[0]?.types.includes('text/plain')) {
+                    let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
+                    const reader = new FileReader();
+                    reader.readAsText(textBlob);  // 获取文本
+                    reader.onload = () => {
+                        let txt = reader.result as string
+                        if (txt && txt.length > 0) {
+                            let text = new Text(txt, pos.x, pos.y)
+                            text.fitSize = true;
+                            this.addFeature(text);
+                        }
+                    }
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to read clipboard content: ', error);
+            return null;
+        }
+    }
+
+    // 拖放去添加元素
+    drop2Feature(e: any) {
+        //取得拖进来的文件
+        var data = e.dataTransfer;
+        const files = data.files;  // file继承与blob
+        if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
+            let pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
+            const reader = new FileReader();
+            reader.readAsDataURL(files[0]);  // base64
+            reader.onload = () => {
+                let dataUrl = reader.result as string;
+                if (dataUrl) {
+                    let img = new Img(dataUrl, pos.x, pos.y)
+                    this.addFeature(img);
+                }
+            }
+        }
     }
 
     destroy() {
         cancelAnimationFrame(this.timer);
         this.features.forEach(f => {
-            this.removeFeature(f);
+            this.removeFeature(f, false);
         })
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
-    /**
-* 鼠标松开后的缓动减速
-* @param lastAndPrevMouseMovePoint 
-* @returns 
-*/
-    // private toSlideMove(lastAndPrevMouseMovePoint: {
-    //     last_p: IPoint,
-    //     prev_p: IPoint
-    // }) {
-    //     if (!this.cbSlideTransition) return;
-    // }
+
 }
 
 export default GridSystem;

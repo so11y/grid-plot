@@ -7,7 +7,8 @@ enum CoordinateSystem {
     SCALE_ABILITY = .8,  // 缩放快慢
     NATIVE_SCALE = 10,  // 原始缩放大小
     AREA_FILL_COLOR = "rgba(145,202,255, .5)",  // 区域选择的rect填充色
-    DB_CLICK_DURATION = 250  // 双击间隔的时间
+    DB_CLICK_DURATION = 250,  // 双击间隔的时间
+    DRAG_TRANSITION_MIN_DIST = 5  // 拖拽滑动最小距离
 }
 
 // 控制点方位
@@ -21,7 +22,7 @@ enum FontFamily {
 }
 
 // 控制点方位
-enum ControlPoint {
+enum CtrlType {
     SIZE_CTRL = "sizeCtrl",
     ANGLE_CTRL = "angleCtrl",
     WIDTH_CTRL = "widthCtrl",
@@ -45,12 +46,6 @@ enum BlockType {
     POLYGON = "polygon",
     ARROW = "arrow",
     CUSTOM = "custom",
-}
-
-// 元素分类,大类: 点状的,圆形的,线性的
-enum Category {
-    BLOCK = 'block',
-    LINE = 'line'
 }
 
 // 操作的类型
@@ -101,7 +96,7 @@ enum LinkStyle {
     CURVE = 'curve'  // 曲线
 }
 
-// 线段样式
+// 对齐方向
 enum Orientation {
     LEFT = 'left',
     RIGHT = 'right',
@@ -134,12 +129,11 @@ enum AlignType {
 
 export {
     CoordinateSystem,
-    ControlPoint,
+    CtrlType,
     BlockType,
     OperateType,
     LinkMark,
     Events,
-    Category,
     LinkStyle,
     FontFamily,
     Orientation,

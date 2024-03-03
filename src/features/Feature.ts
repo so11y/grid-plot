@@ -1,27 +1,26 @@
-import { Orientation } from "../Constants";
-import type GridSystem from "../GridSystem";
+import { CtrlType, Orientation } from "../Constants";
+import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { IPoint, Size } from "../Interface";
+import { BasicFeature, IPoint, Props, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
-import Bbox from "./function-shape/Bbox";
+import gsap from "gsap";
+import Text from "./basic-shape/Text";
 
 class Feature {
 
     static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
-    static isAnchor = false;
 
     pointArr: IPoint[] = [];
     fillStyle: string = '#ffec99';
     strokeStyle: string = '#f08c00';
-    hoverStyle: string = '#ffec99';
-    focusStyle: string = '#ffec99';
+    hoverStyle: string = '#fff1b5';
+    focusStyle: string = '#fff1b5';
     zIndex: number = 0;
     lineWidth: number = .5;
     lineCap: CanvasLineCap = "round"   // butt, round, square
     lineJoin: CanvasLineJoin = "round"
-
     opacity: number = 1; // 整体透明度
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0;
@@ -36,13 +35,10 @@ class Feature {
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
 
-    gridPos: IPoint = { x: 0, y: 0 };  // 网格坐标系下的坐标
     parent: Feature | null = null;  // 父元素
-    children: Feature[] = [];  // 子节点
+    children: BasicFeature[] = [];  // 子节点
     gls: GridSystem = Feature.Gls;
-    bbox: Bbox | null = null;
-    lastRelativePnt: IPoint = this.getRectWrapPoints()[0];
-    adsorbTypes = ["grid", "feature"];  // 移动时吸附规则
+    adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
     pntDistanceLimit = 2;  // 距离太近的两个点,就不重复添加了
     pntExtentPer: {
         left: IPoint[],
@@ -57,11 +53,10 @@ class Feature {
     isPointIn: boolean = false; //鼠标是否悬浮在元素上
     isFocused: boolean = false; //是否正在操作, 鼠标按在这个元素身上
     isFixedPos: boolean = false;  // 是否固定位置.不跟随网格移动
+    isFixedSize: boolean = false;  // 是否固定大小.不能控制点形变
     isOutScreen: boolean = false;  // 是否在屏幕外
-    isObstacle: boolean = false;  // 是否是障碍物
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
-    isTransform: boolean = true; // 是否形变
     isShowAdsorbLine: boolean = false;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
@@ -70,8 +65,9 @@ class Feature {
     // 节点功能
     cbSelect: boolean = true;  // 是否可被选择
     cbMove: boolean = true;  // 是否可被拖拽
-    cbChangeZindex: boolean = true; // 是否获取焦点时改变层级关系
     cbAdsorb: boolean = true;
+    cbTransform: boolean = true;  // 是否可被形变
+    cbTransformChild: boolean = true; // 子元素是否可被形变
 
     // // 节点事件
     // ondelete: Function | null = null;
@@ -100,6 +96,9 @@ class Feature {
     rotateEvents: Function[] = [];
     onDelete: Function | null = null;  // 删除的时候
     deleteEvents: Function[] = [];
+    onBlur: Function | null = null;  // 删除的时候
+    blurEvents: Function[] = [];
+
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
@@ -114,10 +113,10 @@ class Feature {
         this.pointArr = this.pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
-        this.children.forEach(cf => {
+        this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
-        this.onrotate && this.onrotate()
+        this.onrotate && this.onrotate();
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {
@@ -127,6 +126,12 @@ class Feature {
                 y: !this.isOnlyHorizonalDrag ? p.y += offsetY : p.y
             }
         })
+        // 照顾fixedSize元素
+        this.position.x += offsetX;
+        this.position.y += offsetY;
+        if (this.children) {  // 子元素递归偏移
+            this.children.forEach(cf => cf.translate(offsetX, offsetY))
+        }
         this.ontranslate();
     }
 
@@ -141,7 +146,6 @@ class Feature {
         })
         ctx.save()
         this.closePath && path.closePath()
-        this.setPointIn(ctx, path)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
@@ -160,6 +164,7 @@ class Feature {
         this.isStroke && ctx.stroke(path);
         ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        this.setPointIn(ctx, path)
         ctx.restore();
         return path;
     }
@@ -204,7 +209,7 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            if (this.cbSelect && this.gls) {
+            if (this.cbSelect && this.gls.cbSelectFeature) {
                 let mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.closePath) {
@@ -212,15 +217,17 @@ class Feature {
                 } else {
                     isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
-                // if(isPointIn){
-                //     this.gls.hoverNode = this;
-                // }
-
                 if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
                     this.onmouseover && this.onmouseover();
                 } else if (this.isPointIn && !isPointIn) {
                     this.onmouseleave && this.onmouseleave();
                 }
+                // if(!this.isPointIn && isPointIn){
+                //     this.onFocus();
+                // }
+                // if(this.isPointIn && isPointIn){
+
+                // }
                 this.isPointIn = isPointIn;
                 this.isPointIn && this.onmousemove && this.onmousemove();
             }
@@ -239,7 +246,8 @@ class Feature {
             minY = Math.min(minY, point.y);
             maxY = Math.max(maxY, point.y);
         }
-
+        this.size.width = Math.abs(maxX - minX);
+        this.size.height = Math.abs(maxY - minY);
         return [minX, maxX, minY, maxY];
     }
 
@@ -277,17 +285,22 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature: Feature, cbSelect = true) {
+    addFeature(feature?: BasicFeature, props?: Partial<Props>) {
+        if (!feature) return;
+        if (this.children.find(cf => cf === feature)) return
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
-        feature.angle = feature.parent.angle;
         function setProps(f: Feature) {   // 递归设置子元素属性
-            f.cbSelect = cbSelect;
-            f.children.forEach(cf => {setProps(cf) })
+            if (props) {
+                props.cbSelect != undefined && (f.cbSelect = props.cbSelect);
+                props.angle != undefined && (f.angle = props.angle);
+            }
+            f.children.forEach(cf => { setProps(cf) })
         }
         setProps(feature)
     }
+
     // 删除指定子元素
     removeChild(feature: Feature) {
         feature.parent = null;
@@ -325,60 +338,131 @@ class Feature {
         return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
     }
 
-    ontranslate() {
-        this.translateEvents.forEach(f => { f() })
-        this.onTranslate && this.onTranslate();
+    // 将元素移动到画中间
+    toCenter(feature: Feature) {
+        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
+        gsap.to(this.gls.pageSlicePos, {
+            duration: 0.25,
+            x: this.gls.pageSlicePos.x + distX,
+            y: this.gls.pageSlicePos.y + distY,
+            ease: "slow.out",
+        })
     }
-    onmouseover() {
-        this.mouseoverEvents.forEach(f => { f() })
-        this.onMouseover && this.onMouseover();
+
+    // --------------------元素鼠标事件相关----------------
+    onmouseover(e?: any) {
+        this.children.forEach(cf => {
+            cf.onmouseover(e)
+        })
+        this.mouseoverEvents.forEach(f => { f(e) })
+        this.onMouseover && this.onMouseover(e);
     }
-    onmousemove() {
-        this.mousemoveEvents.forEach(f => { f() })
-        this.onMousemove && this.onMousemove();
+    onmousemove(e?: any) {
+        this.children.forEach(cf => {
+            cf.onmousemove(e)
+        })
+        this.mousemoveEvents.forEach(f => { f(e) })
+        this.onMousemove && this.onMousemove(e);
     }
-    onmousedown() {
-        this.mousedownEvents.forEach(f => { f() })
-        this.onMousedown && this.onMousedown();
+    onmousedown(e?: any) {
+        this.children.forEach(cf => {
+            cf.onmousedown(e)
+        })
+        this.mousedownEvents.forEach(f => { f(e) })
+        this.onMousedown && this.onMousedown(e);
     }
-    onmouseup() {
-        this.mouseupEvents.forEach(f => { f() })
-        this.onMouseup && this.onMouseup();
+    onmouseup(e?: any) {
+        this.children.forEach(cf => {
+            cf.onmouseup(e)
+        })
+        this.mouseupEvents.forEach(f => { f(e) })
+        this.onMouseup && this.onMouseup(e);
     }
-    onmouseleave() {
-        this.mouseleaveEvents.forEach(f => { f() })
-        this.onMouseleave && this.onMouseleave();
+    onmouseleave(e?: any) {
+        this.children.forEach(cf => {
+            cf.onmouseleave(e)
+        })
+        this.mouseleaveEvents.forEach(f => { f(e) })
+        this.onMouseleave && this.onMouseleave(e);
     }
-    ondbclick() {
-        this.dbclickEvents.forEach(f => { f() })
-        this.onDbclick && this.onDbclick();
+    ondbclick(e?: any) {
+        this.children.forEach(cf => {
+            cf.ondbclick(e)
+        })
+        this.dbclickEvents.forEach(f => { f(e) })
+        this.onDbclick && this.onDbclick(e);
     }
-    ondragend() {
-        this.dragendEvents.forEach(f => { f() })
-        this.onDragend && this.onDragend();
+    // --------------------元素绘制相关----------------
+    ontranslate(e?: any) {
+        this.children.forEach(cf => {
+            cf.ontranslate(e)
+        })
+        this.translateEvents.forEach(f => { f(e) })
+        this.onTranslate && this.onTranslate(e);
     }
-    resize() {
-        this.resizeEvents.forEach(f => { f() })
-        this.onResize && this.onResize();
+    onresize(type?: CtrlType) {
+        this.children.forEach(cf => {
+            cf.onresize(type)
+        })
+        this.resizeEvents.forEach(f => { f(type) })
+        this.onResize && this.onResize(type);
     }
-    ondraw() {
-        this.drawEvents.forEach(f => { f() })
-        this.onDraw && this.onDraw();
+    ondraw(e?: any) {
+        this.children.forEach(cf => {
+            cf.ondraw(e)
+        })
+        this.drawEvents.forEach(f => { f(e) })
+        this.onDraw && this.onDraw(e);
     }
-    onrotate() {
-        this.rotateEvents.forEach(f => { f() })
-        this.onRotate && this.onRotate();
+    onrotate(e?: any) {
+        this.children.forEach(cf => {
+            cf.onrotate(e)
+        })
+        this.rotateEvents.forEach(f => { f(e) })
+        this.onRotate && this.onRotate(e);
     }
-    ondelete() {
-        this.deleteEvents.forEach(f => { f() })
-        this.onDelete && this.onDelete();
+    ondragend(e?: any) {
+        this.children.forEach(cf => {
+            cf.ondragend(e)
+        })
+        this.dragendEvents.forEach(f => { f(e) })
+        this.onDragend && this.onDragend(e);
+    }
+    // --------------------元素操作相关----------------
+    ondelete(e?: any) {
+        this.children.forEach(cf => {
+            cf.ondelete(e)
+        })
+        this.deleteEvents.forEach(f => { f(e) })
+        this.onDelete && this.onDelete(e);
+    }
+    // 只作用于基础元素
+    onblur(e?: any) {
+        this.blurEvents.forEach(f => { f(e) })
+        this.onBlur && this.onBlur(e);
     }
 
     destroy() {
         this.children.forEach(cf => {
-            this.gls.removeFeature(cf);
+            this.gls.removeFeature(cf, false);
         })
     };
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+        let path = ''
+        pointArr.forEach((p, i) => {
+            if (i === 0) {
+                path += `M ${p.x} ${p.y} `
+            } else {
+                path += `L ${p.x} ${p.y} `
+            }
+        })
+        if(this.closePath){
+            path += ' Z'
+        }
+        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+    }
 }
 
 export default Feature;

@@ -6,7 +6,7 @@ class CtrlPnt extends Rect {
 
     index: number = 0;  // 关联的点是第几个
 
-    constructor(parent: Feature, i = 0, width: number = 7) {   // 相对坐标
+    constructor(parent: Feature, i = 0, width: number = 14) {   // 相对坐标
         const pos = parent.pointArr[i];
         super(pos.x, pos.y, width, width);
         this.className = "CtrlPnt";
@@ -20,7 +20,6 @@ class CtrlPnt extends Rect {
         this.lineWidth = 0;
         this.zIndex = Infinity;
         this.isStroke = false;
-        this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
         this.translateEvents.push(this.onUpdateParentPos.bind(this));
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))

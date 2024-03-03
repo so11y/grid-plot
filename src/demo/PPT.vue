@@ -1,7 +1,7 @@
 <template>
   <div class="canvas-wrap">
     <canvas id="myCanvas" width="1580" height="880" style="border: 0px solid"></canvas>
-    <img src="/meigong1.png" alt id="imgs" style="display: none;" />
+    <img src="/img.png" alt id="imgs" style="display: none;" />
   </div>
 </template>
 
@@ -152,7 +152,7 @@ export default {
     // let imgs = document.querySelector("#vid");
     let img;
     if (imgs) {
-      img = new Img(imgs, 370, 250, 300, 180);
+      img = new Img(imgs, 370, 250);
       img.isStroke = false
       img.zIndex = 2
       gls.addFeature(rect3);

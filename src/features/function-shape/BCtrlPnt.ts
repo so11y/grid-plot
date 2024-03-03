@@ -10,7 +10,7 @@ class BCtrlPnt extends Rect {
     lastAngle: number = 0;
     parent: Bbox | null = null;
 
-    constructor(parent: Bbox, fn: () => IPoint, width: number = 7) {   // 相对坐标
+    constructor(parent: Bbox, fn: () => IPoint, width: number = 14) {   // 相对坐标
         let pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
@@ -25,7 +25,6 @@ class BCtrlPnt extends Rect {
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .2;
-        this.isOnlyCenterAdsorb = true;
         this.dragendEvents.push(this.onUpdateParentVct.bind(this))
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
         this.gls.addFeature(this, false);
