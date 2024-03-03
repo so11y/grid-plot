@@ -379,6 +379,16 @@ function getSizeInBytes(str:string) {
     return binaryString.length; // 返回二进制字符串的长度（单位为字节）
 }
  
+function beautifyHTML(html: string, indentSize = 2) {
+    var formatted = '';
+    // 去除多余空白字符并添加换行符
+    html.replace(/^\s+|\s+$/gm, '').split('\n').forEach((line) => {
+        if (line !== '') {
+            formatted += line + '\n';
+        }
+    });
+    return formatted;
+}
 
 export {
     getMousePos,
@@ -410,4 +420,5 @@ export {
     swapElements,
     isBase64,
     getSizeInBytes,
+    beautifyHTML,
 }

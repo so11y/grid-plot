@@ -98,7 +98,7 @@ class Feature {
     deleteEvents: Function[] = [];
     onBlur: Function | null = null;  // 删除的时候
     blurEvents: Function[] = [];
-    
+
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
@@ -292,7 +292,7 @@ class Feature {
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
         function setProps(f: Feature) {   // 递归设置子元素属性
-            if(props){
+            if (props) {
                 props.cbSelect != undefined && (f.cbSelect = props.cbSelect);
                 props.angle != undefined && (f.angle = props.angle);
             }
@@ -351,94 +351,94 @@ class Feature {
     }
 
     // --------------------元素鼠标事件相关----------------
-    onmouseover(e?:any) {
-        this.children.forEach(cf=>{
+    onmouseover(e?: any) {
+        this.children.forEach(cf => {
             cf.onmouseover(e)
         })
         this.mouseoverEvents.forEach(f => { f(e) })
         this.onMouseover && this.onMouseover(e);
     }
-    onmousemove(e?:any) {
-        this.children.forEach(cf=>{
+    onmousemove(e?: any) {
+        this.children.forEach(cf => {
             cf.onmousemove(e)
         })
         this.mousemoveEvents.forEach(f => { f(e) })
         this.onMousemove && this.onMousemove(e);
     }
-    onmousedown(e?:any) {
-        this.children.forEach(cf=>{
+    onmousedown(e?: any) {
+        this.children.forEach(cf => {
             cf.onmousedown(e)
         })
         this.mousedownEvents.forEach(f => { f(e) })
         this.onMousedown && this.onMousedown(e);
     }
-    onmouseup(e?:any) {
-        this.children.forEach(cf=>{
+    onmouseup(e?: any) {
+        this.children.forEach(cf => {
             cf.onmouseup(e)
         })
         this.mouseupEvents.forEach(f => { f(e) })
         this.onMouseup && this.onMouseup(e);
     }
-    onmouseleave(e?:any) {
-        this.children.forEach(cf=>{
+    onmouseleave(e?: any) {
+        this.children.forEach(cf => {
             cf.onmouseleave(e)
         })
         this.mouseleaveEvents.forEach(f => { f(e) })
         this.onMouseleave && this.onMouseleave(e);
     }
-    ondbclick(e?:any) {
-        this.children.forEach(cf=>{
+    ondbclick(e?: any) {
+        this.children.forEach(cf => {
             cf.ondbclick(e)
         })
         this.dbclickEvents.forEach(f => { f(e) })
         this.onDbclick && this.onDbclick(e);
     }
     // --------------------元素绘制相关----------------
-    ontranslate(e?:any) {
-        this.children.forEach(cf=>{
+    ontranslate(e?: any) {
+        this.children.forEach(cf => {
             cf.ontranslate(e)
         })
         this.translateEvents.forEach(f => { f(e) })
         this.onTranslate && this.onTranslate(e);
     }
     onresize(type?: CtrlType) {
-        this.children.forEach(cf=>{
+        this.children.forEach(cf => {
             cf.onresize(type)
         })
         this.resizeEvents.forEach(f => { f(type) })
         this.onResize && this.onResize(type);
     }
-    ondraw(e?:any) {
-        this.children.forEach(cf=>{
+    ondraw(e?: any) {
+        this.children.forEach(cf => {
             cf.ondraw(e)
         })
         this.drawEvents.forEach(f => { f(e) })
         this.onDraw && this.onDraw(e);
     }
-    onrotate(e?:any) {
-        this.children.forEach(cf=>{
+    onrotate(e?: any) {
+        this.children.forEach(cf => {
             cf.onrotate(e)
         })
         this.rotateEvents.forEach(f => { f(e) })
         this.onRotate && this.onRotate(e);
     }
-    ondragend(e?:any) {
-        this.children.forEach(cf=>{
+    ondragend(e?: any) {
+        this.children.forEach(cf => {
             cf.ondragend(e)
         })
         this.dragendEvents.forEach(f => { f(e) })
         this.onDragend && this.onDragend(e);
     }
     // --------------------元素操作相关----------------
-    ondelete(e?:any) {
-        this.children.forEach(cf=>{
+    ondelete(e?: any) {
+        this.children.forEach(cf => {
             cf.ondelete(e)
         })
         this.deleteEvents.forEach(f => { f(e) })
         this.onDelete && this.onDelete(e);
     }
     // 只作用于基础元素
-    onblur(e?:any) {
+    onblur(e?: any) {
         this.blurEvents.forEach(f => { f(e) })
         this.onBlur && this.onBlur(e);
     }
@@ -448,6 +448,21 @@ class Feature {
             this.gls.removeFeature(cf, false);
         })
     };
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+        let path = ''
+        pointArr.forEach((p, i) => {
+            if (i === 0) {
+                path += `M ${p.x} ${p.y} `
+            } else {
+                path += `L ${p.x} ${p.y} `
+            }
+        })
+        if(this.closePath){
+            path += ' Z'
+        }
+        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}"/>`
+    }
 }
 
 export default Feature;

@@ -116,20 +116,14 @@ class Rect extends Feature {
         return width / height;
     }
 
-    // getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
-    //     if (this.isFixedSize) {
-    //         const leftTop = pointArr[0]
-    //         pointArr = [
-    //             { x: leftTop.x + this.gls.getRelativeLen(this.size.width) / 2, y: leftTop.y + this.gls.getRelativeLen(this.size.height) / 2 },
-    //             // { x: leftTop.x + this.size.width, y: leftTop.y + this.size.height / 2 },
-    //             // { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 4 },
-    //             // { x: leftTop.x + this.size.width / 4 + this.size.width / 2, y: leftTop.y + this.size.height / 2 + this.size.width / 4 },
-    //             // { x: leftTop.x + this.size.width / 4, y: leftTop.y + this.size.width / 4 },
-    //         ]
-    //     }
-    //     return super.getRectWrapExtent(pointArr);
-    // }
-
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+        let { width, height, leftTop } = this.getSize(pointArr);
+        return `
+        <g stroke-linecap="round" transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})"  style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
+            <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
+        </g>
+        `
+    }
 }
 
 export default Rect;

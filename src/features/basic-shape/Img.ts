@@ -73,6 +73,19 @@ class Img extends Rect {
         }
         return path;
     }
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+        let svgStr = super.getSvg(pointArr, lineWidth, radius, boxWidth + (lineWidth * 2), boxHeight + (lineWidth * 2));
+        let center = this.getCenterPos(pointArr);
+        let { width, height } = this.getSize(pointArr);
+
+        return svgStr + `
+        <g stroke-linecap="round" transform="rotate(${this.angle} ${boxWidth / 2} ${boxHeight / 2})">
+            <image href="${this.src}" x="${center.x + lineWidth}" y="${center.y + lineWidth}"  width="${width - lineWidth}" height="${height - lineWidth}" transform="translate(${-width / 2 - lineWidth / 2} ${-height / 2 - lineWidth / 2})"
+            />
+        </g>
+        `
+    }
 }
 
 export default Img;

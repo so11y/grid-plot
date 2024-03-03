@@ -266,8 +266,12 @@
                                 <i class="iconfont gls-hebing"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制为图片到剪贴板"
-                                @click="gls?.copyImageToClipboard(gls.getFocusNode())">
+                                @click="copyImageToClipboard()">
                                 <i class="iconfont gls-fuzhitupian"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="复制为SVG到剪贴板"
+                                @click="copySvgToClipboard()">
+                                <i class="iconfont gls-SVG"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="同步缩放" @click="setTranformChild">
                                 <i class="iconfont gls-scale-same"></i>
@@ -567,9 +571,15 @@ function reset(clear = false) {
     // gls.loadData();
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
+    let feature = new Feature([
+        { x: 0, y: 0 },
+        { x: 10, y: 10 }
+    ])
+    gls.addFeature(feature);
+
 
     let rect = new Rect(100, 100, 100, 100)
-    rect.radius = 2;
+    // rect.radius = 2;
     // rect.isFixedPos = true;
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
@@ -596,7 +606,9 @@ function reset(clear = false) {
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
-    let group = new Group([rect, rect2, circle])
+    // 合并为组
+    let group = new Group([rect, rect2, circle]);
+    group.rotate(60)
     group.cbTransformChild = false;
     gls.addFeature(group, false)
     group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
@@ -611,7 +623,7 @@ function reset(clear = false) {
     // // text2.fitSize = true;
     // gls.addFeature(text2, false);
     // line.addFeature(text2, false);
-    line.enableCtrlPnts();
+    // line.enableCtrlPnts();
     gls.addFeature(line, false)
 
     // console.log(group, rect, rect2);
@@ -711,6 +723,30 @@ function setTranformChild() {
         console.log(focuseNode.cbTransformChild, "focuseNode.cbTransformChild");
     }
     message.info('同步缩放');
+}
+
+function copyImageToClipboard() {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        gls.copyImageToClipboard(focuseNode).then(blob => {
+            let reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = (res) => {
+                window.open('', '_blank')?.document.write(`<html><body><img src='${res.target?.result}'></body></html>`);
+            }
+        })
+    }
+    message.info('已复制为图片到剪贴板');
+}
+
+function copySvgToClipboard() {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        gls.copySvgToClipboard(focuseNode).then(res => {
+            window.open('', '_blank')?.document.write(res);
+        })
+    }
+    message.info('已复制为SVG到剪贴板');
 }
 
 </script>

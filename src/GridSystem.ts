@@ -5,7 +5,7 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
 import { BasicFeature, IPoint, Props } from "./Interface";
 import Stack from "./Stack";
-import { getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
+import { beautifyHTML, getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -1253,7 +1253,6 @@ class GridSystem {
     }
 
     // ----------------------复制到剪切板---------------------------
-
     initAnchorPnts() {
         let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
         features.forEach(f => {
@@ -1306,60 +1305,132 @@ class GridSystem {
     }
 
     // 复制元素为png到剪贴板
-    copyImageToClipboard(feature?: BasicFeature, padding = 20) {
-        if (!feature) return;
+    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> {
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
-                let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
-                // 将多边形移动到Canvas的左上角  
-                pointArr.forEach(point => {
-                    point.x -= offset.x;  // 水平方向移动到左侧边界
-                    point.y -= offset.y; // 垂直方向移动到顶部边界  
-                });
-                let lineWidth = this.getRatioSize(cf.lineWidth);
-                cf.draw(ctx, pointArr, lineWidth);
-                if (cf.children) {
+                if (this.isBasicFeature(cf)) {
+                    let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
+                    // 将多边形移动到Canvas的左上角  
+                    pointArr.forEach(point => {
+                        point.x -= offset.x;  // 水平方向移动到左侧边界
+                        point.y -= offset.y; // 垂直方向移动到顶部边界  
+                    });
+                    let lineWidth = this.getRatioSize(cf.lineWidth);
+                    if (cf instanceof Rect) {
+                        cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
+                    } else {
+                        cf.draw(ctx, pointArr, lineWidth);
+                    }
                     drawChildren(ctx, cf.children, offset)
                 }
             });
         }
         return new Promise((resolve, reject) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-            let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
-            let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
-            let lineWidth = this.getRatioSize(feature.lineWidth);
-            canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
-            canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
-            // 将多边形移动到Canvas的左上角 
-            pointArr.forEach(point => {
-                point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
-                point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
-            });
-            ctx.fillStyle = this.backgroundColor
-            ctx.fillRect(0, 0, canvas.width, canvas.height)
-            feature.draw(ctx, pointArr, lineWidth);
-            if (feature.children) {
+            if (feature) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
+                let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                let lineWidth = this.getRatioSize(feature.lineWidth);
+                canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
+                canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
+                // 将多边形移动到Canvas的左上角 
+                pointArr.forEach(point => {
+                    point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
+                });
+                ctx.fillStyle = this.backgroundColor
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (feature instanceof Rect) {
+                    feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                } else {
+                    feature.draw(ctx, pointArr, lineWidth);
+                }
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
+                canvas.toBlob(blob => {
+                    // 使用剪切板API进行复制
+                    if (blob) {
+                        const data = [new ClipboardItem({
+                            [blob.type]: blob
+                        })];
+                        navigator.clipboard.write(data).then(() => {
+                            console.log("复制成功!");
+                            resolve(blob)
+                        }, (err) => {
+                            reject("复制失败:" + err)
+                        })
+                    }
+                });
             }
-            canvas.toBlob(blob => {
+
+        })
+    }
+    // 复制元素为svg到剪贴板
+    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {
+        let featureSvgStr = '';
+        // // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
+        var getChildrenSvgStr = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
+            features.forEach(cf => {
+                if (this.isBasicFeature(cf)) {
+                    let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
+                    // 将多边形移动到Canvas的左上角  
+                    pointArr.forEach(point => {
+                        point.x -= offset.x;  // 水平方向移动到左侧边界
+                        point.y -= offset.y; // 垂直方向移动到顶部边界  
+                    });
+                    let lineWidth = this.getRatioSize(cf.lineWidth);
+                    if (cf instanceof Rect) {
+                        featureSvgStr += cf.getSvg(pointArr, lineWidth, this.getRatioSize(cf.radius), width, height, padding);   // svg旋转默认围绕viewBox左上角
+                    } else {
+                        featureSvgStr += cf.getSvg(pointArr, lineWidth, width, height, padding);   // svg旋转默认围绕viewBox左上角
+                    }
+                    if (cf.children) {
+                        getChildrenSvgStr(cf.children, offset, padding)
+                    }
+                }
+            });
+        }
+        return new Promise((resolve, reject) => {
+            if (feature) {
+                let pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
+                let [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const width = Math.abs(rightTop.x - leftTop.x) + padding;
+                const height = Math.abs(leftTop.y - leftBottom.y) + padding;
+                let lineWidth = this.getRatioSize(feature.lineWidth);
+                // 将多边形移动到Canvas的左上角
+                pointArr.forEach(point => {
+                    point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界 
+                });
+                this.test = pointArr[1];
+                if (feature instanceof Rect) {
+                    featureSvgStr += feature.getSvg(pointArr, lineWidth, this.getRatioSize(feature.radius), width, height, padding);   // svg旋转默认围绕viewBox左上角
+                } else {
+                    featureSvgStr += feature.getSvg(pointArr, lineWidth, width, height, padding);   // svg旋转默认围绕viewBox左上角
+                }
+                getChildrenSvgStr(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 }, width, height, padding);
+                const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+                <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
+                    ${featureSvgStr}
+                </svg>`)
                 // 使用剪切板API进行复制
+                var blob = new Blob([svgStr], { type: 'text/plain' });
                 const data = [new ClipboardItem({
-                    ['image/png']: blob
+                    [blob.type]: blob
                 })];
 
                 navigator.clipboard.write(data).then(() => {
                     console.log("复制成功!");
-                    resolve(1)
-                }, () => {
-                    reject(0)
+                    resolve(svgStr)
+                }, (err) => {
+                    reject("复制失败:" + err)
                 })
-            });
+            }
         })
     }
-    // 复制元素为svg到剪贴板
-    copySvgToClipboard() { }
+
+
 
     // 读取剪贴板内容生成文字或图片
     async clipboard2Feature(pos = getMousePos(this.dom, this.mousePos)) {
