@@ -1,8 +1,7 @@
 // 绘制自定义文字
 
-import { FontFamily, Events, CtrlType } from "../../Constants";
+import { FontFamily, CtrlType } from "../../Constants";
 import { IPoint } from "../../Interface";
-import gsap from "gsap";
 import Rect from "./Rect";
 import Feature from "../Feature";
 import { getMousePos } from "@/utils";
@@ -22,7 +21,7 @@ class Text extends Rect {
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
     contentHeight: number;
-    padding: number = 1;
+    padding: number = .1;
 
     fontWeight: number;
     editble: boolean;  // 双击是否可编辑
@@ -188,15 +187,10 @@ class Text extends Rect {
         Text.inputDom.style.pointerEvents = 'none';
         Text.inputDom.style.top = `${pos.y + top}px`;
         Text.inputDom.style.left = `${pos.x + left}px`;
-        // Text.inputDom.value = this.text;
         document.body.appendChild(Text.inputDom);
-        // new Shortcuts("enter", this.enter2Stop.bind(this))
         setTimeout(() => {
             if (Text.inputDom) {
                 Text.inputDom.focus();
-                // Text.inputDom.addEventListener("keydown", (e: any)=>{
-                //     console.log(e.keyCode, "keydow");
-                // })
                 Text.inputDom.onchange = () => {
                     if (Text.inputDom) {
                         this.text = this.text.slice(0, this.cursorIndex) + Text.inputDom.value + this.text.slice(this.cursorIndex);

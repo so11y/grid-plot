@@ -374,11 +374,11 @@ function isBase64(str: string) {
 }
 
 // 获取字符串大小
-function getSizeInBytes(str:string) {
+function getSizeInBytes(str: string) {
     var binaryString = window.atob(str); // 将Base64字符串转换为二进制字符串
     return binaryString.length; // 返回二进制字符串的长度（单位为字节）
 }
- 
+
 function beautifyHTML(html: string, indentSize = 2) {
     var formatted = '';
     // 去除多余空白字符并添加换行符

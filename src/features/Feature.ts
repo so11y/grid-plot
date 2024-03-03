@@ -458,7 +458,7 @@ class Feature {
                 path += `L ${p.x} ${p.y} `
             }
         })
-        if(this.closePath){
+        if (this.closePath) {
             path += ' Z'
         }
         return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`

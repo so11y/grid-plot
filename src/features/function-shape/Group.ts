@@ -10,7 +10,7 @@ export default class Group extends Rect {
         super(0, 0, 0, 0);
         features = features.filter(f => !f.isFixedPos && !f.isFixedSize) // 过滤不合法的元素
         features.forEach(f => {
-            this.addFeature(f, {cbSelect: false});
+            this.addFeature(f, { cbSelect: false });
         })
         this.toResize(features);
         this.className = 'Group';

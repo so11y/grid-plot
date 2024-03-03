@@ -33,7 +33,7 @@ class Stack {
 
     undo() {
         console.log(111);
-        
+
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
         if (!prevFeaturesPropsArr) return;
@@ -61,7 +61,7 @@ class Stack {
         this.pointer--;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        this.gls.features.filter(f => this.gls.isBasicFeature(f)).forEach(f => f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
@@ -93,7 +93,7 @@ class Stack {
         this.pointer++;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        this.gls.features.filter(f => this.gls.isBasicFeature(f)).forEach(f => f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 

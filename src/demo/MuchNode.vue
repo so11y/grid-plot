@@ -32,7 +32,7 @@ export default {
         startTime();
 
         for (let index = 0; index <= 16000; index++) {
-            let rect = new Rect(gls.getRelativeLen(randomNum(0, gls.ctx.canvas.width))*2, gls.getRelativeLen(randomNum(0, gls.ctx.canvas.height))*2, 15, 15)   // 5个单位长度
+            let rect = new Rect(gls.getRelativeLen(randomNum(0, gls.ctx.canvas.width)) * 2, gls.getRelativeLen(randomNum(0, gls.ctx.canvas.height)) * 2, 15, 15)   // 5个单位长度
             gls.addFeature(rect);
         }
     },
