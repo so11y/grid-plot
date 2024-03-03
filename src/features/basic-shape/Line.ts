@@ -60,10 +60,10 @@ class Line extends Feature {
             if (i == 0) {
                 path.moveTo(p.x, p.y)
             } else {
-                if(this.curveCtrlPnt[i]){
+                if (this.curveCtrlPnt[i]) {
                     let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
                     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
-                }else {
+                } else {
                     path.lineTo(p.x, p.y)
                 }
             }
@@ -119,6 +119,36 @@ class Line extends Feature {
     getCtrlPnts() {
         let ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CCtrlPnt) && f.parent === this);
         return ctrlPnts;
+    }
+
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+        let path = ''
+        if (this.isFreeStyle) {
+            pointArr.forEach((p, i) => {
+                if (i > 1) {
+                    const { x: centerX, y: centerY } = pointArr[i - 1]
+                    const { x: endX, y: endY } = p;
+                    const { x: startX, y: startY } = pointArr[i - 2]
+                    const [lastX, lastY] = [(startX + centerX) / 2, (startY + centerY) / 2]
+                    const [x, y] = [(centerX + endX) / 2, (centerY + endY) / 2]
+                    const lineWidth2 = this.lineWidthArr[i] * 2 || this.lineWidthArr[i - 1] || .2;
+                    path += `<path d="M ${lastX} ${lastY} Q ${centerX} ${centerY} ${x} ${y}" stroke="${this.strokeStyle}" stroke-width="${this.gls.getRatioSize(lineWidth2)*.8}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+                }
+            })
+            return path;
+        } else {
+            pointArr.forEach((p, i) => {
+                if (i === 0) {
+                    path += `M ${p.x} ${p.y} `
+                } else {
+                    path += `L ${p.x} ${p.y} `
+                }
+            })
+            if (this.closePath) {
+                path += ' Z'
+            }
+            return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+        }
     }
 
     destroy(): void {

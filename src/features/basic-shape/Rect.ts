@@ -116,10 +116,10 @@ class Rect extends Feature {
         return width / height;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
         let { width, height, leftTop } = this.getSize(pointArr);
         return `
-        <g stroke-linecap="round" transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})"  style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
             <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
         </g>
         `

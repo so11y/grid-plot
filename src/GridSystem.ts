@@ -1363,14 +1363,13 @@ class GridSystem {
                     }
                 });
             }
-
         })
     }
     // 复制元素为svg到剪贴板
     copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {
-        let featureSvgStr = '';
-        // // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
-        var getChildrenSvgStr = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
+        let svgstr = '';
+        // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
+        var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
             features.forEach(cf => {
                 if (this.isBasicFeature(cf)) {
                     let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
@@ -1381,12 +1380,12 @@ class GridSystem {
                     });
                     let lineWidth = this.getRatioSize(cf.lineWidth);
                     if (cf instanceof Rect) {
-                        featureSvgStr += cf.getSvg(pointArr, lineWidth, this.getRatioSize(cf.radius), width, height, padding);   // svg旋转默认围绕viewBox左上角
+                        svgstr += cf.getSvg(pointArr, lineWidth, this.getRatioSize(cf.radius));   // svg旋转默认围绕viewBox左上角
                     } else {
-                        featureSvgStr += cf.getSvg(pointArr, lineWidth, width, height, padding);   // svg旋转默认围绕viewBox左上角
+                        svgstr += cf.getSvg(pointArr, lineWidth);   // svg旋转默认围绕viewBox左上角
                     }
                     if (cf.children) {
-                        getChildrenSvgStr(cf.children, offset, padding)
+                        addChildrenSvg(cf.children, offset, padding)
                     }
                 }
             });
@@ -1398,21 +1397,21 @@ class GridSystem {
                 const width = Math.abs(rightTop.x - leftTop.x) + padding;
                 const height = Math.abs(leftTop.y - leftBottom.y) + padding;
                 let lineWidth = this.getRatioSize(feature.lineWidth);
-                // 将多边形移动到Canvas的左上角
+                // 将多边形移动到SVG的左上角
                 pointArr.forEach(point => {
                     point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                     point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界 
                 });
                 this.test = pointArr[1];
                 if (feature instanceof Rect) {
-                    featureSvgStr += feature.getSvg(pointArr, lineWidth, this.getRatioSize(feature.radius), width, height, padding);   // svg旋转默认围绕viewBox左上角
+                    svgstr += feature.getSvg(pointArr, lineWidth, this.getRatioSize(feature.radius));   // svg旋转默认围绕viewBox左上角
                 } else {
-                    featureSvgStr += feature.getSvg(pointArr, lineWidth, width, height, padding);   // svg旋转默认围绕viewBox左上角
+                    svgstr += feature.getSvg(pointArr, lineWidth);   // svg旋转默认围绕viewBox左上角
                 }
-                getChildrenSvgStr(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 }, width, height, padding);
+                addChildrenSvg(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
                 <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
-                    ${featureSvgStr}
+                    ${svgstr}
                 </svg>`)
                 // 使用剪切板API进行复制
                 var blob = new Blob([svgStr], { type: 'text/plain' });
@@ -1429,8 +1428,6 @@ class GridSystem {
             }
         })
     }
-
-
 
     // 读取剪贴板内容生成文字或图片
     async clipboard2Feature(pos = getMousePos(this.dom, this.mousePos)) {

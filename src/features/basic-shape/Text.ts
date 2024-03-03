@@ -22,7 +22,7 @@ class Text extends Rect {
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
     contentHeight: number;
-    padding: number = 0;
+    padding: number = 1;
 
     fontWeight: number;
     editble: boolean;  // 双击是否可编辑
@@ -215,7 +215,7 @@ class Text extends Rect {
         }
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
         var offscreenCanvas = document.createElement('canvas');
         // 获取离屏Canvas的2D渲染上下文  
         var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
@@ -223,9 +223,8 @@ class Text extends Rect {
         const padding = this.gls.getRatioSize(this.padding);
         const lineHeight = this.gls.getRatioSize(this.lineHeight);
 
-        let svgStr = super.getSvg(pointArr, lineWidth, radius, boxWidth + (padding * 2), boxHeight + (padding * 2));
-        let center = this.getCenterPos(pointArr);
-        let { width, height } = this.getSize(pointArr);
+        let { width, height, leftTop } = this.getSize(pointArr);
+        let svgStr = super.getSvg(pointArr, lineWidth, radius);
         let fontSize = this.gls.getRatioSize(this.fontSize)
 
         var textArr = ''
@@ -235,24 +234,28 @@ class Text extends Rect {
 
         ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
 
-        for (let i = 0; i < this.text.length; i++) {
+        // 文本的起始坐标
+        const startX = leftTop.x + lineWidth / 2 + padding;
+        const startY = leftTop.y + lineWidth / 2 + padding + lineHeight;
+
+        for (let i = 0; i < this.text.length; i++) {  // 去换行
             const curFontWidth = ctx.measureText(this.text[i]).width;
             contentWidth += curFontWidth;
-            if (contentWidth > (boxWidth - padding * 2 - lineWidth * 2 - boxPadding)) {
-                textArr += `<text x="${center.x + lineWidth + padding}" y="${center.y + contentHeight + lineWidth + padding + lineHeight}" transform="translate(${-width / 2 - lineWidth / 2} ${-height / 2 - lineWidth / 2})" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize - .5}; font-weight:${this.bold ? 'bold' : ''};"
+            if (contentWidth > (width - padding * 2 - lineWidth * 2)) {
+                textArr += `<text x="${startX}" y="${startY + contentHeight}" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize}; font-weight:${this.bold ? 'bold' : ''};"
                 >${this.text.substring(lastSunStrIndex, i)}</text>`
                 contentHeight += (fontSize + lineHeight);
                 contentWidth = 0;
                 lastSunStrIndex = i;
             }
             if (i == this.text.length - 1) {
-                textArr += `<text x="${center.x + lineWidth + padding}" y="${center.y + contentHeight + lineWidth + padding + lineHeight}" transform="translate(${-width / 2 - lineWidth / 2} ${-height / 2 - lineWidth / 2})" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize - .5}; font-weight:${this.bold ? 'bold' : ''};"
+                textArr += `<text x="${startX}" y="${startY + contentHeight}" dominant-baseline="hanging" style="fill:${this.color}; font-family: '${this.fontFamily}'; font-size: ${fontSize}; font-weight:${this.bold ? 'bold' : ''};"
                 >${this.text.substring(lastSunStrIndex, i + 1)}</text>`
             }
         }
 
         return svgStr + `
-        <g stroke-linecap="round" transform="rotate(${this.angle} ${boxWidth / 2} ${boxHeight / 2})">
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})">
             ${textArr} 
         </g>
         `

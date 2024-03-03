@@ -449,7 +449,7 @@ class Feature {
         })
     };
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, boxWidth = 0, boxHeight = 0, boxPadding = 0) {
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
         let path = ''
         pointArr.forEach((p, i) => {
             if (i === 0) {
@@ -461,7 +461,7 @@ class Feature {
         if(this.closePath){
             path += ' Z'
         }
-        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}"/>`
+        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
     }
 }
 

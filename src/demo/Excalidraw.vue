@@ -321,6 +321,10 @@
                         <span>恢复</span>
                         <div><a-tag>Ctrl</a-tag><a-tag>Y</a-tag></div>
                     </a-row>
+                    <a-row type="flex" justify="space-between" class="row">
+                        <span>合并为组(使用区域选择框选多个元素)</span>
+                        <div><a-tag>Ctrl</a-tag><a-tag>U</a-tag></div>
+                    </a-row>
                 </div>
             </div>
             <template #footer>
@@ -571,15 +575,9 @@ function reset(clear = false) {
     // gls.loadData();
     setCanvasSize(canvasDom);
     startTime(gls as GridSystem);
-    let feature = new Feature([
-        { x: 0, y: 0 },
-        { x: 10, y: 10 }
-    ])
-    gls.addFeature(feature);
-
 
     let rect = new Rect(100, 100, 100, 100)
-    // rect.radius = 2;
+    rect.radius = 2;
     // rect.isFixedPos = true;
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
@@ -615,8 +613,8 @@ function reset(clear = false) {
 
     let line = new Line([
         { x: 10, y: 10 },
-        { x: 50, y: 50 },
-        { x: 100, y: 70 },
+        { x: 0, y: 80 },
+        { x: 100, y: 120 },
     ])
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
