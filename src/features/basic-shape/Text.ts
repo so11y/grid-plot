@@ -21,7 +21,7 @@ class Text extends Rect {
     lineHeight: number;
     rows: number;  // 当前文本被分成多少行
     contentHeight: number;
-    padding: number = .1;
+    padding: number = 0;
 
     fontWeight: number;
     editble: boolean;  // 双击是否可编辑

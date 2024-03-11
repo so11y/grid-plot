@@ -1,4 +1,4 @@
-import { CtrlType, Orientation } from "../Constants";
+import { AlignType, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Props, Size } from "../Interface";
@@ -6,6 +6,7 @@ import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
 import Text from "./basic-shape/Text";
+import Rect from "./basic-shape/Rect";
 
 class Feature {
 
@@ -222,12 +223,6 @@ class Feature {
                 } else if (this.isPointIn && !isPointIn) {
                     this.onmouseleave && this.onmouseleave();
                 }
-                // if(!this.isPointIn && isPointIn){
-                //     this.onFocus();
-                // }
-                // if(this.isPointIn && isPointIn){
-
-                // }
                 this.isPointIn = isPointIn;
                 this.isPointIn && this.onmousemove && this.onmousemove();
             }
@@ -300,9 +295,7 @@ class Feature {
         }
         setProps(feature)
     }
-
-    // 删除指定子元素
-    removeChild(feature: Feature) {
+    removeChild(feature: Feature) { // 删除指定子元素
         feature.parent = null;
         this.children.splice(this.children.findIndex(cf => cf == feature), 1);
     }
@@ -315,7 +308,6 @@ class Feature {
         }
         this.isFixedPos = true;
     }
-
     toRelativePos() {
         if (this.isFixedPos) {
             let { x, y } = this.gls.getRelativePos({ x: this.position.x, y: this.position.y });
@@ -462,6 +454,24 @@ class Feature {
             path += ' Z'
         }
         return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+    }
+
+    revert(direction: AlignType, center = this.getCenterPos()) {
+        switch (direction) {
+            case AlignType.HORIZONAL:
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: 2 * center.x - p.x, y: p.y }
+                })
+                break;
+            case AlignType.VERTICAL:
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: p.x, y: 2 * center.y - p.y }
+                })
+                break;
+            default:
+                break;
+        }
+        this.children.forEach(cf => cf.revert(direction, center))
     }
 }
 

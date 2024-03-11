@@ -95,9 +95,9 @@ export default class Shortcuts {
     }
 
     handleEvents = (e: any) => {
-        if (e.keyCode != 116 && e.keyCode != 123) {  // 白名单 f5 
-            e.preventDefault();
-        }
+        // if (e.keyCode != 116 && e.keyCode != 123 && e.keyCode != 8 && e.keyCode != 45) {  // 白名单 f5 
+        //     e.preventDefault();
+        // }
         this.typeArr.forEach(ta => {
             if (ta.ctrl) {
                 if (!e.ctrlKey) {

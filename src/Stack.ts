@@ -22,7 +22,7 @@ class Stack {
         let features = this.gls.features.filter(f => this.gls.isBasicFeature(f)) as BasicFeature[]
         features.forEach(f => {
             let fProps = this.gls.recordFeature(f);
-            featurePropsArr.push(fProps)
+            featurePropsArr.push(fProps as Props)
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;

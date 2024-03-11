@@ -152,23 +152,23 @@ class GridSystem {
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
-        GridSystem.Shortcuts.addEvent('del', () => {
-            const feature = this.getFocusNode();
-            if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
-                if (feature.cursorIndex < feature.text.length) {
-                    feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
-                }
-            } else {
-                this.removeFeature(feature, true);
-            }
-        })
-        GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
-            const feature = this.getFocusNode();
-            if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
-                feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
-                feature.cursorIndex--;
-            }
-        })
+        // GridSystem.Shortcuts.addEvent('del', () => {
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
+        //         if (feature.cursorIndex < feature.text.length) {
+        //             feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
+        //         }
+        //     } else {
+        //         this.removeFeature(feature, true);
+        //     }
+        // })
+        // GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
+        //         feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
+        //         feature.cursorIndex--;
+        //     }
+        // })
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
@@ -183,33 +183,33 @@ class GridSystem {
             let sa = this.features.find(f => f instanceof SelectArea) as SelectArea;
             this.removeFeature(sa)
         })
-        GridSystem.Shortcuts.addEvent("left", () => {
-            const feature = this.getFocusNode();
-            if (feature instanceof Text) {
-                feature.cursorIndex > 0 && feature.cursorIndex--;
-                console.log(feature.cursorIndex, "feature.cursorIndex");
-            }
-        })
-        GridSystem.Shortcuts.addEvent("right", () => {
-            const feature = this.getFocusNode();
-            if (feature instanceof Text) {
-                feature.cursorIndex < feature.text.length && feature.cursorIndex++;
-            }
-        })
-        GridSystem.Shortcuts.addEvent("up", () => {
-            const feature = this.getFocusNode();
-            if (feature instanceof Text) {
-                Text.mousePos.y -= this.getRatioSize(feature.fontSize);
-                feature.cursorIndex = -1;
-            }
-        })
-        GridSystem.Shortcuts.addEvent("down", () => {
-            const feature = this.getFocusNode();
-            if (feature instanceof Text) {
-                Text.mousePos.y += this.getRatioSize(feature.fontSize)
-                feature.cursorIndex = -1;
-            }
-        })
+        // GridSystem.Shortcuts.addEvent("left", () => {
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text) {
+        //         feature.cursorIndex > 0 && feature.cursorIndex--;
+        //         console.log(feature.cursorIndex, "feature.cursorIndex");
+        //     }
+        // })
+        // GridSystem.Shortcuts.addEvent("right", () => {
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text) {
+        //         feature.cursorIndex < feature.text.length && feature.cursorIndex++;
+        //     }
+        // })
+        // GridSystem.Shortcuts.addEvent("up", () => {
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text) {
+        //         Text.mousePos.y -= this.getRatioSize(feature.fontSize);
+        //         feature.cursorIndex = -1;
+        //     }
+        // })
+        // GridSystem.Shortcuts.addEvent("down", () => {
+        //     const feature = this.getFocusNode();
+        //     if (feature instanceof Text) {
+        //         Text.mousePos.y += this.getRatioSize(feature.fontSize)
+        //         feature.cursorIndex = -1;
+        //     }
+        // })
     }
 
     private mouseMove = (e: any) => {
@@ -1171,59 +1171,61 @@ class GridSystem {
         return feature;
     }
 
-    recordFeature(f: BasicFeature): Props {
-        return {
-            id: f.id,
-            className: f.className,
-            position: f.position,
-            size: f.size,
-            angle: f.angle,
+    recordFeature(f: BasicFeature, onlyStyle = false): Partial<Props> {
+        const styleProps = {
             fillStyle: f.fillStyle,
             focusStyle: f.focusStyle,
             hoverStyle: f.hoverStyle,
-            zIndex: f.zIndex,
             lineWidth: f.lineWidth,
             lineCap: f.lineCap,
             lineJoin: f.lineJoin,
             opacity: f.opacity,
             lineDashArr: f.lineDashArr,
             lineDashOffset: f.lineDashOffset,
-
-            closePath: f.closePath,  // 是否闭合
-            isPointIn: f.isPointIn, //鼠标是否悬浮在元素上
-            isFixedPos: f.isFixedPos,  // 是否绝对位置.不跟随网格移动
-            isOutScreen: f.isOutScreen,  // 是否在屏幕外
-            isOverflowHidden: f.isOverflowHidden,  // 子元素超出是否隐藏
             isStroke: f.isStroke,  // 是否渲染边框
-            isShowAdsorbLine: f.isShowAdsorbLine,  // 是否显示吸附辅助线
-            isOnlyCenterAdsorb: f.isOnlyCenterAdsorb,  // 是否只以中心对其
-            isOnlyHorizonalDrag: f.isOnlyHorizonalDrag,  // 是否只能 水平 方向拖拽
-            isOnlyVerticalDrag: f.isOnlyVerticalDrag,  // 是否只能 垂直 方向拖拽
-
-            pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
-
-            isFixedSize: f instanceof Rect ? f.isFixedSize : false,
             radius: f instanceof Rect ? f.radius : 0,
-
-            src: f instanceof Img ? f.src : '',
-
-            text: f instanceof Text ? f.text : '',
             fitSize: f instanceof Text ? f.fitSize : false,
             fontWeight: f instanceof Text ? f.fontWeight : 0,
             color: f instanceof Text ? f.color : '',
             fontFamily: f instanceof Text ? f.fontFamily : undefined,
             lineHeight: f instanceof Text ? f.lineHeight : 0,
-            rows: f instanceof Text ? f.rows : 1,
+        }
+        if (onlyStyle) {
+            return styleProps
+        } else {
+            return {
+                id: f.id,
+                className: f.className,
+                position: f.position,
+                size: f.size,
+                angle: f.angle,
+                zIndex: f.zIndex,
+                closePath: f.closePath,  // 是否闭合
+                isPointIn: f.isPointIn, //鼠标是否悬浮在元素上
+                isFixedPos: f.isFixedPos,  // 是否绝对位置.不跟随网格移动
+                isOutScreen: f.isOutScreen,  // 是否在屏幕外
+                isOverflowHidden: f.isOverflowHidden,  // 子元素超出是否隐藏
+                isShowAdsorbLine: f.isShowAdsorbLine,  // 是否显示吸附辅助线
+                isOnlyCenterAdsorb: f.isOnlyCenterAdsorb,  // 是否只以中心对其
+                isOnlyHorizonalDrag: f.isOnlyHorizonalDrag,  // 是否只能 水平 方向拖拽
+                isOnlyVerticalDrag: f.isOnlyVerticalDrag,  // 是否只能 垂直 方向拖拽
 
-            isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
-            lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
+                pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
 
-            children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
-            // parent: f.parent ? f.parent.id: '',
-            // startFeatureId: f instanceof Link ? f.startFeatureId : '',
-            // endFeatureId: f instanceof Link ? f.endFeatureId : '',
+                isFixedSize: f instanceof Rect ? f.isFixedSize : false,
+                src: f instanceof Img ? f.src : '',
+                text: f instanceof Text ? f.text : '',
+                isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
+                lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
+                children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
+                ...styleProps
+                // parent: f.parent ? f.parent.id: '',
+                // startFeatureId: f instanceof Link ? f.startFeatureId : '',
+                // endFeatureId: f instanceof Link ? f.endFeatureId : '',
+            }
         }
     }
+
     // -------------------保存画布状态,读取画布状态---------------------------
     save(featurePropsArr?: Props[]) {
         if (!featurePropsArr) {
@@ -1231,7 +1233,7 @@ class GridSystem {
             this.features.forEach(f => {
                 if (this.isBasicFeature(f)) {
                     let fProps = this.recordFeature(f as BasicFeature);
-                    featurePropsArr && featurePropsArr.push(fProps)
+                    featurePropsArr && featurePropsArr.push(fProps as Props)
                 }
             })
         }
@@ -1461,8 +1463,7 @@ class GridSystem {
                     reader.onload = () => {
                         let txt = reader.result as string
                         if (txt && txt.length > 0) {
-                            let text = new Text(txt, pos.x, pos.y)
-                            text.fitSize = true;
+                            let text = new Text(txt, pos.x, pos.y, this.ctx.measureText(txt).width)
                             this.addFeature(text);
                         }
                     }
