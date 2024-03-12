@@ -5,8 +5,6 @@ import { BasicFeature, IPoint, Props, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
-import Text from "./basic-shape/Text";
-import Rect from "./basic-shape/Rect";
 
 class Feature {
 
@@ -121,6 +119,7 @@ class Feature {
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {
+        if(!this.cbMove) return;
         this.pointArr = this.pointArr.map(p => {
             return {
                 x: !this.isOnlyVerticalDrag ? p.x += offsetX : p.x,
@@ -351,16 +350,16 @@ class Feature {
         this.onMouseover && this.onMouseover(e);
     }
     onmousemove(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmousemove(e)
-        })
+        // this.children.forEach(cf => {
+        //     cf.onmousemove(e)
+        // })
         this.mousemoveEvents.forEach(f => { f(e) })
         this.onMousemove && this.onMousemove(e);
     }
     onmousedown(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmousedown(e)
-        })
+        // this.children.forEach(cf => {
+        //     cf.onmousedown(e)
+        // })
         this.mousedownEvents.forEach(f => { f(e) })
         this.onMousedown && this.onMousedown(e);
     }

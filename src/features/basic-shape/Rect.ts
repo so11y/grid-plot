@@ -7,8 +7,8 @@ class Rect extends Feature {
     radius = 0;   // 做成圆,radius = width/10
 
     constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
-        let points = getRectPoint({ x, y }, { width, height })
-        super(points);
+        let pointArr = getRectPoint({ x, y }, { width, height })
+        super(pointArr);
         this.className = "Rect";
         this.position.x = x;
         this.position.y = y;

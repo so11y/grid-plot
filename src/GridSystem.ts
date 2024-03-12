@@ -240,7 +240,7 @@ class GridSystem {
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.dom, ev);
         const { x: px, y: py } = this.pageSlicePos;
-        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.cbMove && f.isPointIn);  // 寻找鼠标悬浮元素
+        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
         let moveFlag = false;
         var mousemove = (e: any) => { };
         if (this.cbSelectFeature) {
@@ -266,7 +266,7 @@ class GridSystem {
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
                 mousemove = (e: any) => {
-                    if (focusNode && focusNode.cbMove) {
+                    if (focusNode) {
                         const { x: moveX, y: moveY } = getMousePos(this.dom, e);
                         const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
                         if (lastMove.x && lastMove.y) {  // 移动元素
@@ -1350,9 +1350,9 @@ class GridSystem {
                     feature.draw(ctx, pointArr, lineWidth);
                 }
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
-                canvas.toBlob(blob => {
-                    // 使用剪切板API进行复制
-                    if (blob) {
+                let url = canvas.toDataURL("image/png");   // canvas 转 图片
+                fetch(url).then(data => {
+                    data.blob().then(blob => { // 图片转blob
                         const data = [new ClipboardItem({
                             [blob.type]: blob
                         })];
@@ -1362,7 +1362,7 @@ class GridSystem {
                         }, (err) => {
                             reject("复制失败:" + err)
                         })
-                    }
+                    })
                 });
             }
         })

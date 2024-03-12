@@ -626,9 +626,17 @@ function reset(clear = false) {
     // 合并为组
     let group = new Group([rect, rect2, circle]);
     group.rotate(60)
-    group.cbTransformChild = false;
+    group.cbTransformChild = true;
+    // group.fillStyle = group.hoverStyle = "#000"
     gls.addFeature(group, false)
-    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
+    rect.name = "bigrect"
+    rect.onMousemove = ()=>{
+        console.log(222);
+    }
+    group.onMousemove = ()=>{
+        console.log(11);
+    }
+    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
 
     let line = new Line([
         { x: 10, y: 10 },

@@ -66,18 +66,18 @@ class Text extends Rect {
                 lastWidth = this.getSize().width
             }
         })
-        this.dbclickEvents.push((e: any) => {
-            this.cursorIndex = -1;
-            this.editble = true;
-            Text.mousePos = getMousePos(this.gls.dom, e);
-            this.editText(Text.mousePos)
-        })
-        this.blurEvents.push((e: any) => {
-            this.cursorIndex = -1;
-            this.editble = false;
-            Text.mousePos = { x: 0, y: 0 };
-            this.removeInputDom();
-        })
+        // this.dbclickEvents.push((e: any) => {
+        //     this.cursorIndex = -1;
+        //     this.editble = true;
+        //     Text.mousePos = getMousePos(this.gls.dom, e);
+        //     this.editText(Text.mousePos)
+        // })
+        // this.blurEvents.push((e: any) => {
+        //     this.cursorIndex = -1;
+        //     this.editble = false;
+        //     Text.mousePos = { x: 0, y: 0 };
+        //     this.removeInputDom();
+        // })
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
@@ -125,50 +125,50 @@ class Text extends Rect {
         for (let i = 0; i < this.text.length; i++) {
             const curFontWidth = ctx.measureText(this.text[i]).width;
             if ((contentWidth + curFontWidth) > (boxWidth - padding * 2) || this.text[i] === '\n') {
-                ctx.fillText(this.text.substring(lastSunStrIndex, i), startX + padding, startY + contentHeight) //绘制未截取的部分
+                ctx.fillText(this.text.substring(lastSunStrIndex, i).replace(/[\n\r]+/g, ""), startX + padding, startY + contentHeight) //绘制未截取的部分
                 contentHeight += (fontSize + lineHeight);
                 contentWidth = 0;
                 lastSunStrIndex = i;
             }
             if (i == this.text.length - 1) {
-                ctx.fillText(this.text.substring(lastSunStrIndex, i + 1), startX + padding, startY + contentHeight);
+                ctx.fillText(this.text.substring(lastSunStrIndex + 1, i + 1), startX + padding, startY + contentHeight);
             }
 
-            if (this.editble) {
-                if (this.cursorIndex == i) {
-                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth);
-                    Text.cursorPos.y = startY + contentHeight;
-                }
-                if (this.cursorIndex == this.text.length) {  // 末尾文字处理
-                    Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth + curFontWidth);
-                    Text.cursorPos.y = startY + contentHeight;
-                }
-                if (this.cursorIndex < 0) {
-                    let realMousePosY = 0;
-                    const mouseY = Text.mousePos.y - startY;
-                    if (mouseY < 0) {
-                        realMousePosY = 0;
-                        Text.mousePos.y = startY;
-                    } else if (mouseY > this.contentHeight) {
-                        realMousePosY = this.contentHeight;
-                        Text.mousePos.y = startY + this.contentHeight;
-                    } else {
-                        realMousePosY = mouseY;
-                    }
-                    if (realMousePosY >= contentHeight && realMousePosY <= contentHeight + fontSize) {
-                        Text.cursorPos.y = startY + contentHeight;
-                        const realMousePosX = Text.mousePos.x - startX - padding;
-                        if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
-                            Text.cursorPos.x = (startX + padding + contentWidth);
-                            this.cursorIndex = i;
-                        }
-                        if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
-                            Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
-                            this.cursorIndex = i + 1;
-                        }
-                    }
-                }
-            }
+            // if (this.editble) {
+            //     if (this.cursorIndex == i) {
+            //         Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth);
+            //         Text.cursorPos.y = startY + contentHeight;
+            //     }
+            //     if (this.cursorIndex == this.text.length) {  // 末尾文字处理
+            //         Text.cursorPos.x = Text.mousePos.x = (startX + padding + contentWidth + curFontWidth);
+            //         Text.cursorPos.y = startY + contentHeight;
+            //     }
+            //     if (this.cursorIndex < 0) {
+            //         let realMousePosY = 0;
+            //         const mouseY = Text.mousePos.y - startY;
+            //         if (mouseY < 0) {
+            //             realMousePosY = 0;
+            //             Text.mousePos.y = startY;
+            //         } else if (mouseY > this.contentHeight) {
+            //             realMousePosY = this.contentHeight;
+            //             Text.mousePos.y = startY + this.contentHeight;
+            //         } else {
+            //             realMousePosY = mouseY;
+            //         }
+            //         if (realMousePosY >= contentHeight && realMousePosY <= contentHeight + fontSize) {
+            //             Text.cursorPos.y = startY + contentHeight;
+            //             const realMousePosX = Text.mousePos.x - startX - padding;
+            //             if (realMousePosX > contentWidth - ctx.measureText(this.text[i - 1]).width / 2 && realMousePosX < contentWidth + curFontWidth / 2) {
+            //                 Text.cursorPos.x = (startX + padding + contentWidth);
+            //                 this.cursorIndex = i;
+            //             }
+            //             if (realMousePosX > contentWidth + curFontWidth / 2 && i === this.text.length - 1) {  // 末尾文字处理
+            //                 Text.cursorPos.x = (startX + padding + contentWidth + curFontWidth);
+            //                 this.cursorIndex = i + 1;
+            //             }
+            //         }
+            //     }
+            // }
             contentWidth += curFontWidth;
         }
         return {
