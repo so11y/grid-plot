@@ -600,10 +600,11 @@ function reset(clear = false) {
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
 
-    const text = new Text(`当内容特别多的时候，canvas不会自动换行，canvas需要特
-别处理当内容特
-别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
+    const text = new Text(`当内容
+特别多的时候，canvas不会自动
+换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
     text.fitSize = true;
+    text.rotate(30)
     gls.addFeature(text, false);
     // rect.addFeature(text);
 
@@ -611,23 +612,33 @@ function reset(clear = false) {
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2, false)
 
-    let rect4 = new Rect(350, 200, 50, 50);
-    // rect4.isFixedSize = true;
-    gls.addFeature(rect4, false)
-    const text2 = new Text("测试文本", 350, 200);
-    text.fitSize = true;
-    gls.addFeature(text2, false);
-    rect4.addFeature(text2, { cbSelect: false })
-    rect4.rotate(45)
+    // let rect4 = new Rect(350, 200, 50, 50);
+    // // rect4.isFixedSize = true;
+    // gls.addFeature(rect4, false)
+    // const text2 = new Text("测试文本", 350, 200);
+    // text.fitSize = true;
+    // gls.addFeature(text2, false);
+    // rect4.addFeature(text2, { cbSelect: false })
+    // rect4.rotate(45)
 
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
+    var line = new Line([
+        { x: 10, y: 10 },
+        { x: 0, y: 80 },
+        { x: 100, y: 120 },
+    ])
+    // line.rotate(30)
+    line.translate(200)
+    gls.addFeature(line, false)
+
     // 合并为组
     let group = new Group([rect, rect2, circle]);
     group.rotate(60)
-    group.cbTransformChild = true;
-    // group.fillStyle = group.hoverStyle = "#000"
+    group.translate(300)
+    group.cbTransformChild = false;
+    group.fillStyle = group.hoverStyle = "#000"
     gls.addFeature(group, false)
     rect.name = "bigrect"
     rect.onMousemove = ()=>{
@@ -638,18 +649,12 @@ function reset(clear = false) {
     }
     group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
 
-    let line = new Line([
-        { x: 10, y: 10 },
-        { x: 0, y: 80 },
-        { x: 100, y: 120 },
-    ])
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
     // // text2.fitSize = true;
     // gls.addFeature(text2, false);
     // line.addFeature(text2, false);
     // line.enableCtrlPnts();
-    gls.addFeature(line, false)
 
     // console.log(group, rect, rect2);
 

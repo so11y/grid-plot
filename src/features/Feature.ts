@@ -5,6 +5,7 @@ import { BasicFeature, IPoint, Props, Size } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
+import { el } from "element-plus/es/locale";
 
 class Feature {
 
@@ -87,6 +88,8 @@ class Feature {
     dbclickEvents: Function[] = [];
     onDragend: Function | null = null;  // 拖拽中的事件
     dragendEvents: Function[] = [];
+    onDrag: Function | null = null;  // 拖拽中的事件
+    dragEvents: Function[] = [];
     onResize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
     resizeEvents: Function[] = [];
     onDraw: Function | null = null;  // 每次绘制触发
@@ -107,19 +110,19 @@ class Feature {
         this.id = getUuid();
     }
 
-    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos()) {
+    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(), cbRotate = true) {
         this.angle += angle;
         this.pointArr = this.pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
-        this.children.forEach(cf => {  // 子元素递归旋转
+        cbRotate && this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
         this.onrotate && this.onrotate();
     }
 
     translate(offsetX: number = 0, offsetY: number = 0) {
-        if(!this.cbMove) return;
+        if (!this.cbMove) return;
         this.pointArr = this.pointArr.map(p => {
             return {
                 x: !this.isOnlyVerticalDrag ? p.x += offsetX : p.x,
@@ -420,6 +423,13 @@ class Feature {
         this.dragendEvents.forEach(f => { f(e) })
         this.onDragend && this.onDragend(e);
     }
+    ondrag(e?: any) {
+        this.children.forEach(cf => {
+            cf.ondrag(e)
+        })
+        this.dragEvents.forEach(f => { f(e) })
+        this.onDrag && this.onDrag(e);
+    }
     // --------------------元素操作相关----------------
     ondelete(e?: any) {
         this.children.forEach(cf => {
@@ -455,7 +465,15 @@ class Feature {
         return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
     }
 
-    revert(direction: AlignType, center = this.getCenterPos()) {
+    getRotatePnts(pointArr = this.pointArr, angle: number = this.angle, O: IPoint) {
+        return pointArr.map(p => {
+            return getRotatePnt(O, p, angle)
+        })
+    }
+
+    // 水平翻转, 垂直翻转
+    revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true) {
+        // const angle = this.angle;
         switch (direction) {
             case AlignType.HORIZONAL:
                 this.pointArr = this.pointArr.map(p => {
@@ -470,8 +488,23 @@ class Feature {
             default:
                 break;
         }
-        this.children.forEach(cf => cf.revert(direction, center))
+        if (cbRotate) {
+            this.gls.enableBbox();
+            this.gls.enableBbox(this);
+        }
     }
+
+    findLastParent(feature: Feature = this): Feature | undefined {
+        if (feature.parent) {
+            if (!feature.parent.parent) {
+                return feature.parent;
+            } else {
+                return this.findLastParent(feature.parent)
+            }
+        }
+        return feature
+    }
+
 }
 
 export default Feature;

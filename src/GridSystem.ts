@@ -288,6 +288,7 @@ class GridSystem {
                         }
                         lastMove.x = mx;
                         lastMove.y = my;
+                        focusNode.ondrag && focusNode.ondrag();
                     }
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
@@ -1160,7 +1161,6 @@ class GridSystem {
             props.fontFamily != undefined && (feature.fontFamily = props.fontFamily);
             props.text != undefined && (feature.text = props.text);
             props.lineHeight != undefined && (feature.lineHeight = props.lineHeight);
-            props.rows != undefined && (feature.rows = props.rows);
         }
 
         if (feature instanceof Line) {

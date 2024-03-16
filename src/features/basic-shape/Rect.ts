@@ -1,3 +1,4 @@
+import { AlignType } from "@/Constants";
 import { IPoint } from "../../Interface";
 import { getLenOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
@@ -124,6 +125,41 @@ class Rect extends Feature {
         </g>
         `
     }
+
+    revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true): void {
+        if (cbRotate) {
+            const angle = this.angle;
+            const parent = this.findLastParent()
+            switch (direction) {
+                case AlignType.HORIZONAL:
+                    this.children.forEach((f) => {
+                        f.revert(direction, center, false);
+                        if (!(f instanceof Rect)) {   // 不是Rect不用旋转
+                            f.rotate(-(-180 - 2 * angle), center)
+                        }
+                    })
+                    if (parent) {
+                        parent.rotate(-180 - 2 * angle)
+                    }
+                    break;
+                case AlignType.VERTICAL:
+                    this.children.forEach((f) => {
+                        f.revert(direction, center, false);
+                        if (!(f instanceof Rect)) {   // 不是Rect不用旋转
+                            f.rotate(-(-360 - 2 * angle), center)
+                        }
+                    })
+                    if (parent) {
+                        parent.rotate(-360 - 2 * angle)
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    }
+
 }
 
 export default Rect;

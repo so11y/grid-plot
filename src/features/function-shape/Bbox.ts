@@ -1,7 +1,7 @@
 import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
-import { BasicFeature, IPoint, Vector } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotatePnt, getRotateVct, isPointInPolygon } from "../../utils";
+import { BasicFeature, Vector } from "../../Interface";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -24,18 +24,14 @@ export default class Bbox extends Rect {
 
     constructor(target: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
         const angle = target.angle;
-        target.rotate(-angle)
+        // target.rotate(-angle)
         let center = target.getCenterPos();
-        // let pointArr =  getRotatePointArr(target.pointArr, -target.angle, center);
         let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
-        // this.gls.test = this.gls.getPixelPos(target.pointArr[0])
-        // this.pointArr =  getRotatePointArr(this.pointArr.slice(), target.angle, center);
         this.className = 'Bbox';
         this.isFixedPos = target.isFixedPos;
-        // this.isFixedSize = target.isFixedSize;
-        this.rotate(angle)
-        target.rotate(angle)
+        // this.rotate(angle)
+        // target.rotate(angle)
         this.addFeature(target);
         this.target = target;
         this.ctrlPntSize = ctrlPntSize;
