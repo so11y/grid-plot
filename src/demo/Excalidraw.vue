@@ -645,8 +645,7 @@ function reset(clear = false) {
     let group = new Group([line, rect, rect2, circle]);
     // group.rotate(60)
     group.translate(100)
-    group.cbTransformChild = true;
-    // group.fillStyle = group.hoverStyle = "#000"
+    group.cbTransformChild = false;
     gls.addFeature(group, false)
     rect.name = "bigrect"
     // rect.onMousemove = () => {

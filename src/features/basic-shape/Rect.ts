@@ -117,14 +117,15 @@ class Rect extends Feature {
         return width / height;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-        let { width, height, leftTop } = this.getSize(pointArr);
-        return `
-        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
-            <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
-        </g>
-        `
-    }
+    // getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    //     let { width, height, } = this.getSize(pointArr);
+    //     const [leftTop] = this.getRectWrapPoints(pointArr);
+    //     return `
+    //     <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
+    //         <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
+    //     </g>
+    //     `
+    // }
 
     // revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true): void {
     //     if (cbRotate) {

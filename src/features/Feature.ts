@@ -145,7 +145,7 @@ class Feature {
                 if (this.closePath) {
                     let nextPnt = pointArr[i + 1];
                     let prevPnt = pointArr[pointArr.length - 1];
-                    if(nextPnt && prevPnt){
+                    if (nextPnt && prevPnt) {
                         let midPnt = getMidOfTwoPnts(prevPnt, p)
                         path.moveTo(midPnt.x, midPnt.y)
                         path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
@@ -492,10 +492,12 @@ class Feature {
     }
 
     // 水平翻转, 垂直翻转
-    revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true) {
+    revert(direction: AlignType, center = this.getCenterPos(), isParent = true) {
         this.children.forEach(cf => {
-            cf.revert(direction, center)
+            cf.revert(direction, center, false)
         })
+        // const angle = this.angle;
+        // this.rotate(-angle, center);
         switch (direction) {
             case AlignType.HORIZONAL:
                 this.pointArr = this.pointArr.map(p => {
@@ -510,7 +512,7 @@ class Feature {
             default:
                 break;
         }
-        if (cbRotate) {
+        if (isParent) {
             this.gls.enableBbox();
             this.gls.enableBbox(this);
         }

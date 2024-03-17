@@ -1,4 +1,5 @@
 
+import { AlignType } from "@/Constants";
 import { BasicFeature, IPoint } from "@/Interface";
 import Feature from "../Feature";
 
@@ -8,9 +9,11 @@ export default class Group extends Feature {
         super([]);
         features.forEach(f => this.add(f))
         this.className = 'Group';
-        this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
+        // this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
         this.closePath = true;
+        this.fillStyle = "rgba(250, 242, 180, .5)"
+        this.hoverStyle = "rgba(250, 242, 180, .8)"
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
         this.cbTransformChild = false;
@@ -30,6 +33,35 @@ export default class Group extends Feature {
         features.map(f => allPointArr.push(...f.pointArr));
         this.pointArr = this.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
     }
+
+    // 水平翻转, 垂直翻转
+    revert(direction: AlignType, center = this.getCenterPos(), isParent = true) {
+        this.children.forEach(cf => {
+            cf.revert(direction, center, false)
+        })
+        // const angle = this.angle;
+        // this.rotate(-angle, center);
+        switch (direction) {
+            case AlignType.HORIZONAL:
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: 2 * center.x - p.x, y: p.y }
+                })
+                break;
+            case AlignType.VERTICAL:
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: p.x, y: 2 * center.y - p.y }
+                })
+                break;
+            default:
+                break;
+        }
+        this.toResize(this.children);
+        if (isParent) {
+            this.gls.enableBbox();
+            this.gls.enableBbox(this);
+        }
+    }
+
 
     // 顶部对齐
     toTopAlign(features: Feature[] = this.children, minY: number = this.getRectWrapExtent()[2]) {

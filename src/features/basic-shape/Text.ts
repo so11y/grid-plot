@@ -127,15 +127,14 @@ class Text extends Rect {
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
-        ctx.save();
-        ctx.clip(path);   // 会导致后面元素旋转无效
-        this.setAngle(ctx, pointArr);
-        ctx.textBaseline = "top";
-        ctx.fillStyle = this.color;
-        ctx.lineWidth = this.fontWeight;
         if (Feature.TargetRender) {
-            const { width, leftTop } = this.getSize(pointArr);
+            const { leftTop } = this.getSize(pointArr);
             ctx.save();
+            ctx.clip(path);   // 会导致后面元素旋转无效
+            // this.setAngle(ctx, pointArr);
+            ctx.textBaseline = "top";
+            ctx.fillStyle = this.color;
+            ctx.lineWidth = this.fontWeight;
             ctx.globalAlpha = this.opacity;
             const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
             ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
@@ -156,7 +155,6 @@ class Text extends Rect {
             //         }
             //     }
             // }
-            ctx.restore();
         }
         ctx.restore();
         return path;
