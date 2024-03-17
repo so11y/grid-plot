@@ -130,22 +130,18 @@
                     <li>
                         <div class="title">描边宽度</div>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="modifyLineWidth(.1)" title="细">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(.1)" title="细">
                                 <i class="iconfont gls-xi-zhixian"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="modifyLineWidth(.5)" title="粗">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(.5)" title="粗">
                                 <i class="iconfont gls-zhong-zhixian"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="modifyLineWidth(1)" title="特粗">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(1)" title="特粗">
                                 <i class="iconfont gls-cu-zhixian"></i>
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" :step=".1" :min=".1" :max="2" v-model:value="props.lineWidth"
-                                style="width: 100px;"
-                                @change="(e: any) => modifyLineWidth(e)" />
+                                style="width: 100px;" @change="(e: any) => modifyLineWidth(e)" />
                         </a-row>
                     </li>
                     <li>
@@ -165,8 +161,7 @@
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" :step="1" :min="1" :max="30" v-model:value="props.lineWidth"
-                                style="width: 100px;"
-                                @change="(e: any) => modifyBorderStyle([5, e]) " />
+                                style="width: 100px;" @change="(e: any) => modifyBorderStyle([5, e])" />
                         </a-row>
                     </li>
                     <li>
@@ -182,13 +177,13 @@
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" v-model:value="props.radius" :step=".1" :min="0" :max="1"
-                                style="width: 100px;" @change="(e:any)=>modifyRadius(e)" />
+                                style="width: 100px;" @change="(e: any) => modifyRadius(e)" />
                         </a-row>
                     </li>
                     <li>
                         <div class="title">透明度</div>
                         <a-slider id="test" v-model:value="props.opacity" :step=".1" :min=".1" :max="2"
-                            @change="(e:any)=>modifyOpacity(e)" />
+                            @change="(e: any) => modifyOpacity(e)" />
                     </li>
                     <li>
                         <div class="title">图层</div>
@@ -298,7 +293,7 @@
                 </ul>
             </div>
         </div>
-        <canvas id="myCanvas" width="1580" height="880" ref="cvs" ></canvas>
+        <canvas id="myCanvas" width="1580" height="880" ref="cvs"></canvas>
         <a-modal v-model:open="isShowSaveImage" title="保存为图片" width="80vw">
             <a-row type="flex" justify="center">
                 <img alt="" id="preview-img" width="80%">
@@ -604,7 +599,8 @@ function reset(clear = false) {
 特别多的时候，canvas不会自动
 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
     text.fitSize = true;
-    text.rotate(30)
+    text.radius = 2
+    // text.rotate(30)
     gls.addFeature(text, false);
     // rect.addFeature(text);
 
@@ -624,30 +620,42 @@ function reset(clear = false) {
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
+    // var line = new Line([
+    //     { x: 10, y: 10 },
+    //     { x: 0, y: 80 },
+    //     { x: 100, y: 120 },
+    // ])
+    // line.radius = 20;
+    // // line.rotate(30)
+    // line.translate(200)
+    // gls.addFeature(line, false)
+
     var line = new Line([
         { x: 10, y: 10 },
         { x: 0, y: 80 },
         { x: 100, y: 120 },
     ])
+    // line.closePath = true;
+    line.radius = 4;
     // line.rotate(30)
     line.translate(200)
     gls.addFeature(line, false)
 
     // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    group.rotate(60)
-    group.translate(300)
-    group.cbTransformChild = false;
-    group.fillStyle = group.hoverStyle = "#000"
+    let group = new Group([line, rect, rect2, circle]);
+    // group.rotate(60)
+    group.translate(100)
+    group.cbTransformChild = true;
+    // group.fillStyle = group.hoverStyle = "#000"
     gls.addFeature(group, false)
     rect.name = "bigrect"
-    rect.onMousemove = ()=>{
-        console.log(222);
-    }
-    group.onMousemove = ()=>{
-        console.log(11);
-    }
-    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
+    // rect.onMousemove = () => {
+    //     console.log(222);
+    // }
+    // group.onMousemove = () => {
+    //     console.log(11);
+    // }
+    // group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
@@ -662,10 +670,12 @@ function reset(clear = false) {
     //     gls.removeFeature(rect4)
     // }, 1000);
 
-    let img = new Img("/img2.png", 700, 100)
+    let img = new Img("/img2.png", 700, 100);
+    img.radius = 2
+
+    // img.fillStyle = "transparent"
     // img.rotate(20)
     gls.addFeature(img, false)
-
     gls.enableStack();
 }
 
@@ -761,7 +771,7 @@ function modifyOpacity(opacity: number) {
     let focuseNode = gls?.getFocusNode();
     if (focuseNode) {
         console.log(opacity, "opacity");
-        
+
         focuseNode.opacity = opacity;
     }
 }

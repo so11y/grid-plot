@@ -6,42 +6,6 @@ import Rect from "./Rect";
 import Feature from "../Feature";
 import { getMousePos } from "@/utils";
 
-function setCursorPosition(element: HTMLTextAreaElement, position = 0) {
-    if (element.setSelectionRange) {
-        element.setSelectionRange(position, position);
-    } else if (element.createTextRange) {
-        var range = element.createTextRange();
-        range.collapse(true);
-        range.moveEnd('character', position);
-        range.moveStart('character', position);
-        range.select();
-    }
-}
-
-function getCursorPosition(element: HTMLTextAreaElement) {
-    if (element.selectionStart !== undefined) {
-        // 标准方法（大多数现代浏览器）  
-        return {
-            start: element.selectionStart,
-            end: element.selectionEnd
-        };
-    } else if (document.selection) {
-        // 旧版IE浏览器的方法  
-        var range = document.selection.createRange();
-        var stored_range = range.duplicate();
-
-        // 将选中内容移动到文本域的起始位置，以便测量光标位置  
-        stored_range.moveToElementText(element);
-        stored_range.setEndPoint('EndToEnd', range);
-
-        return {
-            start: stored_range.text.length - range.text.length,
-            end: stored_range.text.length
-        };
-    }
-    return { start: 0, end: 0 }; // 如果不支持上述方法，则返回默认位置  
-}
-
 class Text extends Rect {
 
     static mousePos: IPoint = { x: 0, y: 0 }
@@ -164,14 +128,14 @@ class Text extends Rect {
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
         ctx.save();
-        this.radius == 0 && this.setChildAngle(ctx, pointArr);
+        ctx.clip(path);   // 会导致后面元素旋转无效
+        this.setAngle(ctx, pointArr);
         ctx.textBaseline = "top";
         ctx.fillStyle = this.color;
         ctx.lineWidth = this.fontWeight;
         if (Feature.TargetRender) {
             const { width, leftTop } = this.getSize(pointArr);
             ctx.save();
-            this.radius !== 0 && ctx.clip(path);   // 会导致后面元素旋转无效
             ctx.globalAlpha = this.opacity;
             const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
             ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;

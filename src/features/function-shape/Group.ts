@@ -1,17 +1,12 @@
 
-import { AlignType } from "@/Constants";
 import { BasicFeature, IPoint } from "@/Interface";
-import { createVctor, getLenOfPntToLine, getRotatePnt } from "@/utils";
-import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
 
-export default class Group extends Rect {
+export default class Group extends Feature {
 
     constructor(features: BasicFeature[]) {   // 相对坐标
-        super(0, 0, 0, 0);
-        console.log(features, "features");
+        super([]);
         features.forEach(f => this.add(f))
-        this.toResize(features);
         this.className = 'Group';
         this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
@@ -33,10 +28,7 @@ export default class Group extends Rect {
     toResize(features: BasicFeature[]) {  // 重新创建后重设大小
         let allPointArr: IPoint[] = [];
         features.map(f => allPointArr.push(...f.pointArr));
-        let [minX, maxX, minY, maxY] = this.getRectWrapExtent(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
-        let center = this.getCenterPos(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
-        this.setPos(center.x, center.y);
-        this.setSize(maxX - minX, maxY - minY);
+        this.pointArr = this.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
     }
 
     // 顶部对齐
@@ -101,109 +93,109 @@ export default class Group extends Rect {
         })
     }
 
-    // 均匀分布子元素, 两边有空隙
-    toSpaceAroud(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
-        if (features.length > 1) {
-            switch (flexFLow) {
-                case AlignType.HORIZONAL:
-                    {
-                        features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
-                        this.toLeftAlign(features);
-                        const { width, height, leftTop } = this.getSize();
-                        let sonLen = 0;
-                        features.forEach(f => {
-                            let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
-                            sonLen += (maxX - minX);
-                        })
-                        let spaceLen = (width - sonLen) / (features.length + 1)
-                        let lastLen = 0
-                        features.forEach((f, i) => {
-                            if (features[i - 1]) {
-                                let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
-                                lastLen += (maxX - minX);
-                            }
-                            f.translate(spaceLen * (i + 1) + lastLen, 0)
-                        })
-                        break;
-                    }
-                case AlignType.VERTICAL:
-                    {
-                        features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
-                        this.toTopAlign(features);
-                        const { width, height, leftTop } = this.getSize();
-                        let sonLen = 0;
-                        features.forEach(f => {
-                            let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
-                            sonLen += (maxY - minY);
-                        })
-                        let spaceLen = (height - sonLen) / (features.length + 1)
-                        let lastLen = 0
-                        features.forEach((f, i) => {
-                            if (features[i - 1]) {
-                                let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
-                                lastLen += (maxY - minY);
-                            }
-                            f.translate(0, spaceLen * (i + 1) + lastLen)
-                        })
-                        break;
-                    }
-                default:
-                    break;
-            }
-        }
-    }
+    // // 均匀分布子元素, 两边有空隙
+    // toSpaceAroud(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
+    //     if (features.length > 1) {
+    //         switch (flexFLow) {
+    //             case AlignType.HORIZONAL:
+    //                 {
+    //                     features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
+    //                     this.toLeftAlign(features);
+    //                     const { width, height, leftTop } = this.getSize();
+    //                     let sonLen = 0;
+    //                     features.forEach(f => {
+    //                         let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
+    //                         sonLen += (maxX - minX);
+    //                     })
+    //                     let spaceLen = (width - sonLen) / (features.length + 1)
+    //                     let lastLen = 0
+    //                     features.forEach((f, i) => {
+    //                         if (features[i - 1]) {
+    //                             let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
+    //                             lastLen += (maxX - minX);
+    //                         }
+    //                         f.translate(spaceLen * (i + 1) + lastLen, 0)
+    //                     })
+    //                     break;
+    //                 }
+    //             case AlignType.VERTICAL:
+    //                 {
+    //                     features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
+    //                     this.toTopAlign(features);
+    //                     const { width, height, leftTop } = this.getSize();
+    //                     let sonLen = 0;
+    //                     features.forEach(f => {
+    //                         let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
+    //                         sonLen += (maxY - minY);
+    //                     })
+    //                     let spaceLen = (height - sonLen) / (features.length + 1)
+    //                     let lastLen = 0
+    //                     features.forEach((f, i) => {
+    //                         if (features[i - 1]) {
+    //                             let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
+    //                             lastLen += (maxY - minY);
+    //                         }
+    //                         f.translate(0, spaceLen * (i + 1) + lastLen)
+    //                     })
+    //                     break;
+    //                 }
+    //             default:
+    //                 break;
+    //         }
+    //     }
+    // }
 
-    // 均匀分布子元素, 两边吗没有空隙
-    toSpaceBetween(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
-        if (features.length > 1) {
-            switch (flexFLow) {
-                case AlignType.HORIZONAL:
-                    {
-                        features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
-                        this.toLeftAlign(features);
-                        // const { width, height, leftTop } = this.getSize();  // group的大小
-                        // let sonLen = 0;
-                        // features.forEach(f => {
-                        //     let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
-                        //     sonLen += (maxX - minX);
-                        // })
-                        // let spaceLen = (width - sonLen) / (features.length - 1)
-                        // let lastLen = 0
-                        // features.forEach((f, i) => {
-                        //     if (features[i - 1]) {
-                        //         let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
-                        //         lastLen += (maxX - minX);
-                        //     }
-                        //     f.translate(spaceLen * i + lastLen, 0)
-                        // })
-                        break;
-                    }
-                case AlignType.VERTICAL:
-                    {
-                        features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
-                        this.toTopAlign(features);
-                        const { width, height, leftTop } = this.getSize();  // group的大小
-                        let sonLen = 0;
-                        features.forEach(f => {
-                            let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
-                            sonLen += (maxY - minY);
-                        })
-                        let spaceLen = (height - sonLen) / (features.length - 1)
-                        let lastLen = 0
-                        features.forEach((f, i) => {
-                            if (features[i - 1]) {
-                                let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
-                                lastLen += (maxY - minY);
-                            }
-                            f.translate(0, spaceLen * i + lastLen)
-                        })
-                        break;
-                    }
-                default:
-                    break;
-            }
-        }
-    }
+    // // 均匀分布子元素, 两边吗没有空隙
+    // toSpaceBetween(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
+    //     if (features.length > 1) {
+    //         switch (flexFLow) {
+    //             case AlignType.HORIZONAL:
+    //                 {
+    //                     features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
+    //                     this.toLeftAlign(features);
+    //                     // const { width, height, leftTop } = this.getSize();  // group的大小
+    //                     // let sonLen = 0;
+    //                     // features.forEach(f => {
+    //                     //     let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
+    //                     //     sonLen += (maxX - minX);
+    //                     // })
+    //                     // let spaceLen = (width - sonLen) / (features.length - 1)
+    //                     // let lastLen = 0
+    //                     // features.forEach((f, i) => {
+    //                     //     if (features[i - 1]) {
+    //                     //         let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
+    //                     //         lastLen += (maxX - minX);
+    //                     //     }
+    //                     //     f.translate(spaceLen * i + lastLen, 0)
+    //                     // })
+    //                     break;
+    //                 }
+    //             case AlignType.VERTICAL:
+    //                 {
+    //                     features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
+    //                     this.toTopAlign(features);
+    //                     const { width, height, leftTop } = this.getSize();  // group的大小
+    //                     let sonLen = 0;
+    //                     features.forEach(f => {
+    //                         let [minX, maxX, minY, maxY] = f.getRectWrapExtent();
+    //                         sonLen += (maxY - minY);
+    //                     })
+    //                     let spaceLen = (height - sonLen) / (features.length - 1)
+    //                     let lastLen = 0
+    //                     features.forEach((f, i) => {
+    //                         if (features[i - 1]) {
+    //                             let [minX, maxX, minY, maxY] = features[i - 1].getRectWrapExtent();
+    //                             lastLen += (maxY - minY);
+    //                         }
+    //                         f.translate(0, spaceLen * i + lastLen)
+    //                     })
+    //                     break;
+    //                 }
+    //             default:
+    //                 break;
+    //         }
+    //     }
+    // }
 
     // flex-start：子项在起点位置对齐
     // flex - end：子项在结束位子对齐

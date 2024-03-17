@@ -18,49 +18,49 @@ class Rect extends Feature {
         this.closePath = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
-        let path = new Path2D();
-        // if (radius == 0) {
-        //     pointArr.forEach((p, i) => {
-        //         if (i == 0) {
-        //             path.moveTo(p.x, p.y)
-        //         } else {
-        //             path.lineTo(p.x, p.y)
-        //         }
-        //     })
-        // } else {
-        const { width, height, leftTop } = this.getSize(pointArr);
-        if (this.isFixedSize) {
-            let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
-            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
-        } else {
-            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
-            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
-        }
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-        ctx.save()
-        // this.closePath && path.closePath()
-        ctx.lineCap = this.lineCap;
-        ctx.globalAlpha = this.opacity;
-        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
-        ctx.lineDashOffset = this.lineDashOffset;
-        ctx.strokeStyle = this.strokeStyle;
-        if (this.isPointIn) {
-            ctx.fillStyle = this.hoverStyle;
-            if (this.gls.focusNode === this) {
-                ctx.fillStyle = this.focusStyle;
-            }
-        } else {
-            ctx.fillStyle = this.fillStyle;
-        }
-        ctx.lineWidth = lineWidth;
-        this.setChildAngle(ctx, pointArr);
-        this.isStroke && ctx.stroke(path);
-        this.closePath && ctx.fill(path);
-        this.setPointIn(ctx, path)
-        ctx.restore();
-        return path;
-    }
+    // draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+    //     let path = new Path2D();
+    //     // if (radius == 0) {
+    //         pointArr.forEach((p, i) => {
+    //             if (i == 0) {
+    //                 path.moveTo(p.x, p.y)
+    //             } else {
+    //                 path.lineTo(p.x, p.y)
+    //             }
+    //         })
+    //     // } else {
+    //     // const { width, height, leftTop } = this.getSize(pointArr);
+    //     // if (this.isFixedSize) {
+    //     //     let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
+    //     //     path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
+    //     // } else {
+    //     //     path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
+    //     //     // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+    //     // }
+    //     this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+    //     ctx.save()
+    //     // this.setAngle(ctx, pointArr);
+    //     this.closePath && path.closePath()
+    //     ctx.lineCap = this.lineCap;
+    //     ctx.globalAlpha = this.opacity;
+    //     this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
+    //     ctx.lineDashOffset = this.lineDashOffset;
+    //     ctx.strokeStyle = this.strokeStyle;
+    //     if (this.isPointIn) {
+    //         ctx.fillStyle = this.hoverStyle;
+    //         if (this.gls.focusNode === this) {
+    //             ctx.fillStyle = this.focusStyle;
+    //         }
+    //     } else {
+    //         ctx.fillStyle = this.fillStyle;
+    //     }
+    //     ctx.lineWidth = lineWidth;
+    //     this.isStroke && ctx.stroke(path);
+    //     this.closePath && ctx.fill(path);
+    //     this.setPointIn(ctx, path)
+    //     ctx.restore();
+    //     return path;
+    // }
 
     // 绘制圆角矩形
     drawRoundedRect(path: Path2D, x: number, y: number, width: number, height: number, r: number) {
@@ -89,7 +89,7 @@ class Rect extends Feature {
     }
 
     // 以左上角去旋转内容， 文字或者图片
-    setChildAngle = (ctx: CanvasRenderingContext2D, pointArr: IPoint[]) => {
+    setAngle = (ctx: CanvasRenderingContext2D, pointArr: IPoint[]) => {
         let boxInfo = {
             x: pointArr[0].x,
             y: pointArr[0].y,
@@ -126,39 +126,42 @@ class Rect extends Feature {
         `
     }
 
-    revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true): void {
-        if (cbRotate) {
-            const angle = this.angle;
-            const parent = this.findLastParent()
-            switch (direction) {
-                case AlignType.HORIZONAL:
-                    this.children.forEach((f) => {
-                        f.revert(direction, center, false);
-                        if (!(f instanceof Rect)) {   // 不是Rect不用旋转
-                            f.rotate(-(-180 - 2 * angle), center)
-                        }
-                    })
-                    if (parent) {
-                        parent.rotate(-180 - 2 * angle)
-                    }
-                    break;
-                case AlignType.VERTICAL:
-                    this.children.forEach((f) => {
-                        f.revert(direction, center, false);
-                        if (!(f instanceof Rect)) {   // 不是Rect不用旋转
-                            f.rotate(-(-360 - 2 * angle), center)
-                        }
-                    })
-                    if (parent) {
-                        parent.rotate(-360 - 2 * angle)
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-        }
-    }
+    // revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true): void {
+    //     if (cbRotate) {
+    //         const angle = this.angle;
+    //         const parent = this.findLastParent()
+    //         switch (direction) {
+    //             case AlignType.HORIZONAL:
+    //                 this.children.forEach((f) => {
+    //                     f.revert(direction, center, false);
+    //                     if (!(f instanceof Rect)) {   // 不是Rect不用旋转
+    //                         f.rotate(-(-180 - 2 * angle), center)
+    //                     }
+    //                 })
+    //                 if (parent) {
+    //                     parent.rotate(-180 - 2 * angle)
+    //                 }
+    //                 break;
+    //             case AlignType.VERTICAL:
+    //                 this.children.forEach((f) => {
+    //                     f.revert(direction, center, false);
+    //                     if (!(f instanceof Rect)) {   // 不是Rect不用旋转
+    //                         f.rotate(-(-360 - 2 * angle), center)
+    //                     }
+    //                 })
+    //                 if (parent) {
+    //                     parent.rotate(-360 - 2 * angle)
+    //                 }
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+    //         if (cbRotate) {
+    //             this.gls.enableBbox();
+    //             this.gls.enableBbox(this);
+    //         }
+    //     }
+    // }
 
 }
 

@@ -9,11 +9,26 @@
 </head>
 
 <body>
-
+    <canvas id="myCanvas" width="300" height="200"></canvas>  
 </body>
 
 </html>
-<script>
-    let isCacheSupported = 'caches' in window;
-    console.log(isCacheSupported);
+<script>  
+  var canvas = document.getElementById('myCanvas');  
+  var ctx = canvas.getContext('2d');  
+  
+  // 开始绘制路径  
+  ctx.beginPath();  
+  
+  // 设置起点  
+  ctx.moveTo(50, 50);  
+  // 绘制第一个圆角  
+  ctx.arcTo(50, 100, 150, 100, 25);  
+  // 绘制矩形顶部直线  
+//   ctx.lineTo(150, 100);   
+  
+  // 描边路径  
+  ctx.strokeStyle = 'black';  
+  ctx.lineWidth = 5;  
+  ctx.stroke();  
 </script>

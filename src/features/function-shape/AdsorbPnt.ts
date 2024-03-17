@@ -10,7 +10,7 @@ class AdsorbPnt extends Rect {
     cbCrossLine: boolean = true;
     crossLineStrokeStyle: string;
 
-    constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
+    constructor(width: number = 7, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff";
         this.className = "AdsorbPnt";

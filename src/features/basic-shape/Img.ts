@@ -3,7 +3,7 @@ import Rect from "./Rect";
 
 class Img extends Rect {
 
-    element: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
+    domElement: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
     src: string // 图片/视频的地址
 
     /**
@@ -17,14 +17,14 @@ class Img extends Rect {
         this.className = "Img";
         this.src = src;
         if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
-            const video = this.element = document.createElement("video") as HTMLVideoElement;
-            document.body.appendChild(this.element);
-            this.element.src = src;
-            this.element.style.display = "none";
-            this.element.play();
+            const video = this.domElement = document.createElement("video") as HTMLVideoElement;
+            document.body.appendChild(this.domElement);
+            this.domElement.src = src;
+            this.domElement.style.display = "none";
+            this.domElement.play();
             // 视频加载完成事件
             if (!width && !height) {
-                this.element.addEventListener('loadeddata', () => {  // 重新设置img大小
+                this.domElement.addEventListener('loadeddata', () => {  // 重新设置img大小
                     this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
                 });
             }
@@ -32,10 +32,10 @@ class Img extends Rect {
                 video.play();
             })
         } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
-            const image = this.element = new Image();
-            this.element.src = src;
+            const image = this.domElement = new Image();
+            this.domElement.src = src;
             if (!width && !height) {
-                this.element.onload = () => {
+                this.domElement.onload = () => {
                     this.setSize(this.gls.getRelativeLen(image.width), this.gls.getRelativeLen(image.height))
                 }
             }
@@ -46,18 +46,39 @@ class Img extends Rect {
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
         let path = super.draw(ctx, pointArr, lineWidth, radius);
-        if (this.element) {
-            ctx.save();
+        if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
-            this.radius == 0 && this.setChildAngle(ctx, pointArr);
             ctx.save();
-            this.radius !== 0 && ctx.clip(path);   // 考虑优化问题
+            ctx.clip(path);   // 会导致后面元素旋转无效
+            this.setAngle(ctx, pointArr);
             ctx.globalAlpha = this.opacity;
-            ctx.drawImage(this.element, leftTop.x, leftTop.y, width, height);
-            ctx.restore();
+            ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }
         return path;
+    }
+
+    revert() {
+        var offscreenCanvas = document.createElement('canvas');
+        const angle = this.angle;
+        if (this.domElement) {
+            this.rotate(-angle);
+            offscreenCanvas.width = this.domElement.width;
+            offscreenCanvas.height = this.domElement.height;
+            // 获取离屏Canvas的2D渲染上下文  
+            var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+            // 缩放x轴，缩放值为-1实现镜像反转
+            // ctx.translate(offscreenCanvas.width - 100, 0);
+            ctx.scale(-1, 1);
+            // 要使得镜像后的图片位于正确的位置，我们需要将其平移到右边
+            // 在修改后的状态下绘制图片
+            ctx.drawImage(this.domElement, -offscreenCanvas.width, 0);
+            this.src = offscreenCanvas.toDataURL();
+            this.domElement.src = this.src;
+            this.domElement.onload = ()=>{
+                this.rotate(angle);
+            }
+        }
     }
 
     getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {

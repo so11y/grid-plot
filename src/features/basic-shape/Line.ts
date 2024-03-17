@@ -24,7 +24,7 @@ class Line extends Feature {
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
         let path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
@@ -57,17 +57,44 @@ class Line extends Feature {
         }
         ctx.beginPath();
         pointArr.forEach((p, i) => {
-            if (i == 0) {
-                path.moveTo(p.x, p.y)
-            } else {
-                if (this.curveCtrlPnt[i]) {
-                    let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
-                    path.quadraticCurveTo(center.x, center.y, p.x, p.y)
+            if (i == 0) {  // 第一个点
+                if (this.closePath) {
+                    let nextPnt = pointArr[i + 1];
+                    let prevPnt = pointArr[pointArr.length - 1];
+                    if(nextPnt && prevPnt){
+                        let midPnt = getMidOfTwoPnts(prevPnt, p)
+                        path.moveTo(midPnt.x, midPnt.y)
+                        path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+                    }
+                } else {
+                    path.moveTo(p.x, p.y)
+                }
+            } else if (i != pointArr.length - 1) {  // 中间点
+                let nextPnt = pointArr[i + 1];
+                if (nextPnt) {
+                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+                }
+            } else {   // 最后一个点
+                if (this.closePath) {
+                    let nextPnt = pointArr[0];
+                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
                 } else {
                     path.lineTo(p.x, p.y)
                 }
             }
         })
+        // pointArr.forEach((p, i) => {
+        //     if (i == 0) {
+        //         path.moveTo(p.x, p.y)
+        //     } else {
+        //         if (this.curveCtrlPnt[i]) {
+        //             let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
+        //             path.quadraticCurveTo(center.x, center.y, p.x, p.y)
+        //         } else {
+        //             path.lineTo(p.x, p.y)
+        //         }
+        //     }
+        // })
         this.closePath && path.closePath()
         if (!this.isFreeStyle) {
             if (this.isPointIn) {

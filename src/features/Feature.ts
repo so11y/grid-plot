@@ -2,10 +2,9 @@ import { AlignType, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Props, Size } from "../Interface";
-import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
+import { getLenOfTwoPnts, getMidOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
-import { el } from "element-plus/es/locale";
 
 class Feature {
 
@@ -13,7 +12,7 @@ class Feature {
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
 
     pointArr: IPoint[] = [];
-    fillStyle: string = '#ffec99';
+    fillStyle: string = 'transparent';
     strokeStyle: string = '#f08c00';
     hoverStyle: string = '#fff1b5';
     focusStyle: string = '#fff1b5';
@@ -34,6 +33,7 @@ class Feature {
     size: Size = { width: 0, height: 0 }  // 宽高
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
+    radius: number = 0;
 
     parent: Feature | null = null;  // 父元素
     children: BasicFeature[] = [];  // 子节点
@@ -49,7 +49,7 @@ class Feature {
         }
 
     // 节点状态
-    closePath: boolean = true;  // 是否闭合
+    closePath: boolean = false;  // 是否闭合
     isPointIn: boolean = false; //鼠标是否悬浮在元素上
     isFocused: boolean = false; //是否正在操作, 鼠标按在这个元素身上
     isFixedPos: boolean = false;  // 是否固定位置.不跟随网格移动
@@ -138,13 +138,33 @@ class Feature {
         this.ontranslate();
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
         let path = new Path2D();
         pointArr.forEach((p, i) => {
-            if (i == 0) {
-                path.moveTo(p.x, p.y)
-            } else {
-                path.lineTo(p.x, p.y)
+            if (i == 0) {  // 第一个点
+                if (this.closePath) {
+                    let nextPnt = pointArr[i + 1];
+                    let prevPnt = pointArr[pointArr.length - 1];
+                    if(nextPnt && prevPnt){
+                        let midPnt = getMidOfTwoPnts(prevPnt, p)
+                        path.moveTo(midPnt.x, midPnt.y)
+                        path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+                    }
+                } else {
+                    path.moveTo(p.x, p.y)
+                }
+            } else if (i != pointArr.length - 1) {  // 中间点
+                let nextPnt = pointArr[i + 1];
+                if (nextPnt) {
+                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+                }
+            } else {   // 最后一个点
+                if (this.closePath) {
+                    let nextPnt = pointArr[0];
+                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+                } else {
+                    path.lineTo(p.x, p.y)
+                }
             }
         })
         ctx.save()
@@ -165,7 +185,7 @@ class Feature {
         }
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
-        ctx.fill(path);
+        this.closePath && ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
@@ -473,7 +493,9 @@ class Feature {
 
     // 水平翻转, 垂直翻转
     revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true) {
-        // const angle = this.angle;
+        this.children.forEach(cf => {
+            cf.revert(direction, center)
+        })
         switch (direction) {
             case AlignType.HORIZONAL:
                 this.pointArr = this.pointArr.map(p => {

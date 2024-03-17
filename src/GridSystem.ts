@@ -124,12 +124,12 @@ class GridSystem {
             Feature.TargetRender = this;
             let lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
             let path;
-            if (f instanceof Rect) {
-                let radius = this.getRatioSize(f.radius, f.isFixedSize);
-                path = f.draw(this.ctx, pointArr, lineWidth, radius)
-            } else {
-                path = f.draw(this.ctx, pointArr, lineWidth);
-            }
+            // if (f instanceof Rect) {
+            let radius = this.getRatioSize(f.radius, f.isFixedSize);
+            //     path = f.draw(this.ctx, pointArr, lineWidth, radius)
+            // } else {
+            path = f.draw(this.ctx, pointArr, lineWidth, radius);
+            // }
             f.ondraw && f.ondraw()
             this.ctx.save();
             f.isOverflowHidden && this.ctx.clip(path);
@@ -1319,11 +1319,7 @@ class GridSystem {
                         point.y -= offset.y; // 垂直方向移动到顶部边界  
                     });
                     let lineWidth = this.getRatioSize(cf.lineWidth);
-                    if (cf instanceof Rect) {
-                        cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
-                    } else {
-                        cf.draw(ctx, pointArr, lineWidth);
-                    }
+                    cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
                     drawChildren(ctx, cf.children, offset)
                 }
             });
@@ -1344,11 +1340,7 @@ class GridSystem {
                 });
                 ctx.fillStyle = this.backgroundColor
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                if (feature instanceof Rect) {
-                    feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
-                } else {
-                    feature.draw(ctx, pointArr, lineWidth);
-                }
+                feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 let url = canvas.toDataURL("image/png");   // canvas 转 图片
                 fetch(url).then(data => {
