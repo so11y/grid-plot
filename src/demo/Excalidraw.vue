@@ -639,10 +639,11 @@ function reset(clear = false) {
     line.radius = 4;
     // line.rotate(30)
     line.translate(200)
+    line.enableCtrlPnts();
     gls.addFeature(line, false)
 
     // 合并为组
-    let group = new Group([line, rect, rect2, circle]);
+    let group = new Group([rect, rect2, circle]);
     // group.rotate(60)
     group.translate(100)
     group.cbTransformChild = false;

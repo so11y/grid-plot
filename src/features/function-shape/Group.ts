@@ -37,24 +37,8 @@ export default class Group extends Feature {
     // 水平翻转, 垂直翻转
     revert(direction: AlignType, center = this.getCenterPos(), isParent = true) {
         this.children.forEach(cf => {
-            cf.revert(direction, center, false)
+            cf.revert(direction, cf.getCenterPos(), false)
         })
-        // const angle = this.angle;
-        // this.rotate(-angle, center);
-        switch (direction) {
-            case AlignType.HORIZONAL:
-                this.pointArr = this.pointArr.map(p => {
-                    return { x: 2 * center.x - p.x, y: p.y }
-                })
-                break;
-            case AlignType.VERTICAL:
-                this.pointArr = this.pointArr.map(p => {
-                    return { x: p.x, y: 2 * center.y - p.y }
-                })
-                break;
-            default:
-                break;
-        }
         this.toResize(this.children);
         if (isParent) {
             this.gls.enableBbox();

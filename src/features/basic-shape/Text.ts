@@ -1,6 +1,6 @@
 // 绘制自定义文字
 
-import { FontFamily, CtrlType } from "../../Constants";
+import { FontFamily, CtrlType, AlignType } from "../../Constants";
 import { IPoint } from "../../Interface";
 import Rect from "./Rect";
 import Feature from "../Feature";
@@ -131,7 +131,7 @@ class Text extends Rect {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();
             ctx.clip(path);   // 会导致后面元素旋转无效
-            // this.setAngle(ctx, pointArr);
+            this.setAngle(ctx, pointArr);
             ctx.textBaseline = "top";
             ctx.fillStyle = this.color;
             ctx.lineWidth = this.fontWeight;
@@ -338,6 +338,10 @@ class Text extends Rect {
             ${textArr} 
         </g>
         `
+    }
+
+    revert(direction: AlignType, center?: IPoint, isParent?: boolean): void {
+        
     }
 
     // 元素删除时需要做的事情
