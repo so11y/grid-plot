@@ -640,11 +640,12 @@ function reset(clear = false) {
     line.radius = 4;
     // line.rotate(30)
     line.translate(200)
-    line.enableCtrlPnts();
+    // line.enableCtrlPnts();
     gls.addFeature(line, false)
 
 
     let img = new Img("/img2.png", 400, 100);
+    gls.addFeature(img, false)
 
     // 合并为组
     let group = new Group([rect, rect2, circle]);
@@ -676,7 +677,6 @@ function reset(clear = false) {
 
     // img.fillStyle = "transparent"
     // img.rotate(20)
-    gls.addFeature(img, false)
     gls.enableStack();
 }
 

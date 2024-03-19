@@ -36,8 +36,9 @@ class Img extends Rect {
             const image = this.domElement = new Image();
             this.domElement.src = src;
             if (!height) {
-                height = (this.domElement.height / this.domElement.width) * width;
                 this.domElement.onload = () => {
+                    const domElement = this.domElement as HTMLImageElement;
+                    height = (domElement.height / domElement.width) * width;
                     this.setSize(width, height)
                 }
             }
@@ -54,6 +55,7 @@ class Img extends Rect {
             // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
             ctx.globalAlpha = this.opacity;
+            this.gls.test = leftTop;
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }

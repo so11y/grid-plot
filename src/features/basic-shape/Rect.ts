@@ -123,20 +123,20 @@ class Rect extends Feature {
     // 获取矩形的宽度，包括旋转，不是包围盒
     getSize(pointArr: IPoint[] = this.pointArr) {
         let leftTop = {x: 0, y: 0};
-        if(this.isHorizonalRevert && this.isHorizonalRevert){
-            leftTop = pointArr[2]
-        }
-        if(!this.isHorizonalRevert && !this.isHorizonalRevert){
+        if(!this.isHorizonalRevert && !this.isVerticalRevert){
             leftTop = pointArr[0]
         }
-        if(!this.isHorizonalRevert && this.isHorizonalRevert){
+        if(this.isHorizonalRevert && this.isVerticalRevert){
+            leftTop = pointArr[0]
+        }
+        if(this.isHorizonalRevert && !this.isVerticalRevert){
             leftTop = pointArr[1]
         }
-        if(this.isHorizonalRevert && !this.isHorizonalRevert){
-            leftTop = pointArr[3]
+        if(!this.isHorizonalRevert && this.isVerticalRevert){
+            leftTop = pointArr[1]
         }
         return {
-            leftTop: !this.isHorizonalRevert ? pointArr[0] : pointArr[1],
+            leftTop,
             width: getLenOfTwoPnts(pointArr[0], pointArr[1]),
             height: getLenOfTwoPnts(pointArr[0], pointArr[3]),
         }
