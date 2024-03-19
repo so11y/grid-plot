@@ -1,4 +1,4 @@
-import { AlignType } from "@/Constants";
+import { AlignType, CoordinateSystem } from "@/Constants";
 import { IPoint } from "../../Interface";
 import Rect from "./Rect";
 
@@ -10,7 +10,7 @@ class Img extends Rect {
     /**
      * @param src 如果是html标签就传入.src属性, 如果是base64直接传入, 
      */
-    constructor(src: string, x: number = 0, y: number = 0, width?: number, height?: number) {   // 相对坐标
+    constructor(src: string, x: number = 0, y: number = 0, width: number = 100, height?: number) {   // 相对坐标
         if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
             throw "只支持0.5M一下的文件!"
         }
@@ -35,9 +35,10 @@ class Img extends Rect {
         } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
             const image = this.domElement = new Image();
             this.domElement.src = src;
-            if (!width && !height) {
+            if (!height) {
+                height = (this.domElement.height/this.domElement.width)*width;
                 this.domElement.onload = () => {
-                    this.setSize(image.width/this.gls.scale, image.height/this.gls.scale)
+                    this.setSize(width, height)
                 }
             }
         } else {
@@ -50,7 +51,7 @@ class Img extends Rect {
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
-            ctx.clip(path);   // 会导致后面元素旋转无效
+            // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
             ctx.globalAlpha = this.opacity;
             this.gls.test = leftTop

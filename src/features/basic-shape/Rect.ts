@@ -6,7 +6,7 @@ class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
 
-    constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
+    constructor(x: number = 0, y: number = 0, width: number = 15, height: number = 15) {   // 相对坐标
         let pointArr = getRectPoint({ x, y }, { width, height })
         super(pointArr);
         this.className = "Rect";
@@ -49,13 +49,11 @@ class Rect extends Feature {
         // })
         // } else {
         const { width, height, leftTop } = this.getSize(pointArr);
-        ctx.save()
-        this.setAngle(ctx, leftTop)
         if (this.isFixedSize) {
             let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
         } else {
-            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, r);
+            path.roundRect(leftTop.x, leftTop.y, width, height, r);
             // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
@@ -76,11 +74,11 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
+        this.setAngle(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.closePath && ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
-        ctx.restore();
         ctx.restore();
         return path;
     }
@@ -140,15 +138,14 @@ class Rect extends Feature {
         return width / height;
     }
 
-    // getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-    //     let { width, height, } = this.getSize(pointArr);
-    //     const [leftTop] = this.getRectWrapPoints(pointArr);
-    //     return `
-    //     <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
-    //         <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
-    //     </g>
-    //     `
-    // }
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+        let { width, height, leftTop} = this.getSize(pointArr);
+        return `
+        <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
+            <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
+        </g>
+        `
+    }
 
 }
 
