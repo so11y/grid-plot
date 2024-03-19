@@ -10,7 +10,7 @@ class BCtrlPnt extends Rect {
     lastAngle: number;
     parent: Bbox | null = null;
 
-    constructor(parent: Bbox, fn: () => IPoint, width: number = 7) {   // 相对坐标
+    constructor(parent: Bbox, fn: () => IPoint, width: number = 14) {   // 相对坐标
         let pos = fn();
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;

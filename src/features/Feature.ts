@@ -478,9 +478,6 @@ class Feature {
         this.children.forEach(cf => {
             cf.revert(direction, center, false)
         })
-        this.angle = 360 - this.angle;
-        // const angle = this.angle;
-        // this.rotate(-angle, center);
         switch (direction) {
             case AlignType.HORIZONAL:
                 const centerPos = center as IPoint;
@@ -488,12 +485,14 @@ class Feature {
                     return { x: 2 * centerPos.x - p.x, y: p.y }
                 })
                 this.isHorizonalRevert = !this.isHorizonalRevert;
+                this.angle = 360 - this.angle;
                 break;
             case AlignType.VERTICAL:
                 this.pointArr = this.pointArr.map(p => {
                     return { x: p.x, y: 2 * centerPos.y - p.y }
                 }).slice()
                 this.isVerticalRevert = !this.isVerticalRevert;
+                this.angle = 180 - this.angle;
                 break;
             default:
                 break;

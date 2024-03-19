@@ -36,7 +36,7 @@ class Img extends Rect {
             const image = this.domElement = new Image();
             this.domElement.src = src;
             if (!height) {
-                height = (this.domElement.height/this.domElement.width)*width;
+                height = (this.domElement.height / this.domElement.width) * width;
                 this.domElement.onload = () => {
                     this.setSize(width, height)
                 }
@@ -54,7 +54,6 @@ class Img extends Rect {
             // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
             ctx.globalAlpha = this.opacity;
-            this.gls.test = leftTop
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }
@@ -68,11 +67,19 @@ class Img extends Rect {
             offscreenCanvas.height = this.domElement.height;
             // 获取离屏Canvas的2D渲染上下文  
             var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
-            // 缩放x轴，缩放值为-1实现镜像反转
-            ctx.scale(-1, 1);
-            // 要使得镜像后的图片位于正确的位置，我们需要将其平移到右边
-            // 在修改后的状态下绘制图片
-            ctx.drawImage(this.domElement, -offscreenCanvas.width, 0);
+            // 镜像反转
+            switch (direction) {
+                case AlignType.HORIZONAL:
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(this.domElement, -offscreenCanvas.width, 0);
+                    break;
+                case AlignType.VERTICAL:
+                    ctx.scale(1, -1);
+                    ctx.drawImage(this.domElement, 0, -offscreenCanvas.height);
+                    break;
+                default:
+                    break;
+            }
             this.src = offscreenCanvas.toDataURL();
             const image = new Image();
             image.src = this.src;

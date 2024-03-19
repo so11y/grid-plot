@@ -647,7 +647,7 @@ function reset(clear = false) {
     let img = new Img("/img2.png", 400, 100);
 
     // 合并为组
-    let group = new Group([img, rect, rect2, circle]);
+    let group = new Group([rect, rect2, circle]);
     // group.rotate(60)
     group.translate(100)
     group.cbTransformChild = true;
