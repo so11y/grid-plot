@@ -1,6 +1,5 @@
-import { AlignType } from "@/Constants";
 import { IPoint } from "../../Interface";
-import { getLenOfTwoPnts, getRectPoint } from "../../utils";
+import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
 
 class Rect extends Feature {
@@ -18,49 +17,73 @@ class Rect extends Feature {
         this.closePath = true;
     }
 
-    // draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
-    //     let path = new Path2D();
-    //     // if (radius == 0) {
-    //         pointArr.forEach((p, i) => {
-    //             if (i == 0) {
-    //                 path.moveTo(p.x, p.y)
-    //             } else {
-    //                 path.lineTo(p.x, p.y)
-    //             }
-    //         })
-    //     // } else {
-    //     // const { width, height, leftTop } = this.getSize(pointArr);
-    //     // if (this.isFixedSize) {
-    //     //     let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
-    //     //     path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
-    //     // } else {
-    //     //     path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
-    //     //     // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
-    //     // }
-    //     this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
-    //     ctx.save()
-    //     // this.setAngle(ctx, pointArr);
-    //     this.closePath && path.closePath()
-    //     ctx.lineCap = this.lineCap;
-    //     ctx.globalAlpha = this.opacity;
-    //     this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
-    //     ctx.lineDashOffset = this.lineDashOffset;
-    //     ctx.strokeStyle = this.strokeStyle;
-    //     if (this.isPointIn) {
-    //         ctx.fillStyle = this.hoverStyle;
-    //         if (this.gls.focusNode === this) {
-    //             ctx.fillStyle = this.focusStyle;
-    //         }
-    //     } else {
-    //         ctx.fillStyle = this.fillStyle;
-    //     }
-    //     ctx.lineWidth = lineWidth;
-    //     this.isStroke && ctx.stroke(path);
-    //     this.closePath && ctx.fill(path);
-    //     this.setPointIn(ctx, path)
-    //     ctx.restore();
-    //     return path;
-    // }
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
+        let path = new Path2D();
+        // if (radius == 0) {
+        // pointArr.forEach((p, i) => {
+        //     if (i == 0) {  // 第一个点
+        //         if (this.closePath) {
+        //             let nextPnt = pointArr[i + 1];
+        //             let prevPnt = pointArr[pointArr.length - 1];
+        //             if (nextPnt && prevPnt) {
+        //                 let midPnt = getMidOfTwoPnts(prevPnt, p)
+        //                 path.moveTo(midPnt.x, midPnt.y)
+        //                 path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+        //             }
+        //         } else {
+        //             path.moveTo(p.x, p.y)
+        //         }
+        //     } else if (i != pointArr.length - 1) {  // 中间点
+        //         let nextPnt = pointArr[i + 1];
+        //         if (nextPnt) {
+        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+        //         }
+        //     } else {   // 最后一个点
+        //         if (this.closePath) {
+        //             let nextPnt = pointArr[0];
+        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+        //         } else {
+        //             path.lineTo(p.x, p.y)
+        //         }
+        //     }
+        // })
+        // } else {
+        const { width, height, leftTop } = this.getSize(pointArr);
+        ctx.save()
+        this.setAngle(ctx, leftTop)
+        if (this.isFixedSize) {
+            let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
+            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
+        } else {
+            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, r);
+            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+        }
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        ctx.save()
+        this.closePath && path.closePath()
+        ctx.lineCap = this.lineCap;
+        ctx.lineJoin = this.lineJoin;
+        ctx.globalAlpha = this.opacity;
+        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
+        ctx.lineDashOffset = this.lineDashOffset;
+        ctx.strokeStyle = this.strokeStyle;
+        if (this.isPointIn) {
+            ctx.fillStyle = this.hoverStyle;
+            if (this.gls.focusNode === this) {
+                ctx.fillStyle = this.focusStyle;
+            }
+        } else {
+            ctx.fillStyle = this.fillStyle;
+        }
+        ctx.lineWidth = lineWidth;
+        this.isStroke && ctx.stroke(path);
+        this.closePath && ctx.fill(path);
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        this.setPointIn(ctx, path)
+        ctx.restore();
+        ctx.restore();
+        return path;
+    }
 
     // 绘制圆角矩形
     drawRoundedRect(path: Path2D, x: number, y: number, width: number, height: number, r: number) {
@@ -89,10 +112,10 @@ class Rect extends Feature {
     }
 
     // 以左上角去旋转内容， 文字或者图片
-    setAngle = (ctx: CanvasRenderingContext2D, pointArr: IPoint[]) => {
+    setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
         let boxInfo = {
-            x: pointArr[0].x,
-            y: pointArr[0].y,
+            x: leftTop.x,
+            y: leftTop.y,
         }
         ctx.translate(boxInfo.x, boxInfo.y)
         ctx.rotate(this.angle * Math.PI / 180)
@@ -102,7 +125,7 @@ class Rect extends Feature {
     // 获取矩形的宽度，包括旋转，不是包围盒
     getSize(pointArr: IPoint[] = this.pointArr) {
         return {
-            leftTop: pointArr[0],
+            leftTop: !this.isHorizonalRevert ? pointArr[0] : pointArr[1],
             width: getLenOfTwoPnts(pointArr[0], pointArr[1]),
             height: getLenOfTwoPnts(pointArr[0], pointArr[3]),
         }
@@ -125,43 +148,6 @@ class Rect extends Feature {
     //         <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
     //     </g>
     //     `
-    // }
-
-    // revert(direction: AlignType, center = this.getCenterPos(), cbRotate = true): void {
-    //     if (cbRotate) {
-    //         const angle = this.angle;
-    //         const parent = this.findLastParent()
-    //         switch (direction) {
-    //             case AlignType.HORIZONAL:
-    //                 this.children.forEach((f) => {
-    //                     f.revert(direction, center, false);
-    //                     if (!(f instanceof Rect)) {   // 不是Rect不用旋转
-    //                         f.rotate(-(-180 - 2 * angle), center)
-    //                     }
-    //                 })
-    //                 if (parent) {
-    //                     parent.rotate(-180 - 2 * angle)
-    //                 }
-    //                 break;
-    //             case AlignType.VERTICAL:
-    //                 this.children.forEach((f) => {
-    //                     f.revert(direction, center, false);
-    //                     if (!(f instanceof Rect)) {   // 不是Rect不用旋转
-    //                         f.rotate(-(-360 - 2 * angle), center)
-    //                     }
-    //                 })
-    //                 if (parent) {
-    //                     parent.rotate(-360 - 2 * angle)
-    //                 }
-    //                 break;
-    //             default:
-    //                 break;
-    //         }
-    //         if (cbRotate) {
-    //             this.gls.enableBbox();
-    //             this.gls.enableBbox(this);
-    //         }
-    //     }
     // }
 
 }

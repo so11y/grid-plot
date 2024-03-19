@@ -61,6 +61,8 @@ class Feature {
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
     isOnlyVerticalDrag: boolean = false;  // 是否只能 垂直 方向拖拽
+    isHorizonalRevert = false;  // 水平翻转
+    isVerticalRevert = false;  // 垂直翻转
 
     // 节点功能
     cbSelect: boolean = true;  // 是否可被选择
@@ -111,10 +113,8 @@ class Feature {
     }
 
     rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(), cbRotate = true) {
+        this.pointArr = this.getRotatePnts(this.pointArr, angle, O)
         this.angle += angle;
-        this.pointArr = this.pointArr.map(p => {
-            return getRotatePnt(O, p, angle)
-        })
         cbRotate && this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
@@ -141,30 +141,10 @@ class Feature {
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
         let path = new Path2D();
         pointArr.forEach((p, i) => {
-            if (i == 0) {  // 第一个点
-                if (this.closePath) {
-                    let nextPnt = pointArr[i + 1];
-                    let prevPnt = pointArr[pointArr.length - 1];
-                    if (nextPnt && prevPnt) {
-                        let midPnt = getMidOfTwoPnts(prevPnt, p)
-                        path.moveTo(midPnt.x, midPnt.y)
-                        path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-                    }
-                } else {
-                    path.moveTo(p.x, p.y)
-                }
-            } else if (i != pointArr.length - 1) {  // 中间点
-                let nextPnt = pointArr[i + 1];
-                if (nextPnt) {
-                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-                }
-            } else {   // 最后一个点
-                if (this.closePath) {
-                    let nextPnt = pointArr[0];
-                    path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-                } else {
-                    path.lineTo(p.x, p.y)
-                }
+            if (i == 0) {
+                path.moveTo(p.x, p.y)
+            } else {
+                path.lineTo(p.x, p.y)
             }
         })
         ctx.save()
@@ -485,6 +465,7 @@ class Feature {
         return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
     }
 
+    // 一个点围绕某个点旋转angle角度
     getRotatePnts(pointArr = this.pointArr, angle: number = this.angle, O: IPoint) {
         return pointArr.map(p => {
             return getRotatePnt(O, p, angle)
@@ -492,22 +473,27 @@ class Feature {
     }
 
     // 水平翻转, 垂直翻转
-    revert(direction: AlignType, center = this.getCenterPos(), isParent = true) {
+    revert(direction: AlignType, center?: IPoint, isParent = true) {
+        if (!center) center = this.getCenterPos();
         this.children.forEach(cf => {
             cf.revert(direction, center, false)
         })
+        this.angle = 360 - this.angle;
         // const angle = this.angle;
         // this.rotate(-angle, center);
         switch (direction) {
             case AlignType.HORIZONAL:
+                const centerPos = center as IPoint;
                 this.pointArr = this.pointArr.map(p => {
-                    return { x: 2 * center.x - p.x, y: p.y }
+                    return { x: 2 * centerPos.x - p.x, y: p.y }
                 })
+                this.isHorizonalRevert = !this.isHorizonalRevert;
                 break;
             case AlignType.VERTICAL:
                 this.pointArr = this.pointArr.map(p => {
-                    return { x: p.x, y: 2 * center.y - p.y }
-                })
+                    return { x: p.x, y: 2 * centerPos.y - p.y }
+                }).slice()
+                this.isVerticalRevert = !this.isVerticalRevert;
                 break;
             default:
                 break;

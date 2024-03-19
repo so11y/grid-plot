@@ -1,3 +1,4 @@
+import { AlignType } from "@/Constants";
 import { IPoint } from "../../Interface";
 import Rect from "./Rect";
 
@@ -36,7 +37,7 @@ class Img extends Rect {
             this.domElement.src = src;
             if (!width && !height) {
                 this.domElement.onload = () => {
-                    this.setSize(this.gls.getRelativeLen(image.width), this.gls.getRelativeLen(image.height))
+                    this.setSize(image.width/this.gls.scale, image.height/this.gls.scale)
                 }
             }
         } else {
@@ -50,33 +51,33 @@ class Img extends Rect {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
             ctx.clip(path);   // 会导致后面元素旋转无效
-            this.setAngle(ctx, pointArr);
+            this.setAngle(ctx, leftTop);
             ctx.globalAlpha = this.opacity;
+            this.gls.test = leftTop
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }
         return path;
     }
 
-    revert() {
+    revert(direction: AlignType, center?: IPoint, isParent = true) {
         var offscreenCanvas = document.createElement('canvas');
-        const angle = this.angle;
         if (this.domElement) {
-            this.rotate(-angle);
             offscreenCanvas.width = this.domElement.width;
             offscreenCanvas.height = this.domElement.height;
             // 获取离屏Canvas的2D渲染上下文  
             var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
             // 缩放x轴，缩放值为-1实现镜像反转
-            // ctx.translate(offscreenCanvas.width - 100, 0);
             ctx.scale(-1, 1);
             // 要使得镜像后的图片位于正确的位置，我们需要将其平移到右边
             // 在修改后的状态下绘制图片
             ctx.drawImage(this.domElement, -offscreenCanvas.width, 0);
             this.src = offscreenCanvas.toDataURL();
-            this.domElement.src = this.src;
-            this.domElement.onload = ()=>{
-                this.rotate(angle);
+            const image = new Image();
+            image.src = this.src;
+            image.onload = () => {
+                this.domElement = image;
+                super.revert(direction, center, isParent)
             }
         }
     }

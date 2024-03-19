@@ -34,19 +34,6 @@ export default class Group extends Feature {
         this.pointArr = this.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
     }
 
-    // 水平翻转, 垂直翻转
-    revert(direction: AlignType, center = this.getCenterPos(), isParent = true) {
-        this.children.forEach(cf => {
-            cf.revert(direction, cf.getCenterPos(), false)
-        })
-        this.toResize(this.children);
-        if (isParent) {
-            this.gls.enableBbox();
-            this.gls.enableBbox(this);
-        }
-    }
-
-
     // 顶部对齐
     toTopAlign(features: Feature[] = this.children, minY: number = this.getRectWrapExtent()[2]) {
         if (features.length > 1) {

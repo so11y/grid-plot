@@ -590,6 +590,7 @@ function reset(clear = false) {
 
     let rect = new Rect(100, 100, 100, 100)
     rect.radius = 2;
+    rect.rotate(60)
     // rect.isFixedPos = true;
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
@@ -642,11 +643,15 @@ function reset(clear = false) {
     line.enableCtrlPnts();
     gls.addFeature(line, false)
 
+
+    let img = new Img("/img2.png", 700, 100);
+    img.radius = 2
+
     // 合并为组
     let group = new Group([rect, rect2, circle]);
     // group.rotate(60)
     group.translate(100)
-    group.cbTransformChild = false;
+    group.cbTransformChild = true;
     gls.addFeature(group, false)
     rect.name = "bigrect"
     // rect.onMousemove = () => {
@@ -669,9 +674,6 @@ function reset(clear = false) {
     // setTimeout(() => {
     //     gls.removeFeature(rect4)
     // }, 1000);
-
-    let img = new Img("/img2.png", 700, 100);
-    img.radius = 2
 
     // img.fillStyle = "transparent"
     // img.rotate(20)
