@@ -172,44 +172,6 @@ class Feature {
         return path;
     }
 
-    drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            let [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
-            let { x: centerX, y: centerY } = this.getCenterPos(pointArr);
-            if (this._orientations) {
-                ctx.save();
-                ctx.beginPath()
-                if (this._orientations.includes(Orientation.LEFT)) {
-                    ctx.moveTo(leftX, 0)
-                    ctx.lineTo(leftX, this.gls.ctx.canvas.height);
-                } else if (this._orientations.includes(Orientation.RIGHT)) {
-                    ctx.moveTo(rightX, 0)
-                    ctx.lineTo(rightX, this.gls.ctx.canvas.height);
-                }
-                if (this._orientations.includes(Orientation.TOP)) {
-                    ctx.moveTo(0, topY)
-                    ctx.lineTo(this.gls.ctx.canvas.width, topY);
-                } else if (this._orientations.includes(Orientation.BOTTOM)) {
-                    ctx.moveTo(0, bottomY)
-                    ctx.lineTo(this.gls.ctx.canvas.width, bottomY);
-                }
-                if (this._orientations.includes(Orientation.CENTER_X)) {
-                    ctx.moveTo(centerX, 0)
-                    ctx.lineTo(centerX, this.gls.ctx.canvas.height);
-                }
-                if (this._orientations.includes(Orientation.CENTER_Y)) {
-                    ctx.moveTo(0, centerY)
-                    ctx.lineTo(this.gls.ctx.canvas.width, centerY);
-                }
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = .8;
-                ctx.setLineDash([8, 8]);
-                ctx.stroke();
-                ctx.restore();
-            }
-        }
-    }
-
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
             if (this.cbSelect && this.gls.cbSelectFeature) {
@@ -247,7 +209,6 @@ class Feature {
         this.size.height = Math.abs(maxY - minY);
         return [minX, maxX, minY, maxY];
     }
-
 
     // [leftTop, rightTop, rightBottom, leftBottom]
     getRectWrapPoints(pointArr: IPoint[] = this.pointArr): IPoint[] {
@@ -319,29 +280,53 @@ class Feature {
         this.isFixedPos = false;
     }
 
-    // 获取包围盒矩形的Size
-    getPixelSize() {
-        const [leftTop, rightTop, rightBottom] = this.getRectWrapPoints();
-        return {
-            x: getLenOfTwoPnts(leftTop, rightTop),
-            y: getLenOfTwoPnts(leftTop, rightBottom),
-        }
-    }
-
-    getAnchorPnts(): AnchorPnt[] {
-        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
-    }
-
-    // 将元素移动到画中间
-    toCenter(feature: Feature) {
-        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
-        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
-        gsap.to(this.gls.pageSlicePos, {
-            duration: 0.25,
-            x: this.gls.pageSlicePos.x + distX,
-            y: this.gls.pageSlicePos.y + distY,
-            ease: "slow.out",
+    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+        let path = ''
+        pointArr.forEach((p, i) => {
+            if (i === 0) {
+                path += `M ${p.x} ${p.y} `
+            } else {
+                path += `L ${p.x} ${p.y} `
+            }
         })
+        if (this.closePath) {
+            path += ' Z'
+        }
+        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+    }
+
+    // 水平翻转, 垂直翻转
+    revert(direction: AlignType, center?: IPoint, isParent = true) {
+        if (!center) center = this.getCenterPos();
+        this.children.forEach(cf => {
+            cf.revert(direction, center, false)
+        })
+        switch (direction) {
+            case AlignType.HORIZONAL: {
+                const centerPos = center as IPoint;
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: 2 * centerPos.x - p.x, y: p.y }
+                })
+                this.isHorizonalRevert = !this.isHorizonalRevert;
+                this.angle = 360 - this.angle;
+                break;
+            }
+            case AlignType.VERTICAL: {
+                const centerPos = center as IPoint;
+                this.pointArr = this.pointArr.map(p => {
+                    return { x: p.x, y: 2 * centerPos.y - p.y }
+                })
+                this.isVerticalRevert = !this.isVerticalRevert;
+                this.angle = 180 - this.angle;
+                break;
+            }
+            default:
+                break;
+        }
+        if (isParent) {
+            this.gls.enableBbox();
+            this.gls.enableBbox(this);
+        }
     }
 
     // --------------------元素鼠标事件相关----------------
@@ -450,19 +435,68 @@ class Feature {
         })
     };
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
-        let path = ''
-        pointArr.forEach((p, i) => {
-            if (i === 0) {
-                path += `M ${p.x} ${p.y} `
-            } else {
-                path += `L ${p.x} ${p.y} `
-            }
-        })
-        if (this.closePath) {
-            path += ' Z'
+
+    // 获取包围盒矩形的Size
+    getPixelSize() {
+        const [leftTop, rightTop, rightBottom] = this.getRectWrapPoints();
+        return {
+            x: getLenOfTwoPnts(leftTop, rightTop),
+            y: getLenOfTwoPnts(leftTop, rightBottom),
         }
-        return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+    }
+    
+    drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {   // 吸附的对齐线
+        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
+            let [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
+            let { x: centerX, y: centerY } = this.getCenterPos(pointArr);
+            if (this._orientations) {
+                ctx.save();
+                ctx.beginPath()
+                if (this._orientations.includes(Orientation.LEFT)) {
+                    ctx.moveTo(leftX, 0)
+                    ctx.lineTo(leftX, this.gls.ctx.canvas.height);
+                } else if (this._orientations.includes(Orientation.RIGHT)) {
+                    ctx.moveTo(rightX, 0)
+                    ctx.lineTo(rightX, this.gls.ctx.canvas.height);
+                }
+                if (this._orientations.includes(Orientation.TOP)) {
+                    ctx.moveTo(0, topY)
+                    ctx.lineTo(this.gls.ctx.canvas.width, topY);
+                } else if (this._orientations.includes(Orientation.BOTTOM)) {
+                    ctx.moveTo(0, bottomY)
+                    ctx.lineTo(this.gls.ctx.canvas.width, bottomY);
+                }
+                if (this._orientations.includes(Orientation.CENTER_X)) {
+                    ctx.moveTo(centerX, 0)
+                    ctx.lineTo(centerX, this.gls.ctx.canvas.height);
+                }
+                if (this._orientations.includes(Orientation.CENTER_Y)) {
+                    ctx.moveTo(0, centerY)
+                    ctx.lineTo(this.gls.ctx.canvas.width, centerY);
+                }
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = .8;
+                ctx.setLineDash([8, 8]);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+    }
+
+    getAnchorPnts(): AnchorPnt[] {
+        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
+    }
+
+    // 将元素移动到画中间
+    toCenter(feature: Feature) {
+        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
+        gsap.to(this.gls.pageSlicePos, {
+            duration: 0.25,
+            x: this.gls.pageSlicePos.x + distX,
+            y: this.gls.pageSlicePos.y + distY,
+            ease: "slow.out",
+        })
     }
 
     // 一个点围绕某个点旋转angle角度
@@ -470,40 +504,6 @@ class Feature {
         return pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
-    }
-
-    // 水平翻转, 垂直翻转
-    revert(direction: AlignType, center?: IPoint, isParent = true) {
-        if (!center) center = this.getCenterPos();
-        this.children.forEach(cf => {
-            cf.revert(direction, center, false)
-        })
-        switch (direction) {
-            case AlignType.HORIZONAL: {
-                const centerPos = center as IPoint;
-                this.pointArr = this.pointArr.map(p => {
-                    return { x: 2 * centerPos.x - p.x, y: p.y }
-                })
-                this.isHorizonalRevert = !this.isHorizonalRevert;
-                this.angle = 360 - this.angle;
-                break;
-            }
-            case AlignType.VERTICAL: {
-                const centerPos = center as IPoint;
-                this.pointArr = this.pointArr.map(p => {
-                    return { x: p.x, y: 2 * centerPos.y - p.y }
-                })
-                this.isVerticalRevert = !this.isVerticalRevert;
-                this.angle = 180 - this.angle;
-                break;
-            }
-            default:
-                break;
-        }
-        if (isParent) {
-            this.gls.enableBbox();
-            this.gls.enableBbox(this);
-        }
     }
 
     findLastParent(feature: Feature = this): Feature | undefined {

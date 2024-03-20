@@ -431,12 +431,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击画布创建吧!")
             let rect = new Rect(0, 0, 50, 20);
             rect.name = '你好'
-            cb = gls?.click2DrawByClick(rect)
+            cb = gls?.singleClickToFeature(rect)
             break;
         case 2: // 单击创建Circle
             message.info("点击画布创建吧!")
             let circle = new Circle(0, 0, 50, 50);
-            cb = gls?.click2DrawByClick(circle)
+            cb = gls?.singleClickToFeature(circle)
             break;
         case 3: // 点击创建Line
             message.info("点击画布创建吧!")
@@ -445,23 +445,23 @@ function onSelectTool(index = 0, param?: any) {
             console.log(globalBorderStyle.value, "globalBorderStyle.value");
 
             line.lineDashArr = globalBorderStyle.value;
-            cb = gls?.click2DrawByContinuousClick(line)
+            cb = gls?.continuousClickToFeature(line)
             break;
         case 4: // 自由笔
             message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
-            function click2DrawByMove() {
+            function downMoveToFeature() {
                 let line = new Line();
                 line.isFreeStyle = true;
                 line.strokeStyle = globalStrokeColor.value || "red"
                 line.hoverStyle = "#666"
                 line.focusStyle = "#666"
-                cb = gls?.click2DrawByMove(line, !!param, () => {
+                cb = gls?.downMoveToFeature(line, !!param, () => {
                     line.strokeStyle = globalStrokeColor.value || "red"
-                    click2DrawByMove();
+                    downMoveToFeature();
                 })
             }
-            click2DrawByMove();
+            downMoveToFeature();
             break;
         case 5: // 选择区域
             var txt = prompt("请输入文字", "测试文字");
@@ -469,7 +469,7 @@ function onSelectTool(index = 0, param?: any) {
                 message.info("点击画布创建吧!")
                 let text = new Text(txt as string, 0, 0, 20, 10);
                 text.fitSize = true;
-                gls?.click2DrawByClick(text)
+                gls?.singleClickToFeature(text)
             }
 
             break;
@@ -483,7 +483,7 @@ function onSelectTool(index = 0, param?: any) {
                     reader.onload = function () {
                         message.info("点击画布创建吧!")
                         let img = new Img(reader.result as string, 0, 0);
-                        gls?.click2DrawByClick(img)
+                        gls?.singleClickToFeature(img)
                     }
                 }
             });
@@ -585,7 +585,7 @@ function reset(clear = false) {
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls = new GridSystem(canvasDom);
     // gls.loadData();
-    setCanvasSize(canvasDom);
+    setSize(canvasDom);
     startTime(gls as GridSystem);
 
     let rect = new Rect(100, 100, 100, 100)
@@ -684,7 +684,7 @@ function linkTo(url: string) {
     window.open(url);
 }
 
-function setCanvasSize(canvasDom: HTMLCanvasElement) {
+function setSize(canvasDom: HTMLCanvasElement) {
     canvasDom.width = document.documentElement.clientWidth - 4;
     canvasDom.height = document.documentElement.clientHeight - 4;
 

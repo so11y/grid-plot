@@ -3,7 +3,7 @@ import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
-import { BasicFeature, IPoint, Props } from "./Interface";
+import { BasicFeature, IPoint, PixelPos, Props, RelativePos } from "./Interface";
 import Stack from "./Stack";
 import { beautifyHTML, getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
 import gsap from "gsap";
@@ -148,7 +148,7 @@ class GridSystem {
         this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.dom.ondrop = this.drop2Feature.bind(this);
+        this.dom.ondrop = this.dropToFeature.bind(this);
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -171,7 +171,7 @@ class GridSystem {
         // })
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
-        GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboard2Feature.bind(this))
+        GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboardToFeature.bind(this))
         GridSystem.Shortcuts.addEvent(["ctrl", "u"], () => {
             const feature = this.getFocusNode();
             if (feature instanceof SelectArea) {
@@ -622,37 +622,7 @@ class GridSystem {
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    toMinusIndex(feature: BasicFeature) {
-        let index = this.features.findIndex(f => f === feature);
-        swapElements<Feature>(this.features, index, index - 1);
-        this.resetIndex();
-    }
-    toPlusIndex(feature: BasicFeature) {
-        let index = this.features.findIndex(f => f === feature);
-        swapElements<Feature>(this.features, index, index + 1);
-        this.resetIndex();
-    }
-    toMinIndex(feature: BasicFeature) {
-        let index = this.features.findIndex(f => f === feature);
-        this.features.splice(index, 1);
-        this.features.unshift(feature);
-        this.resetIndex();
-    }
-    // 将元素置顶，在画布最上层显示
-    toMaxIndex(feature: BasicFeature) {
-        let index = this.features.findIndex(f => f === feature);
-        this.features.splice(index, 1);
-        this.features.push(feature);
-        this.resetIndex();
-    }
-    resetIndex() {
-        let features = this.features.filter(f => this.isBasicFeature(f));
-        features.forEach((f, i) => f.zIndex = i);
-        this.features.sort((a, b) => a.zIndex - b.zIndex);
-    }
-
-    // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
-    getFocusNode() {
+    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as BasicFeature;
@@ -669,8 +639,39 @@ class GridSystem {
         return;
     }
 
-    // ------------------ 获取像素，或相对坐标，宽度等-----------------
-    getPixelPos(point: IPoint, isFixedPos?: boolean): IPoint {
+    // --------------------------调整元素上下层级相关--------------------------------
+    toMinusIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        swapElements<Feature>(this.features, index, index - 1);
+        this.resortIndex();
+    }
+    toPlusIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        swapElements<Feature>(this.features, index, index + 1);
+        this.resortIndex();
+    }
+    toMinIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        this.features.splice(index, 1);
+        this.features.unshift(feature);
+        this.resortIndex();
+    }
+    // 将元素置顶，在画布最上层显示
+    toMaxIndex(feature: BasicFeature) {
+        let index = this.features.findIndex(f => f === feature);
+        this.features.splice(index, 1);
+        this.features.push(feature);
+        this.resortIndex();
+    }
+    resortIndex() {
+        let features = this.features.filter(f => this.isBasicFeature(f));
+        features.forEach((f, i) => f.zIndex = i);
+        this.features.sort((a, b) => a.zIndex - b.zIndex);
+    }
+
+    // ------------------ 获取像素，或相对坐标，宽度等-------------------------
+    // 获取像素位置`坐标
+    getPixelPos(point: RelativePos, isFixedPos?: boolean): PixelPos {
         if (isFixedPos) {
             return point
         } else {
@@ -686,8 +687,8 @@ class GridSystem {
     getPxielY(num: number) {
         return this.pageSlicePos.y + (num / CoordinateSystem.GRID_SIZE) * this.scale
     }
-
-    getRelativePos(point: IPoint, isFixedPos?: boolean): IPoint {
+    // 获取相对位置坐标
+    getRelativePos(point: PixelPos, isFixedPos?: boolean): RelativePos {
         if (isFixedPos) {
             return point
         } else {
@@ -703,7 +704,6 @@ class GridSystem {
     getRelativeY(num: number = 0) {
         return ((num - this.pageSlicePos.y) / this.scale) * CoordinateSystem.GRID_SIZE
     }
-
     // 获取像素长度， 比如获取元素的宽高
     getPixelLen(len: number) {
         return len * CoordinateSystem.GRID_SIZE;
@@ -711,8 +711,8 @@ class GridSystem {
     getRelativeLen(len: number) {
         return len / CoordinateSystem.GRID_SIZE;
     }
-
-    getRatioSize(size: number, isFixedSize?: boolean): number {  // 获取像素宽度， 比如lineWidth， fontSize, 随网格缩放而缩放
+    // 获取像素宽度， 比如lineWidth， fontSize, 随网格缩放而缩放
+    getRatioSize(size: number, isFixedSize?: boolean): number {
         if (isFixedSize) {
             return size;
         } else {
@@ -722,7 +722,7 @@ class GridSystem {
     }
 
     // ------------------ 鼠标点击方式去创建元素-----------------
-    click2DrawByClick(rect: Rect | Circle, fn?: Function) {
+    singleClickToFeature(rect: Rect | Circle, fn?: Function) {
         this.addFeature(rect, false);
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         this.cbSelectFeature = false;
@@ -730,11 +730,11 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
+            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var click2draw = (e: any) => {
+        var clickDraw = (e: any) => {
             if (e.detail.button === 0) {
                 rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y);
                 clear(false);
@@ -743,38 +743,36 @@ class GridSystem {
                 throw "请用左键绘制!"
             }
         }
-        var move2draw = () => {
+        var moveDraw = () => {
             rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
         }
-        document.addEventListener(Events.MOUSE_DOWN, click2draw);
-        document.addEventListener(Events.MOUSE_MOVE, move2draw);
+        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
+        document.addEventListener(Events.MOUSE_MOVE, moveDraw);
         return clear;
     }
-
-    // 鼠标点一下添加一个点去画折线
-    click2DrawByContinuousClick(line: Line, fn?: Function) {
+    continuousClickToFeature(line: Line, fn?: Function) { // 鼠标点一下添加一个点去画折线
         this.cbSelectFeature = false;
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         var clear = (remove = true) => {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
+            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
             document.removeEventListener(Events.RIGHT_CLICK, overDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var move2draw = (e: any) => {
+        var moveDraw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
         }
-        var click2draw = (e: any) => {
+        var clickDraw = (e: any) => {
             if (e.detail.button === 0) {
                 line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 if (line.pointArr.length == 1) {
                     line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
                 this.addFeature(line, false);
-                document.addEventListener(Events.MOUSE_MOVE, move2draw);
+                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
             } else {
                 throw "请用左键绘制!"
             }
@@ -784,12 +782,10 @@ class GridSystem {
             fn && fn();
         }
         document.addEventListener(Events.RIGHT_CLICK, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, click2draw);
+        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
         return clear;
     }
-
-    // 鼠标按住不放持续画线
-    click2DrawByMove(line: Line, isLaserPen = false, fn?: Function) {
+    downMoveToFeature(line: Line, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
         this.cbSelectFeature = false;
         let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         let lastLineWidth = 0
@@ -798,12 +794,12 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, click2draw);
-            document.removeEventListener(Events.MOUSE_MOVE, move2draw);
+            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
+            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
             document.removeEventListener(Events.MOUSE_UP, overDraw);
             !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var move2draw = () => {
+        var moveDraw = () => {
             let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
             line.addPoint({ x, y });
             if (line.pointArr.length > 1) {
@@ -844,11 +840,11 @@ class GridSystem {
             clear(false);
             fn && fn();
         }
-        var click2draw = (e: any) => {  // 
+        var clickDraw = (e: any) => {  // 
             if (e.detail.button === 0) {
                 let { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
                 line.addPoint({ x, y });
-                document.addEventListener(Events.MOUSE_MOVE, move2draw);
+                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
                 document.addEventListener(Events.MOUSE_UP, overDraw);
                 this.addFeature(line, false);
             } else {
@@ -856,175 +852,67 @@ class GridSystem {
             }
         }
         // document.addEventListener(Events.MOUSE_UP, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, click2draw);
+        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
         return clear;
     }
 
-
-    // ----------------------其他功能性API------------------------
-    /**
- * 根据一个点获取他周围的吸附距离
- * @param pnt 
- * @returns 
- */
-    getAdsorbPos(pnt: IPoint) {
-        var gridSize = CoordinateSystem.GRID_SIZE;
-        let offsetX = 0, offsetY = 0;
-        // 相对像素
-        // 吸附的约束，灵敏度
-        let min = gridSize * .4;
-        let max = gridSize * .6;
-
-        //  ------------- 水平对齐
-        var diffX = getDeviation(pnt.x);
-        if (offsetX == 0 && (diffX > 0 && diffX < min) || (diffX < 0 && diffX > -min)) {
-            offsetX = -pnt.x % (gridSize * gridSize);
-        }
-        if (offsetX == 0 && (diffX > max && diffX < gridSize) || (diffX > -gridSize && diffX < -max)) {
-            offsetX = (gridSize * gridSize) * (diffX > 0 ? 1 : -1) - pnt.x % (gridSize * gridSize);
-        }
-        //  ------------- 垂直对齐
-        var diffY = getDeviation(pnt.y);
-        if (offsetY == 0 && (diffY > 0 && diffY < min) || (diffY < 0 && diffY > -min)) {
-            offsetY = -pnt.y % (gridSize * gridSize);
-        }
-        if (offsetY == 0 && (diffY > max && diffY < gridSize) || (diffY > -gridSize && diffY < -max)) {
-            offsetY = (gridSize * gridSize) * (diffY > 0 ? 1 : -1) - pnt.y % (gridSize * gridSize);
-        }
-
-        return { x: offsetX, y: offsetY };
-
-        function getDeviation(num: number): number {
-            var gridSize = CoordinateSystem.GRID_SIZE;
-            return (num / gridSize) % gridSize;
-        }
-    }
-
-    // 判断是否时基础元素
-    isBasicFeature(f?: Feature | null | undefined) {
-        if (!f) return false;
-        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
-    }
-    // 判断是否时控制点元素
-    isCtrlFeature(f?: Feature | null | undefined) {
-        if (!f) return false;
-        return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'CCtrlPnt'
-    }
-
-    translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {
-        gsap.to(this.pageSlicePos, {
-            duration,
-            x: offsetX,
-            y: offsetY,
-            ease: "slow.out",
-        })
-        // this.pageSlicePos.x += offsetX;
-        // this.pageSlicePos.y += offsetY;
-    }
-
-    // 加载字体
-    loadFont(fontFamily: FontFamily) {
-        const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
-        if (!document.fonts.has(fontface)) {
-            fontface.load().then(function (loadFace) {
-                console.log("字体加载完毕!");
-                document.fonts.add(loadFace);
-            });
-        }
-    }
-
-    setCanvasSize(width?: number | null, height?: number | null) {
-        if (width) this.ctx.canvas.width = width;
-        if (height) this.ctx.canvas.height = height;
-    }
-
-    // 求点与canvas中心的距离
-    getCenterDist(point: IPoint) {
-        let canvasCenter = { x: this.dom.width / 2, y: this.dom.height / 2 }
-        return {
-            x: canvasCenter.x - point.x,
-            y: canvasCenter.y - point.y
-        }
-    }
-    // 获取中心点
-    getCenterPoint() {
-        let centerP = { x: this.dom.width / 2, y: this.dom.height / 2 };
-        let canvasR = this.getRelativePos(centerP)
-        return [centerP, canvasR]
-    }
-
-    // 缩放至 
-    zoomTo(scale: number, point?: IPoint) {
-        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
-        if (!point) point = this.getCenterPoint()[0]
-        this.scale = scale;
-        this.back2center(point.x, point.y, lastGirdSize)
-    }
-
-    // // 判断某个网格内有没有元素
-    // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
-    //     let target: Feature | undefined;
-    //     for (let index = 0; index < pool.length; index++) {
-    //         const block = pool[index];
-    //         if (block.gridPos.x == gx && block.gridPos.y == gy) {
-    //             target = block;
-    //             break;
-    //         }
-    //     }
-    //     return target;
-    // }
-    // 根据相对坐标获取网格坐标
-    getGridPosByRelativePos(x: number, y: number): IPoint {
-        let gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
-        let gx = x / gridSize;
-        let gy = y / gridSize;
-        return { x: gx, y: gy }
-    }
-    // // 根据鼠标,像素坐标获取网格坐标
-    // getGridPosByPixelPos(x: number, y: number): IPoint {
-    //     let gridSize = CoordinateSystem.GRID_SIZE * this.scale;  // 实际网格单元大小
-    //     let gx = x > this.pageSlicePos.x ? Math.ceil((x - this.pageSlicePos.x) / gridSize) : Math.floor((x - this.pageSlicePos.x) / gridSize);
-    //     let gy = y > this.pageSlicePos.y ? Math.ceil((y - this.pageSlicePos.y) / gridSize) : Math.floor((y - this.pageSlicePos.y) / gridSize);
-    //     return { x: gx, y: gy }
-    // }
-    // 根据网格坐标获取相对坐标
-    getRelativePosByGridPos(x: number, y: number): IPoint {
-        let gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
-        return {
-            x: x > 0 ? gridSize * (x - 1) : gridSize * x,
-            y: y > 0 ? gridSize * (y - 1) : gridSize * y,
-        }
-    }
-
-    // ---------------------开启或关闭历史记录, bbox, 区域选择
-    enableStack(enabled: boolean = true) {
-        if (!enabled) {
-            GridSystem.Stack?.destory();
-            GridSystem.Stack = null;
-        } else {
-            if (GridSystem.Stack) {
-                GridSystem.Stack?.destory();
-                GridSystem.Stack = null;
-            } else {
-                GridSystem.Stack = new Stack();
+    async clipboardToFeature(pos = getMousePos(this.dom, this.mousePos)) { // 读取剪贴板内容生成文字或图片
+        try {
+            const clipboardData = await navigator.clipboard.read();
+            pos = this.getRelativePos(pos)
+            // 判断剪贴板数据类型为图像
+            if (clipboardData) {
+                let index = clipboardData[0].types.findIndex(type => type === 'image/png' || type === 'image/jpeg');
+                if (index > -1) {
+                    // 将图像转换成Blob对象
+                    const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(imageBlob);  // 读取base64
+                    reader.onload = () => {
+                        let dataUrl = reader.result as string;
+                        console.log(dataUrl, "dataUrl");
+                        if (dataUrl) {
+                            let img = new Img(dataUrl, pos.x, pos.y)
+                            this.addFeature(img);
+                        }
+                    }
+                    return;
+                }
+                // 判断剪贴板数据类型为文本
+                if (clipboardData[0]?.types.includes('text/plain')) {
+                    let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
+                    const reader = new FileReader();
+                    reader.readAsText(textBlob);  // 获取文本
+                    reader.onload = () => {
+                        let txt = reader.result as string
+                        if (txt && txt.length > 0) {
+                            let text = new Text(txt, pos.x, pos.y, this.ctx.measureText(txt).width)
+                            this.addFeature(text);
+                        }
+                    }
+                    return;
+                }
             }
+        } catch (error) {
+            console.error('Failed to read clipboard content: ', error);
+            return null;
         }
     }
-    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
-        let bbox = this.features.find(f => f instanceof Bbox);
-        this.removeFeature(bbox, false);
-        if (f && !f.isFixedSize && f.cbTransform) {
-            let nbbox = new Bbox(f);
-            return nbbox;
-        }
-    }
-    enableSelectArea(bool = true) {
-        let sa = this.features.find(f => f instanceof SelectArea);
-        this.removeFeature(sa, false);
-        if (bool) {
-            sa = new SelectArea();
-            return sa;
+    dropToFeature(e: any) { // 拖放去添加元素
+        //取得拖进来的文件
+        var data = e.dataTransfer;
+        const files = data.files;  // file继承与blob
+        if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
+            let pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
+            const reader = new FileReader();
+            reader.readAsDataURL(files[0]);  // base64
+            reader.onload = () => {
+                let dataUrl = reader.result as string;
+                if (dataUrl) {
+                    let img = new Img(dataUrl, pos.x, pos.y)
+                    this.addFeature(img);
+                }
+            }
         }
     }
 
@@ -1107,7 +995,6 @@ class GridSystem {
         }
         return feature;
     }
-
     modifyFeature(feature: BasicFeature, props: Props) {
         props.id != undefined && (feature.id = props.id);
         props.className != undefined && (feature.className = props.className)
@@ -1170,8 +1057,7 @@ class GridSystem {
 
         return feature;
     }
-
-    recordFeature(f: BasicFeature, onlyStyle = false): Partial<Props> {
+    recordFeature(f: BasicFeature, onlyStyle = false): Partial<Props> {  // 复制或读取元素属性
         const styleProps = {
             fillStyle: f.fillStyle,
             focusStyle: f.focusStyle,
@@ -1226,7 +1112,39 @@ class GridSystem {
         }
     }
 
-    // -------------------保存画布状态,读取画布状态---------------------------
+
+    // ---------------------开启或关闭历史记录, bbox, 区域选择
+    enableStack(enabled: boolean = true) {
+        if (!enabled) {
+            GridSystem.Stack?.destory();
+            GridSystem.Stack = null;
+        } else {
+            if (GridSystem.Stack) {
+                GridSystem.Stack?.destory();
+                GridSystem.Stack = null;
+            } else {
+                GridSystem.Stack = new Stack();
+            }
+        }
+    }
+    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
+        let bbox = this.features.find(f => f instanceof Bbox);
+        this.removeFeature(bbox, false);
+        if (f && !f.isFixedSize && f.cbTransform) {
+            let nbbox = new Bbox(f);
+            return nbbox;
+        }
+    }
+    enableSelectArea(bool = true) {
+        let sa = this.features.find(f => f instanceof SelectArea);
+        this.removeFeature(sa, false);
+        if (bool) {
+            sa = new SelectArea();
+            return sa;
+        }
+    }
+
+    // -------------------保存画布状态,读取画布状态,加载状态---------------------------
     save(featurePropsArr?: Props[]) {
         if (!featurePropsArr) {
             featurePropsArr = [];
@@ -1253,61 +1171,19 @@ class GridSystem {
             this.createFeature(fp)
         })
     }
-
-    // ----------------------复制到剪切板---------------------------
-    initAnchorPnts() {
-        let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
-        features.forEach(f => {
-            let anchorPnts = f.getAnchorPnts();
-            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
-                let lAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
-                    return leftCenter;
-                });
-                lAnchorPnt.name = 'leftAnchor';
-                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
-                lAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
-                let rAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
-                    return rightCenter;
-                });
-                rAnchorPnt.name = 'rightAnchor';
-                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
-                rAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
-                let tAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
-                    return rightCenter;
-                });
-                tAnchorPnt.name = 'tAnchorPnt';
-                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
-                tAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
-                let bAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
-                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
-                    return rightCenter;
-                });
-                bAnchorPnt.name = 'bottomAnchor';
-                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
-                bAnchorPnt.cbSelect = false;
-            }
-        })
+    // 加载字体
+    loadFont(fontFamily: FontFamily) {
+        const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
+        if (!document.fonts.has(fontface)) {
+            fontface.load().then(function (loadFace) {
+                console.log("字体加载完毕!");
+                document.fonts.add(loadFace);
+            });
+        }
     }
 
-    removeAnchorPnts() {
-        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
-    }
-
-    // 复制元素为png到剪贴板
-    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> {
+    // ----------------------剪切板相关---------------------------
+    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> { // 复制元素为png到剪贴板
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
@@ -1359,8 +1235,7 @@ class GridSystem {
             }
         })
     }
-    // 复制元素为svg到剪贴板
-    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {
+    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
         let svgstr = '';
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
         var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
@@ -1404,9 +1279,9 @@ class GridSystem {
                 }
                 addChildrenSvg(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-                <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
-                    ${svgstr}
-                </svg>`)
+                    <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
+                        ${svgstr}
+                    </svg>`)
                 // 使用剪切板API进行复制
                 var blob = new Blob([svgStr], { type: 'text/plain' });
                 const data = [new ClipboardItem({
@@ -1423,69 +1298,180 @@ class GridSystem {
         })
     }
 
-    // 读取剪贴板内容生成文字或图片
-    async clipboard2Feature(pos = getMousePos(this.dom, this.mousePos)) {
-        try {
-            const clipboardData = await navigator.clipboard.read();
-            pos = this.getRelativePos(pos)
-            // 判断剪贴板数据类型为图像
-            if (clipboardData) {
-                console.log(clipboardData, "clipboardData");
-                let index = clipboardData[0].types.findIndex(type => type === 'image/png' || type === 'image/jpeg');
-                if (index > -1) {
-                    // 将图像转换成Blob对象
-                    const imageBlob = new Blob([await clipboardData[0].getType(clipboardData[0].types[index])], { type: 'image/' + clipboardData[index].types[0].split('/')[1] });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(imageBlob);  // 读取base64
-                    reader.onload = () => {
-                        let dataUrl = reader.result as string;
-                        console.log(dataUrl, "dataUrl");
-                        if (dataUrl) {
-                            let img = new Img(dataUrl, pos.x, pos.y)
-                            this.addFeature(img);
-                        }
-                    }
-                    return;
-                }
-                // 判断剪贴板数据类型为文本
-                if (clipboardData[0]?.types.includes('text/plain')) {
-                    let textBlob = await clipboardData[0].getType(clipboardData[0].types[0]);
-                    const reader = new FileReader();
-                    reader.readAsText(textBlob);  // 获取文本
-                    reader.onload = () => {
-                        let txt = reader.result as string
-                        if (txt && txt.length > 0) {
-                            let text = new Text(txt, pos.x, pos.y, this.ctx.measureText(txt).width)
-                            this.addFeature(text);
-                        }
-                    }
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error('Failed to read clipboard content: ', error);
-            return null;
+    // ----------------------------画布相关操作方法------------------------------
+    translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {  // 移动画布
+        gsap.to(this.pageSlicePos, {
+            duration,
+            x: offsetX,
+            y: offsetY,
+            ease: "slow.out",
+        })
+        // this.pageSlicePos.x += offsetX;
+        // this.pageSlicePos.y += offsetY;
+    }
+    zoomTo(scale: number, point?: IPoint) { // 缩放至 
+        let lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
+        if (!point) point = this.getCenterPos()[0]
+        this.scale = scale;
+        this.back2center(point.x, point.y, lastGirdSize)
+    }
+    getCenterPos() { // 获取中心点
+        let centerP = { x: this.dom.width / 2, y: this.dom.height / 2 };
+        let canvasR = this.getRelativePos(centerP)
+        return [centerP, canvasR]
+    }
+    // 求点与canvas中心的距离
+    getCenterDist(point: IPoint) {
+        let canvasCenter = { x: this.dom.width / 2, y: this.dom.height / 2 }
+        return {
+            x: canvasCenter.x - point.x,
+            y: canvasCenter.y - point.y
+        }
+    }
+    setSize(width?: number | null, height?: number | null) {
+        if (width) this.ctx.canvas.width = width;
+        if (height) this.ctx.canvas.height = height;
+    }
+
+    // ----------------------------判断型方法-------------------------------
+    // 判断是否时基础元素
+    isBasicFeature(f?: Feature | null | undefined) {
+        if (!f) return false;
+        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    }
+    // 判断是否时控制点元素
+    isCtrlFeature(f?: Feature | null | undefined) {
+        if (!f) return false;
+        return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'CCtrlPnt'
+    }
+
+    // ------------------------网格坐标相关方法--------------------------
+    // // 判断某个网格内有没有元素
+    // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
+    //     let target: Feature | undefined;
+    //     for (let index = 0; index < pool.length; index++) {
+    //         const block = pool[index];
+    //         if (block.gridPos.x == gx && block.gridPos.y == gy) {
+    //             target = block;
+    //             break;
+    //         }
+    //     }
+    //     return target;
+    // }
+    // 根据相对坐标获取网格坐标
+    getGridPosByRelativePos(x: number, y: number): IPoint {
+        let gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
+        let gx = x / gridSize;
+        let gy = y / gridSize;
+        return { x: gx, y: gy }
+    }
+    // // 根据鼠标,像素坐标获取网格坐标
+    // getGridPosByPixelPos(x: number, y: number): IPoint {
+    //     let gridSize = CoordinateSystem.GRID_SIZE * this.scale;  // 实际网格单元大小
+    //     let gx = x > this.pageSlicePos.x ? Math.ceil((x - this.pageSlicePos.x) / gridSize) : Math.floor((x - this.pageSlicePos.x) / gridSize);
+    //     let gy = y > this.pageSlicePos.y ? Math.ceil((y - this.pageSlicePos.y) / gridSize) : Math.floor((y - this.pageSlicePos.y) / gridSize);
+    //     return { x: gx, y: gy }
+    // }
+    // 根据网格坐标获取相对坐标
+    getRelativePosByGridPos(x: number, y: number): IPoint {
+        let gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
+        return {
+            x: x > 0 ? gridSize * (x - 1) : gridSize * x,
+            y: y > 0 ? gridSize * (y - 1) : gridSize * y,
         }
     }
 
-    // 拖放去添加元素
-    drop2Feature(e: any) {
-        //取得拖进来的文件
-        var data = e.dataTransfer;
-        const files = data.files;  // file继承与blob
-        if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
-            let pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
-            const reader = new FileReader();
-            reader.readAsDataURL(files[0]);  // base64
-            reader.onload = () => {
-                let dataUrl = reader.result as string;
-                if (dataUrl) {
-                    let img = new Img(dataUrl, pos.x, pos.y)
-                    this.addFeature(img);
-                }
-            }
+    // ----------------------其他功能性API------------------------
+    /**
+ * 根据一个点获取他周围的吸附距离
+ * @param pnt 
+ * @returns 
+ */
+    getAdsorbPos(pnt: IPoint) {
+        var gridSize = CoordinateSystem.GRID_SIZE;
+        let offsetX = 0, offsetY = 0;
+        // 相对像素
+        // 吸附的约束，灵敏度
+        let min = gridSize * .4;
+        let max = gridSize * .6;
+
+        //  ------------- 水平对齐
+        var diffX = getDeviation(pnt.x);
+        if (offsetX == 0 && (diffX > 0 && diffX < min) || (diffX < 0 && diffX > -min)) {
+            offsetX = -pnt.x % (gridSize * gridSize);
+        }
+        if (offsetX == 0 && (diffX > max && diffX < gridSize) || (diffX > -gridSize && diffX < -max)) {
+            offsetX = (gridSize * gridSize) * (diffX > 0 ? 1 : -1) - pnt.x % (gridSize * gridSize);
+        }
+        //  ------------- 垂直对齐
+        var diffY = getDeviation(pnt.y);
+        if (offsetY == 0 && (diffY > 0 && diffY < min) || (diffY < 0 && diffY > -min)) {
+            offsetY = -pnt.y % (gridSize * gridSize);
+        }
+        if (offsetY == 0 && (diffY > max && diffY < gridSize) || (diffY > -gridSize && diffY < -max)) {
+            offsetY = (gridSize * gridSize) * (diffY > 0 ? 1 : -1) - pnt.y % (gridSize * gridSize);
+        }
+
+        return { x: offsetX, y: offsetY };
+
+        function getDeviation(num: number): number {
+            var gridSize = CoordinateSystem.GRID_SIZE;
+            return (num / gridSize) % gridSize;
         }
     }
+
+    // -----------------锚点的操作----------------------
+    initAnchorPnts() {
+        let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        features.forEach(f => {
+            let anchorPnts = f.getAnchorPnts();
+            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
+                let lAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
+                    return leftCenter;
+                });
+                lAnchorPnt.name = 'leftAnchor';
+                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
+                lAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
+                let rAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
+                    return rightCenter;
+                });
+                rAnchorPnt.name = 'rightAnchor';
+                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
+                rAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
+                let tAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
+                    return rightCenter;
+                });
+                tAnchorPnt.name = 'tAnchorPnt';
+                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
+                tAnchorPnt.cbSelect = false;
+            }
+            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
+                let bAnchorPnt = new AnchorPnt(f, () => {
+                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
+                    return rightCenter;
+                });
+                bAnchorPnt.name = 'bottomAnchor';
+                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
+                bAnchorPnt.cbSelect = false;
+            }
+        })
+    }
+    removeAnchorPnts() {
+        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
+    }
+
 
     destroy() {
         cancelAnimationFrame(this.timer);

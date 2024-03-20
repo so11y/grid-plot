@@ -137,15 +137,15 @@
 ```
 > 通过单击创建元素，传入一个你要创建元素
 ```
-   gls.click2DrawByClick(feature)
+   gls.singleClickToFeature(feature)
 ```
 > 通过连续点击创建元素，传入一个你要创建元素，一般用于创建多点线段
 ```
-   gls.click2DrawByContinuousClick(feature)
+   gls.continuousClickToFeature(feature)
 ```
 > 通过连续移动创建元素，传入一个你要创建元素，比如自由绘制线段（画笔）
 ```
-   gls.click2DrawByMove(feature)
+   gls.downMoveToFeature(feature)
 ```
 > 获取传入元素的所有点坐标，第一个参数设置返回值的格式
 ```

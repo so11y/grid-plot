@@ -51,10 +51,11 @@ class Rect extends Feature {
         const { width, height, leftTop } = this.getSize(pointArr);
         if (this.isFixedSize) {
             let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
-            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
+            // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
+            this.drawRoundedRect(path, x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
         } else {
-            path.roundRect(leftTop.x, leftTop.y, width, height, r);
-            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+            // path.roundRect(leftTop.x, leftTop.y, width, height, r);
+            this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, r);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
