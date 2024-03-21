@@ -1,5 +1,6 @@
 import GridSystem from "./GridSystem";
 import { BasicFeature, Props } from "./Interface";
+import { isBasicFeature } from "./utils";
 
 class Stack {
 
@@ -19,10 +20,10 @@ class Stack {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
             this.statusList.pop();
         }
-        let features = this.gls.features.filter(f => this.gls.isBasicFeature(f)) as BasicFeature[]
+        let features = this.gls.features.filter(f => isBasicFeature(f)) as BasicFeature[]
         features.forEach(f => {
             let fProps = this.gls.recordFeature(f);
-            featurePropsArr.push(fProps)
+            featurePropsArr.push(fProps as Props)
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
@@ -33,7 +34,7 @@ class Stack {
 
     undo() {
         console.log(111);
-        
+
         let curFeaturesPropsArr = this.statusList[this.pointer];
         let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
         if (!prevFeaturesPropsArr) return;
@@ -61,7 +62,7 @@ class Stack {
         this.pointer--;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
@@ -93,7 +94,7 @@ class Stack {
         this.pointer++;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f=> this.gls.isBasicFeature(f)).forEach(f=>f.onresize())
+        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.onresize())
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 

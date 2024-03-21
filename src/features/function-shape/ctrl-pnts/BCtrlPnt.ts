@@ -1,18 +1,19 @@
-import { IPoint } from "../../Interface";
-import { createVctor } from "../../utils";
-import Rect from "../basic-shape/Rect";
-import Bbox from "./Bbox";
+import { IPoint } from "../../../Interface";
+import { createVctor } from "../../../utils";
+import Rect from "../../basic-shape/Rect";
+import Bbox from "../Bbox";
 
 // 自定义控制点元素
 class BCtrlPnt extends Rect {
 
     getPoint: () => IPoint;
-    lastAngle: number = 0;
+    lastAngle: number;
     parent: Bbox | null = null;
 
     constructor(parent: Bbox, fn: () => IPoint, width: number = 14) {   // 相对坐标
         let pos = fn();
         super(pos.x, pos.y, width, width);
+        this.lastAngle = parent.angle;
         this.getPoint = fn;
         this.className = "BCtrlPnt";
         this.parent = parent;

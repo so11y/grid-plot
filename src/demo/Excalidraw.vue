@@ -130,22 +130,18 @@
                     <li>
                         <div class="title">描边宽度</div>
                         <a-row type="flex" align="middle" class="func-wrap">
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineWidth = .1) }" title="细">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(.1)" title="细">
                                 <i class="iconfont gls-xi-zhixian"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineWidth = .5) }" title="粗">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(.5)" title="粗">
                                 <i class="iconfont gls-zhong-zhixian"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)"
-                                @click="() => { gls && gls.focusNode && (gls.focusNode.lineWidth = 1) }" title="特粗">
+                            <a-button style="background-color: hsl(240 25% 96%)" @click="modifyLineWidth(1)" title="特粗">
                                 <i class="iconfont gls-cu-zhixian"></i>
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" :step=".1" :min=".1" :max="2" v-model:value="props.lineWidth"
-                                style="width: 100px;"
-                                @change="(e: any) => { gls?.focusNode && (gls.focusNode.lineWidth = e) }" />
+                                style="width: 100px;" @change="(e: any) => modifyLineWidth(e)" />
                         </a-row>
                     </li>
                     <li>
@@ -165,8 +161,7 @@
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" :step="1" :min="1" :max="30" v-model:value="props.lineWidth"
-                                style="width: 100px;"
-                                @change="(e: any) => { gls?.focusNode && (gls.focusNode.lineDashArr = [5, e]) }" />
+                                style="width: 100px;" @change="(e: any) => modifyBorderStyle([5, e])" />
                         </a-row>
                     </li>
                     <li>
@@ -182,13 +177,13 @@
                             </a-button>
                             <a-divider type="vertical"></a-divider>
                             <a-slider id="test" v-model:value="props.radius" :step=".1" :min="0" :max="1"
-                                style="width: 100px;" @change="modifyRadius(e)" />
+                                style="width: 100px;" @change="(e: any) => modifyRadius(e)" />
                         </a-row>
                     </li>
                     <li>
                         <div class="title">透明度</div>
                         <a-slider id="test" v-model:value="props.opacity" :step=".1" :min=".1" :max="2"
-                            @change="(e: any) => { gls?.focusNode && (gls.focusNode.opacity = e) }" />
+                            @change="(e: any) => modifyOpacity(e)" />
                     </li>
                     <li>
                         <div class="title">图层</div>
@@ -258,13 +253,18 @@
                                 <i class="iconfont gls-shanchu"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
-                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                @click="gls?.focusNode && (gls.focusNode.isClosePath = !gls.focusNode.isClosePath)">
                                 <i class="iconfont gls-bihe"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="合并为组"
-                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                @click="gls?.focusNode && (gls.focusNode.isClosePath = !gls.focusNode.isClosePath)">
                                 <i class="iconfont gls-hebing"></i>
                             </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="同步缩放" @click="setTranformChild">
+                                <i class="iconfont gls-scale-same"></i>
+                            </a-button>
+                        </a-row>
+                        <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制为图片到剪贴板"
                                 @click="copyImageToClipboard()">
                                 <i class="iconfont gls-fuzhitupian"></i>
@@ -273,9 +273,21 @@
                                 @click="copySvgToClipboard()">
                                 <i class="iconfont gls-SVG"></i>
                             </a-button>
-                            <a-button style="background-color: hsl(240 25% 96%)" title="同步缩放" @click="setTranformChild">
-                                <i class="iconfont gls-scale-same"></i>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="水平翻转"
+                                @click="revert(AlignType.HORIZONAL)">
+                                <i class="iconfont gls-zuoyoufanzhuan"></i>
                             </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直翻转"
+                                @click="revert(AlignType.VERTICAL)">
+                                <i class="iconfont gls-shangxiafanzhuan"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="复制样式" @click="copyStyle()">
+                                <i class="iconfont gls-copy"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="粘贴样式" @click="modifyStyle()">
+                                <i class="iconfont gls-paste"></i>
+                            </a-button>
+
                         </a-row>
                     </li>
                 </ul>
@@ -384,7 +396,7 @@ let gl: GridLine | null = new GridLine();
 let sa: SelectArea | null | undefined = null;
 let gls: GridSystem | null;
 const isShowPropTab = ref(false);
-const isShowRightClickPanel = ref(false);
+const copyStyles = ref({});
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
 const globalStrokeColor = ref("")
@@ -419,12 +431,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击画布创建吧!")
             let rect = new Rect(0, 0, 50, 20);
             rect.name = '你好'
-            cb = gls?.click2DrawByClick(rect)
+            cb = gls?.singleClickToFeature(rect)
             break;
         case 2: // 单击创建Circle
             message.info("点击画布创建吧!")
             let circle = new Circle(0, 0, 50, 50);
-            cb = gls?.click2DrawByClick(circle)
+            cb = gls?.singleClickToFeature(circle)
             break;
         case 3: // 点击创建Line
             message.info("点击画布创建吧!")
@@ -433,23 +445,23 @@ function onSelectTool(index = 0, param?: any) {
             console.log(globalBorderStyle.value, "globalBorderStyle.value");
 
             line.lineDashArr = globalBorderStyle.value;
-            cb = gls?.click2DrawByContinuousClick(line)
+            cb = gls?.continuousClickToFeature(line)
             break;
         case 4: // 自由笔
             message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
-            function click2DrawByMove() {
+            function downMoveToFeature() {
                 let line = new Line();
                 line.isFreeStyle = true;
                 line.strokeStyle = globalStrokeColor.value || "red"
                 line.hoverStyle = "#666"
                 line.focusStyle = "#666"
-                cb = gls?.click2DrawByMove(line, !!param, () => {
+                cb = gls?.downMoveToFeature(line, !!param, () => {
                     line.strokeStyle = globalStrokeColor.value || "red"
-                    click2DrawByMove();
+                    downMoveToFeature();
                 })
             }
-            click2DrawByMove();
+            downMoveToFeature();
             break;
         case 5: // 选择区域
             var txt = prompt("请输入文字", "测试文字");
@@ -457,7 +469,7 @@ function onSelectTool(index = 0, param?: any) {
                 message.info("点击画布创建吧!")
                 let text = new Text(txt as string, 0, 0, 20, 10);
                 text.fitSize = true;
-                gls?.click2DrawByClick(text)
+                gls?.singleClickToFeature(text)
             }
 
             break;
@@ -471,7 +483,7 @@ function onSelectTool(index = 0, param?: any) {
                     reader.onload = function () {
                         message.info("点击画布创建吧!")
                         let img = new Img(reader.result as string, 0, 0);
-                        gls?.click2DrawByClick(img)
+                        gls?.singleClickToFeature(img)
                     }
                 }
             });
@@ -573,18 +585,23 @@ function reset(clear = false) {
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls = new GridSystem(canvasDom);
     // gls.loadData();
-    setCanvasSize(canvasDom);
+    setSize(canvasDom);
     startTime(gls as GridSystem);
 
     let rect = new Rect(100, 100, 100, 100)
     rect.radius = 2;
+    rect.rotate(60)
     // rect.isFixedPos = true;
     // rect.fillStyle = "transparent"
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
 
-    const text = new Text(`当内容特别多的时候，canvas不会自动换行，canvas需要特别处理当内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
+    const text = new Text(`当内容
+特别多的时候，canvas不会自动
+换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
     text.fitSize = true;
+    text.radius = 2
+    // text.rotate(30)
     gls.addFeature(text, false);
     // rect.addFeature(text);
 
@@ -592,37 +609,65 @@ function reset(clear = false) {
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2, false)
 
-    let rect4 = new Rect(350, 200, 50, 50);
-    // rect4.isFixedSize = true;
-    gls.addFeature(rect4, false)
-    const text2 = new Text("测试文本", 350, 200);
-    text.fitSize = true;
-    gls.addFeature(text2, false);
-    rect4.addFeature(text2, { cbSelect: false })
-    rect4.rotate(45)
+    // let rect4 = new Rect(350, 200, 50, 50);
+    // // rect4.isFixedSize = true;
+    // gls.addFeature(rect4, false)
+    // const text2 = new Text("测试文本", 350, 200);
+    // text.fitSize = true;
+    // gls.addFeature(text2, false);
+    // rect4.addFeature(text2, { cbSelect: false })
+    // rect4.rotate(45)
 
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
-    // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    group.rotate(60)
-    group.cbTransformChild = false;
-    gls.addFeature(group, false)
-    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
+    // var line = new Line([
+    //     { x: 10, y: 10 },
+    //     { x: 0, y: 80 },
+    //     { x: 100, y: 120 },
+    // ])
+    // line.radius = 20;
+    // // line.rotate(30)
+    // line.translate(200)
+    // gls.addFeature(line, false)
 
-    let line = new Line([
+    var line = new Line([
         { x: 10, y: 10 },
         { x: 0, y: 80 },
         { x: 100, y: 120 },
     ])
+    // line.isClosePath = true;
+    line.radius = 4;
+    // line.rotate(30)
+    line.translate(200)
+    line.enableCtrlPnts();
+    gls.addFeature(line, false)
+
+
+    let img = new Img("/img2.png", 400, 100);
+    gls.addFeature(img, false)
+
+    // 合并为组
+    let group = new Group([rect, rect2, circle]);
+    // group.rotate(60)
+    group.translate(100)
+    group.cbTransformChild = true;
+    gls.addFeature(group, false)
+    rect.name = "bigrect"
+    rect.onMousemove = () => {
+        console.log(222);
+    }
+    // group.onMousemove = () => {
+    //     console.log(11);
+    // }
+    // group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
+
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
     // // text2.fitSize = true;
     // gls.addFeature(text2, false);
     // line.addFeature(text2, false);
     // line.enableCtrlPnts();
-    gls.addFeature(line, false)
 
     // console.log(group, rect, rect2);
 
@@ -630,6 +675,8 @@ function reset(clear = false) {
     //     gls.removeFeature(rect4)
     // }, 1000);
 
+    // img.fillStyle = "transparent"
+    // img.rotate(20)
     gls.enableStack();
 }
 
@@ -637,7 +684,7 @@ function linkTo(url: string) {
     window.open(url);
 }
 
-function setCanvasSize(canvasDom: HTMLCanvasElement) {
+function setSize(canvasDom: HTMLCanvasElement) {
     canvasDom.width = document.documentElement.clientWidth - 4;
     canvasDom.height = document.documentElement.clientHeight - 4;
 
@@ -707,10 +754,26 @@ function modifyBorderStyle(arr: number[]) {
     }
 }
 
+function modifyLineWidth(width: number) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode) {
+        focuseNode.lineWidth = width;
+    }
+}
+
 function modifyRadius(radius: number) {
     let focuseNode = gls?.getFocusNode();
     if (focuseNode && focuseNode instanceof Rect) {
         focuseNode.radius = radius;
+    }
+}
+
+function modifyOpacity(opacity: number) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode) {
+        console.log(opacity, "opacity");
+
+        focuseNode.opacity = opacity;
     }
 }
 
@@ -746,6 +809,31 @@ function copySvgToClipboard() {
     }
     message.info('已复制为SVG到剪贴板');
 }
+
+function revert(direction: AlignType) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        focuseNode.revert(direction)
+    }
+    message.info('镜像翻转');
+}
+
+function copyStyle() {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        copyStyles.value = gls.recordFeature(focuseNode, true);
+    }
+    message.info('复制样式');
+}
+
+function modifyStyle() {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        copyStyles.value = gls.modifyFeature(focuseNode, copyStyles.value);
+    }
+    message.info('粘贴样式');
+}
+
 
 </script>
 
@@ -847,6 +935,7 @@ canvas {
 
             .func-wrap {
                 display: flex;
+                margin-top: 8px;
 
                 button {
                     margin-right: 12px;

@@ -1,45 +1,67 @@
 import { IPoint } from "../../Interface";
-import { getLenOfTwoPnts, getRectPoint } from "../../utils";
+import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
 
 class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
 
-    constructor(x: number = 0, y: number = 0, width: number = 5, height: number = 5) {   // 相对坐标
-        let points = getRectPoint({ x, y }, { width, height })
-        super(points);
+    constructor(x: number = 0, y: number = 0, width: number = 15, height: number = 15) {   // 相对坐标
+        let pointArr = getRectPoint({ x, y }, { width, height })
+        super(pointArr);
         this.className = "Rect";
         this.position.x = x;
         this.position.y = y;
         this.size.width = width;
         this.size.height = height;
-        this.closePath = true;
+        this.isClosePath = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
         let path = new Path2D();
         // if (radius == 0) {
-        //     pointArr.forEach((p, i) => {
-        //         if (i == 0) {
+        // pointArr.forEach((p, i) => {
+        //     if (i == 0) {  // 第一个点
+        //         if (this.isClosePath) {
+        //             let nextPnt = pointArr[i + 1];
+        //             let prevPnt = pointArr[pointArr.length - 1];
+        //             if (nextPnt && prevPnt) {
+        //                 let midPnt = getMidOfTwoPnts(prevPnt, p)
+        //                 path.moveTo(midPnt.x, midPnt.y)
+        //                 path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+        //             }
+        //         } else {
         //             path.moveTo(p.x, p.y)
+        //         }
+        //     } else if (i != pointArr.length - 1) {  // 中间点
+        //         let nextPnt = pointArr[i + 1];
+        //         if (nextPnt) {
+        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
+        //         }
+        //     } else {   // 最后一个点
+        //         if (this.isClosePath) {
+        //             let nextPnt = pointArr[0];
+        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //         } else {
         //             path.lineTo(p.x, p.y)
         //         }
-        //     })
+        //     }
+        // })
         // } else {
         const { width, height, leftTop } = this.getSize(pointArr);
         if (this.isFixedSize) {
             let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
-            path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
+            // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
+            this.drawRoundedRect(path, x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
         } else {
-            path.roundRect(pointArr[0].x, pointArr[0].y, width, height, radius);
-            // this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, radius);
+            // path.roundRect(leftTop.x, leftTop.y, width, height, r);
+            this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, r);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
-        // this.closePath && path.closePath()
+        this.isClosePath && path.closePath()
         ctx.lineCap = this.lineCap;
+        ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
         this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
         ctx.lineDashOffset = this.lineDashOffset;
@@ -53,9 +75,10 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
-        this.setChildAngle(ctx, pointArr);
+        this.setAngle(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
-        this.closePath && ctx.fill(path);
+        this.isClosePath && ctx.fill(path);
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
         return path;
@@ -88,10 +111,10 @@ class Rect extends Feature {
     }
 
     // 以左上角去旋转内容， 文字或者图片
-    setChildAngle = (ctx: CanvasRenderingContext2D, pointArr: IPoint[]) => {
+    setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
         let boxInfo = {
-            x: pointArr[0].x,
-            y: pointArr[0].y,
+            x: leftTop.x,
+            y: leftTop.y,
         }
         ctx.translate(boxInfo.x, boxInfo.y)
         ctx.rotate(this.angle * Math.PI / 180)
@@ -100,8 +123,21 @@ class Rect extends Feature {
 
     // 获取矩形的宽度，包括旋转，不是包围盒
     getSize(pointArr: IPoint[] = this.pointArr) {
+        let leftTop = {x: 0, y: 0};
+        if(!this.isHorizonalRevert && !this.isVerticalRevert){
+            leftTop = pointArr[0]
+        }
+        if(this.isHorizonalRevert && this.isVerticalRevert){
+            leftTop = pointArr[0]
+        }
+        if(this.isHorizonalRevert && !this.isVerticalRevert){
+            leftTop = pointArr[1]
+        }
+        if(!this.isHorizonalRevert && this.isVerticalRevert){
+            leftTop = pointArr[1]
+        }
         return {
-            leftTop: pointArr[0],
+            leftTop,
             width: getLenOfTwoPnts(pointArr[0], pointArr[1]),
             height: getLenOfTwoPnts(pointArr[0], pointArr[3]),
         }
@@ -117,13 +153,14 @@ class Rect extends Feature {
     }
 
     getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-        let { width, height, leftTop } = this.getSize(pointArr);
+        let { width, height, leftTop} = this.getSize(pointArr);
         return `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
             <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>
         </g>
         `
     }
+
 }
 
 export default Rect;

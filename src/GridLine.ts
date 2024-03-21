@@ -152,13 +152,13 @@ export default class GridLine {
                 break;
 
             case 3:
-                
+
                 const width = gls.getRatioSize(this.width);
                 const height = gls.getRatioSize(this.height);
                 let ySliceTotal = Math.ceil(width / gridSize); // 计算需要绘画y轴的条数
                 let xSliceTotal = Math.ceil(height / gridSize);
                 gls.ctx.fillStyle = this.background
-                gls.ctx.fillRect(gls.pageSlicePos.x - width, gls.pageSlicePos.y-height, width*2, height*2);
+                gls.ctx.fillRect(gls.pageSlicePos.x - width, gls.pageSlicePos.y - height, width * 2, height * 2);
 
                 for (let i = 0; i < xSliceTotal; i++) {
                     gls.ctx.beginPath(); // 开启路径，设置不同的样式

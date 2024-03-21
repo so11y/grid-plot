@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.woff2?t=1709209696820') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.woff?t=1709209696820') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.ttf?t=1709209696820') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_kibhaajvlfk.svg?t=1709209696820#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff2?t=1709550386149') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff?t=1709550386149') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.ttf?t=1709550386149') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.svg?t=1709550386149#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,22 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-copy:before {
+  content: "\e644";
+}
+
+.gls-paste:before {
+  content: "\e786";
+}
+
+.gls-zuoyoufanzhuan:before {
+  content: "\e606";
+}
+
+.gls-shangxiafanzhuan:before {
+  content: "\e607";
 }
 
 .gls-scale-same:before {
@@ -225,7 +241,6 @@
 .gls-wenzi:before {
   content: "\e616";
 }
-
 
 
 ul, li, body {

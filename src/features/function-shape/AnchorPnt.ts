@@ -5,7 +5,6 @@ import Rect from "../basic-shape/Rect";
 class AnchorPnt extends Rect {
 
     getPoint: () => IPoint;
-    lastAngle: number = 0;
     isBinding = false;  // 是否与link绑定了
     parent: BasicFeature;
 
@@ -28,9 +27,9 @@ class AnchorPnt extends Rect {
         this.gls.addFeature(this, false);
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }
-    
+
     onUpdatePosByParent() {
-        if(this.isFocused) return;
+        if (this.isFocused) return;
         let pos = this.getPoint();
         this.setPos(pos.x, pos.y);
     }

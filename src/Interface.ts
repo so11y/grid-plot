@@ -43,8 +43,6 @@ interface IBBox {
     bottom?: number,
 }
 
-type Src = string | HTMLImageElement | HTMLVideoElement | null
-
 type Props = Partial<Feature & Text & Img & Link & Group> & {
     id: string,
     children: Props[]
@@ -54,4 +52,4 @@ type BasicFeature = Line | Rect | Circle | Group
 
 type Vector = [number, number]
 
-export type { IPoint, RelativePos, PixelPos, Size, IVctor, IBBox, Src, Props, BasicFeature, Vector };
+export type { IPoint, RelativePos, PixelPos, Size, IVctor, IBBox, Props, BasicFeature, Vector };

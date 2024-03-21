@@ -64,6 +64,10 @@ const keyCodeMap = new Map([
 
 export default class Shortcuts {
 
+    static isShiftKey = false;
+    static isCtrlKey = false;
+    static isAltKey = false;
+    
     typeArr: MyEvent[] = [];
 
     constructor() {
@@ -71,7 +75,8 @@ export default class Shortcuts {
     }
 
     initEventListener() {
-        document.addEventListener('keydown', this.handleEvents)
+        document.addEventListener('keydown', this.handleDownEvents)
+        document.addEventListener('keyup', this.handleUpEvents)
     }
 
     addEvent(kns: string[] | string, cb: Function) {
@@ -94,8 +99,16 @@ export default class Shortcuts {
         })
     }
 
-    handleEvents = (e: any) => {
-        if (e.keyCode != 116 && e.keyCode != 123) {  // 白名单 f5 
+    handleUpEvents(){
+        Shortcuts.isCtrlKey = false;
+        Shortcuts.isShiftKey = false;
+    }
+
+    handleDownEvents = (e: any) => {
+        Shortcuts.isCtrlKey = e.ctrlKey;
+        Shortcuts.isShiftKey = e.shiftKey;
+        Shortcuts.isAltKey = e.altKey;
+        if (e.keyCode != 116 && e.keyCode != 123 && e.keyCode != 8 && e.keyCode != 45) {  // 白名单 f5 
             e.preventDefault();
         }
         this.typeArr.forEach(ta => {
@@ -122,7 +135,8 @@ export default class Shortcuts {
     }
 
     destroy() {
-        document.removeEventListener('keydown', this.handleEvents)
+        document.removeEventListener('keydown', this.handleDownEvents)
+        document.removeEventListener('keyup', this.handleUpEvents)
     }
 
 }

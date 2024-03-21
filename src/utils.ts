@@ -374,11 +374,11 @@ function isBase64(str: string) {
 }
 
 // 获取字符串大小
-function getSizeInBytes(str:string) {
+function getSizeInBytes(str: string) {
     var binaryString = window.atob(str); // 将Base64字符串转换为二进制字符串
     return binaryString.length; // 返回二进制字符串的长度（单位为字节）
 }
- 
+
 function beautifyHTML(html: string, indentSize = 2) {
     var formatted = '';
     // 去除多余空白字符并添加换行符
@@ -388,6 +388,24 @@ function beautifyHTML(html: string, indentSize = 2) {
         }
     });
     return formatted;
+}
+
+// 判断某个数在两个数范围内
+function isBetween(num: number, min: number, max: number) {
+    return num >= Math.min(min, max) && num <= Math.max(min, max);
+}
+
+// ----------------------------判断型方法-------------------------------
+// 判断是否时基础元素
+function isBasicFeature(f?: any) {
+    if (!f) return false;
+    // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+    return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+}
+// 判断是否时控制点元素
+function isCtrlFeature(f?: any) {
+    if (!f) return false;
+    return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
 }
 
 export {
@@ -421,4 +439,7 @@ export {
     isBase64,
     getSizeInBytes,
     beautifyHTML,
+    isBetween,
+    isBasicFeature,
+    isCtrlFeature,
 }

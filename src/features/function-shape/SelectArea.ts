@@ -1,6 +1,6 @@
 import { BasicFeature } from "@/Interface";
 import { DrawAreaMode, SelectMode } from "../../Constants";
-import { isPointInPolygon, getMousePos } from "../../utils";
+import { isPointInPolygon, getMousePos, isBasicFeature } from "../../utils";
 import Group from "./Group";
 
 class SelectArea extends Group {
@@ -67,7 +67,7 @@ class SelectArea extends Group {
     }
 
     getSelectFeature() {
-        let features = this.gls.features.filter(f => this.gls.isBasicFeature(f) && !f.parent);
+        let features = this.gls.features.filter(f => isBasicFeature(f) && !f.parent);
         let featureIn = features.filter(f => {
             if (!f.cbSelect) return
             let pointArr = f.pointArr;
