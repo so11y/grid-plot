@@ -5,7 +5,7 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
 import { BasicFeature, IPoint, PixelPos, Props, RelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMidOfTwoPnts, getMousePos, swapElements } from "./utils";
+import { beautifyHTML, getMidOfTwoPnts, getMousePos, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -107,9 +107,9 @@ class GridSystem {
     // --------------------绘制元素，以及鼠标事件监听----------------------------
     drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
         features.forEach(f => {
-            const isBasic = this.isBasicFeature(f);
+            const isBasic = isBasicFeature(f);
             if (f.hidden) return;
-            if (isBasic && f.parent && this.isBasicFeature(f.parent) && !isChild) return
+            if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
             let pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
                 let [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
@@ -135,7 +135,7 @@ class GridSystem {
             this.ctx.save();
             f.isOverflowHidden && this.ctx.clip(path);
             if (isBasic) {
-                let children = this.features.filter(cf => cf.parent === f && this.isBasicFeature(cf));  // 找出子元素
+                let children = this.features.filter(cf => cf.parent === f && isBasicFeature(cf));  // 找出子元素
                 if (children.length > 0) this.drawFeatures(children, true);
             }
             this.ctx.restore();
@@ -240,15 +240,15 @@ class GridSystem {
                 this.focusNode = focusNode;
             } else {  // 左键点击
                 focusNode?.onmousedown && focusNode.onmousedown(ev);
-                if (!(focusNode instanceof Bbox) && this.focusedTransform && !(this.isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
+                if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
-                    if ((this.isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                    if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
                         let bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
                         bbox && (focusNode = bbox);
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) this.enableSelectArea(false)
+                if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) this.enableSelectArea(false)
                 if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
@@ -301,7 +301,7 @@ class GridSystem {
                 focusNode._orientations = null;
                 focusNode.onmouseup && focusNode.onmouseup();
                 focusNode.ondragend && focusNode.ondragend();
-                if (this.isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
+                if (isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
                     GridSystem.Stack && GridSystem.Stack.record();
                 }
             }
@@ -603,18 +603,18 @@ class GridSystem {
         this.focusNode = feature;
         this.features.push(feature);
         if (!feature.zIndex) {
-            let features = this.features.filter(f => !this.isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
+            let features = this.features.filter(f => !isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
             feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, RCtrlPnt, AnchorPnt
+    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as BasicFeature;
             }
-            if (this.isCtrlFeature(this.focusNode)) {
+            if (isCtrlFeature(this.focusNode)) {
                 if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
                     return this.focusNode.parent.children[0] as BasicFeature;
                 } else {  // 比如线段的ctrlNode
@@ -651,7 +651,7 @@ class GridSystem {
         this.resortIndex();
     }
     resortIndex() {
-        let features = this.features.filter(f => this.isBasicFeature(f));
+        let features = this.features.filter(f => isBasicFeature(f));
         features.forEach((f, i) => f.zIndex = i);
         this.features.sort((a, b) => a.zIndex - b.zIndex);
     }
@@ -1008,7 +1008,7 @@ class GridSystem {
         props.lineDashArr != undefined && (feature.lineDashArr = props.lineDashArr)
         props.lineDashOffset != undefined && (feature.lineDashOffset = props.lineDashOffset)
 
-        props.closePath != undefined && (feature.closePath = props.closePath)
+        props.isClosePath != undefined && (feature.isClosePath = props.isClosePath)
         props.isPointIn != undefined && (feature.isPointIn = props.isPointIn)
         props.isFixedPos != undefined && (feature.isFixedPos = props.isFixedPos)
         props.isOutScreen != undefined && (feature.isOutScreen = props.isOutScreen)
@@ -1073,7 +1073,7 @@ class GridSystem {
                 size: f.size,
                 angle: f.angle,
                 zIndex: f.zIndex,
-                closePath: f.closePath,  // 是否闭合
+                isClosePath: f.isClosePath,  // 是否闭合
                 isPointIn: f.isPointIn, //鼠标是否悬浮在元素上
                 isFixedPos: f.isFixedPos,  // 是否绝对位置.不跟随网格移动
                 isOutScreen: f.isOutScreen,  // 是否在屏幕外
@@ -1136,7 +1136,7 @@ class GridSystem {
         if (!featurePropsArr) {
             featurePropsArr = [];
             this.features.forEach(f => {
-                if (this.isBasicFeature(f)) {
+                if (isBasicFeature(f)) {
                     let fProps = this.recordFeature(f as BasicFeature);
                     featurePropsArr && featurePropsArr.push(fProps as Props)
                 }
@@ -1174,7 +1174,7 @@ class GridSystem {
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
-                if (this.isBasicFeature(cf)) {
+                if (isBasicFeature(cf)) {
                     let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
                     // 将多边形移动到Canvas的左上角  
                     pointArr.forEach(point => {
@@ -1227,7 +1227,7 @@ class GridSystem {
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
         var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
             features.forEach(cf => {
-                if (this.isBasicFeature(cf)) {
+                if (isBasicFeature(cf)) {
                     let pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
                     // 将多边形移动到Canvas的左上角  
                     pointArr.forEach(point => {
@@ -1320,19 +1320,6 @@ class GridSystem {
         if (height) this.ctx.canvas.height = height;
     }
 
-    // ----------------------------判断型方法-------------------------------
-    // 判断是否时基础元素
-    isBasicFeature(f?: Feature | null | undefined) {
-        if (!f) return false;
-        // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-        return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
-    }
-    // 判断是否时控制点元素
-    isCtrlFeature(f?: Feature | null | undefined) {
-        if (!f) return false;
-        return f.className === 'CtrlPnt' || f.className === 'RCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
-    }
-
     // ------------------------网格坐标相关方法--------------------------
     // // 判断某个网格内有没有元素
     // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
@@ -1410,7 +1397,7 @@ class GridSystem {
 
     // -----------------锚点的操作----------------------
     initAnchorPnts() {
-        let features = this.features.filter(f => this.isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        let features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
         features.forEach(f => {
             let anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {

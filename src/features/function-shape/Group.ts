@@ -1,6 +1,6 @@
 
-import { AlignType } from "@/Constants";
 import { BasicFeature, IPoint } from "@/Interface";
+import { isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
 export default class Group extends Feature {
@@ -11,7 +11,7 @@ export default class Group extends Feature {
         this.className = 'Group';
         // this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
-        this.closePath = true;
+        this.isClosePath = true;
         this.fillStyle = "rgba(250, 242, 180, .5)"
         this.hoverStyle = "rgba(250, 242, 180, .8)"
         this.lineDashArr = [8, 12]
@@ -20,7 +20,7 @@ export default class Group extends Feature {
     }
 
     add(feature: BasicFeature) {
-        if (!feature || feature.isFixedPos || feature.isFixedSize) return
+        if(!isBasicFeature(feature) || feature.isFixedPos || feature.isFixedSize) return;  // 非基础元素不添加
         this.addFeature(feature, { cbSelect: false });
         this.toResize(this.children);
     }

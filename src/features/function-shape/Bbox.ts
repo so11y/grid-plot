@@ -6,7 +6,7 @@ import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
 import AnchorPnt from "./AnchorPnt";
-import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
+import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
 import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
 
@@ -14,17 +14,17 @@ export default class Bbox extends Rect {
 
     static isAbsorbAngle = true; // 是否旋转角度的吸附
     static isKeepRatio = true; // 是否按宽高比例缩放
+    static ctrlPSize = 14; // 控制点大小
 
     ratio: number = 1;  // 宽高比, keepRatio用
-    ctrlPntSize: number = 10;  // 控制点大小
     vctX: Vector = [100, 0];
     vctY: Vector = [0, 100];
     lastLenX = 0;
     lastLenY = 0;
     target: Feature;
 
-    constructor(target: BasicFeature | SelectArea, ctrlPntSize = 10) {   // 相对坐标
-        const angle = target.angle;
+    constructor(target: BasicFeature | SelectArea) {   // 相对坐标
+        // const angle = target.angle;
         // target.rotate(-angle)
         let center = target.getCenterPos();
         let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
@@ -35,13 +35,12 @@ export default class Bbox extends Rect {
         // target.rotate(angle)
         this.addFeature(target);
         this.target = target;
-        this.ctrlPntSize = ctrlPntSize;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
         this.isStroke = true;
-        this.closePath = true;
+        this.isClosePath = true;
         this.strokeStyle = "#55585A";
         this.lineDashArr = [8, 8]
-        this.lineWidth = .1;
+        this.lineWidth = .06;
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
         this.setVct();
@@ -90,18 +89,18 @@ export default class Bbox extends Rect {
     initBCtrlPnt() {
         const pointArr = this.pointArr;
         pointArr.forEach((p, i) => {
-            let ctrlP = new CtrlPnt(this, i);
+            let ctrlP = new CtrlPnt(this, i, Bbox.ctrlPSize);
             ctrlP.name = CtrlType.SIZE_CTRL;
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
         })
         // 旋转点
-        let bCtrlP = new RCtrlPnt(this, () => {
+        let bCtrlP = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
             return rotateCtrlPnt;
-        });
+        }, Bbox.ctrlPSize);
         bCtrlP.name = CtrlType.ANGLE_CTRL;
         bCtrlP.adsorbTypes = []
         bCtrlP.translateEvents.push(() => {
@@ -150,11 +149,11 @@ export default class Bbox extends Rect {
         })
 
         // 左边
-        let bCtrlP2 = new RCtrlPnt(this, () => {
+        let bCtrlP2 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
-        });
+        }, Bbox.ctrlPSize);
         bCtrlP2.name = CtrlType.WIDTH_CTRL;
         bCtrlP2.translateEvents.push(() => {
             const pointArr = this.pointArr;
@@ -187,11 +186,11 @@ export default class Bbox extends Rect {
         })
 
         // 右边
-        let bCtrlP3 = new RCtrlPnt(this, () => {
+        let bCtrlP3 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
-        });
+        }, Bbox.ctrlPSize);
         bCtrlP3.name = CtrlType.WIDTH_CTRL;
         bCtrlP3.translateEvents.push(() => {
             const pointArr = this.pointArr;
@@ -225,11 +224,11 @@ export default class Bbox extends Rect {
         })
 
         // 上边
-        let bCtrlP4 = new RCtrlPnt(this, () => {
+        let bCtrlP4 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
-        });
+        }, Bbox.ctrlPSize);
         bCtrlP4.name = CtrlType.HEIGHT_CTRL;
         bCtrlP4.translateEvents.push(() => {
             const pointArr = this.pointArr;
@@ -262,11 +261,11 @@ export default class Bbox extends Rect {
         })
 
         // 下边
-        let bCtrlP5 = new RCtrlPnt(this, () => {
+        let bCtrlP5 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
-        });
+        }, Bbox.ctrlPSize);
         bCtrlP5.name = CtrlType.HEIGHT_CTRL;
         bCtrlP5.translateEvents.push(() => {
             const pointArr = this.pointArr;
@@ -525,8 +524,8 @@ export default class Bbox extends Rect {
         }
     }
 
-    getCtrlPnts(): (CtrlPnt | RCtrlPnt)[] {
-        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'RCtrlPnt') && f.parent == this) as (CtrlPnt | RCtrlPnt)[];
+    getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
 
     // // 子元素 宽高发生变化时, 旋转有问题

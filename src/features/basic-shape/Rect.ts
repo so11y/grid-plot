@@ -14,7 +14,7 @@ class Rect extends Feature {
         this.position.y = y;
         this.size.width = width;
         this.size.height = height;
-        this.closePath = true;
+        this.isClosePath = true;
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
@@ -22,7 +22,7 @@ class Rect extends Feature {
         // if (radius == 0) {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点
-        //         if (this.closePath) {
+        //         if (this.isClosePath) {
         //             let nextPnt = pointArr[i + 1];
         //             let prevPnt = pointArr[pointArr.length - 1];
         //             if (nextPnt && prevPnt) {
@@ -39,7 +39,7 @@ class Rect extends Feature {
         //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //         }
         //     } else {   // 最后一个点
-        //         if (this.closePath) {
+        //         if (this.isClosePath) {
         //             let nextPnt = pointArr[0];
         //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //         } else {
@@ -59,7 +59,7 @@ class Rect extends Feature {
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
-        this.closePath && path.closePath()
+        this.isClosePath && path.closePath()
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
@@ -77,7 +77,7 @@ class Rect extends Feature {
         ctx.lineWidth = lineWidth;
         this.setAngle(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
-        this.closePath && ctx.fill(path);
+        this.isClosePath && ctx.fill(path);
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();

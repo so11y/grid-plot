@@ -20,7 +20,7 @@ class Line extends Feature {
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
         this.className = "Line";
-        this.closePath = false;
+        this.isClosePath = false;
         this.hoverStyle = '#F8EA7A'
     }
 
@@ -68,7 +68,7 @@ class Line extends Feature {
                 // }
             }
         })
-        this.closePath && path.closePath()
+        this.isClosePath && path.closePath()
         if (!this.isFreeStyle) {
             if (this.isPointIn) {
                 ctx.strokeStyle = this.hoverStyle;
@@ -88,7 +88,7 @@ class Line extends Feature {
         ctx.lineWidth = lineWidth;
         ctx.stroke(path);
         ctx.fillStyle = this.fillStyle
-        this.closePath && ctx.fill(path);
+        this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
         ctx.restore()
         return path;
@@ -147,10 +147,10 @@ class Line extends Feature {
                     path += `L ${p.x} ${p.y} `
                 }
             })
-            if (this.closePath) {
+            if (this.isClosePath) {
                 path += ' Z'
             }
-            return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.closePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+            return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.isClosePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
         }
     }
 

@@ -4,7 +4,7 @@ import Rect from "../../basic-shape/Rect";
 import Bbox from "../Bbox";
 
 // 自定义控制点元素
-class RCtrlPnt extends Rect {
+class BCtrlPnt extends Rect {
 
     getPoint: () => IPoint;
     lastAngle: number;
@@ -15,7 +15,7 @@ class RCtrlPnt extends Rect {
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
         this.getPoint = fn;
-        this.className = "RCtrlPnt";
+        this.className = "BCtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
@@ -47,4 +47,4 @@ class RCtrlPnt extends Rect {
     }
 }
 
-export default RCtrlPnt;
+export default BCtrlPnt;

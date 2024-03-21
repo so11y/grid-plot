@@ -253,11 +253,11 @@
                                 <i class="iconfont gls-shanchu"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="是否闭合"
-                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                @click="gls?.focusNode && (gls.focusNode.isClosePath = !gls.focusNode.isClosePath)">
                                 <i class="iconfont gls-bihe"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="合并为组"
-                                @click="gls?.focusNode && (gls.focusNode.closePath = !gls.focusNode.closePath)">
+                                @click="gls?.focusNode && (gls.focusNode.isClosePath = !gls.focusNode.isClosePath)">
                                 <i class="iconfont gls-hebing"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="同步缩放" @click="setTranformChild">
@@ -636,7 +636,7 @@ function reset(clear = false) {
         { x: 0, y: 80 },
         { x: 100, y: 120 },
     ])
-    // line.closePath = true;
+    // line.isClosePath = true;
     line.radius = 4;
     // line.rotate(30)
     line.translate(200)

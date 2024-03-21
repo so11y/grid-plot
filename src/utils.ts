@@ -395,6 +395,19 @@ function isBetween(num: number, min: number, max: number) {
     return num >= Math.min(min, max) && num <= Math.max(min, max);
 }
 
+// ----------------------------判断型方法-------------------------------
+// 判断是否时基础元素
+function isBasicFeature(f?: any) {
+    if (!f) return false;
+    // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+    return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+}
+// 判断是否时控制点元素
+function isCtrlFeature(f?: any) {
+    if (!f) return false;
+    return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
+}
+
 export {
     getMousePos,
     getUuid,
@@ -427,4 +440,6 @@ export {
     getSizeInBytes,
     beautifyHTML,
     isBetween,
+    isBasicFeature,
+    isCtrlFeature,
 }
