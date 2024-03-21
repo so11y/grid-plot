@@ -390,6 +390,11 @@ function beautifyHTML(html: string, indentSize = 2) {
     return formatted;
 }
 
+// 判断某个数在两个数范围内
+function isBetween(num: number, min: number, max: number) {
+    return num >= Math.min(min, max) && num <= Math.max(min, max);
+}
+
 export {
     getMousePos,
     getUuid,
@@ -421,4 +426,5 @@ export {
     isBase64,
     getSizeInBytes,
     beautifyHTML,
+    isBetween,
 }

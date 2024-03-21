@@ -1,8 +1,8 @@
 import Feature from "../Feature";
 import { IPoint } from "../../Interface";
-import CtrlPnt from "../function-shape/CtrlPnt";
+import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
 import { getMidOfTwoPnts } from "@/utils";
-import CCtrlPnt from "../function-shape/CCtrlPnt";
+// import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
 
 class Line extends Feature {
 
@@ -15,7 +15,7 @@ class Line extends Feature {
 
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
-    curveCtrlPnt: CCtrlPnt[] = [];
+    curveCtrlPnt: CtrlPnt[] = [];
 
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
@@ -60,12 +60,12 @@ class Line extends Feature {
             if (i == 0) {
                 path.moveTo(p.x, p.y)
             } else {
-                if (this.curveCtrlPnt[i]) {
-                    let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
-                    path.quadraticCurveTo(center.x, center.y, p.x, p.y)
-                } else {
+                // if (this.curveCtrlPnt[i]) {
+                //     let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
+                //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
+                // } else {
                     path.lineTo(p.x, p.y)
-                }
+                // }
             }
         })
         this.closePath && path.closePath()
@@ -99,14 +99,17 @@ class Line extends Feature {
         if (bool) {
             this.pointArr.forEach((p, i) => {
                 new CtrlPnt(this, i);
-                if (i > 0) {
-                    let centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
-                    let ccp = new CCtrlPnt(centerPos.x, centerPos.y);
-                    this.addFeature(ccp, true)  // 这里是为了方便同时移动
-                    this.curveCtrlPnt[i] = ccp;
-                }
+                // if (i > 0) {
+                    // let centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
+                    // let ccp = new CtrlPnt(this, i);
+                    // this.addFeature(ccp, true)  // 这里是为了方便同时移动
+                    // this.curveCtrlPnt[i] = ccp;
+                // }
             })
+        }else {
+            this.clearCtrlPos();
         }
+        console.log(this.children, this.curveCtrlPnt);
     }
 
     clearCtrlPos() {
@@ -117,7 +120,7 @@ class Line extends Feature {
     }
 
     getCtrlPnts() {
-        let ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CCtrlPnt) && f.parent === this);
+        let ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CtrlPnt) && f.parent === this);
         return ctrlPnts;
     }
 

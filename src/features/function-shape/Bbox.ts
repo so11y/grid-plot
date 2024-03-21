@@ -6,16 +6,17 @@ import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
 import AnchorPnt from "./AnchorPnt";
-import BCtrlPnt from "./BCtrlPnt";
-import CtrlPnt from "./CtrlPnt";
+import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
+import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
 
 export default class Bbox extends Rect {
 
-    keepRatio: boolean;  // 是否按比例缩放
-    ratio: number;  // 宽高比
-    ctrlPntSize: number;
-    lastAngle: number = 0;
+    static isAbsorbAngle = true; // 是否旋转角度的吸附
+    static isKeepRatio = true; // 是否按宽高比例缩放
+
+    ratio: number = 1;  // 宽高比, keepRatio用
+    ctrlPntSize: number = 10;  // 控制点大小
     vctX: Vector = [100, 0];
     vctY: Vector = [0, 100];
     lastLenX = 0;
@@ -41,7 +42,6 @@ export default class Bbox extends Rect {
         this.strokeStyle = "#55585A";
         this.lineDashArr = [8, 8]
         this.lineWidth = .1;
-        this.keepRatio = true;
         this.ratio = this.getRatio();
         this.initBCtrlPnt();
         this.setVct();
@@ -95,38 +95,67 @@ export default class Bbox extends Rect {
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
         })
         // 旋转点
-        let bCtrlP1 = new BCtrlPnt(this, () => {
+        let bCtrlP = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
             return rotateCtrlPnt;
         });
-        bCtrlP1.name = CtrlType.ANGLE_CTRL;
-        bCtrlP1.adsorbTypes = []
-        bCtrlP1.translateEvents.push(() => {
+        bCtrlP.name = CtrlType.ANGLE_CTRL;
+        bCtrlP.adsorbTypes = []
+        bCtrlP.translateEvents.push(() => {
             const bboxPos = this.getCenterPos(); // bbox的中心点
-            const bctrlPos = bCtrlP1.getCenterPos(); // 旋转控制点的中心点
+            const bctrlPos = bCtrlP.getCenterPos(); // 旋转控制点的中心点
             let vct1: Vector = [0, -100];
             let vct2 = createVctor(bboxPos, bctrlPos);
             let angle = getRotateAng(vct1, vct2);
-            let offsetAngle = angle - bCtrlP1.lastAngle;
-            // if (this.parent) {
-            //         if (Math.floor(this.parent.angle + offsetAngle) >= 43 && Math.floor(this.parent.angle + offsetAngle) <= 47.angle != 45) {
-            //         offsetAngle = 45 - this.parent.angle;
-            //     }
-            // }
-            this.rotate(offsetAngle, bboxPos);
-            bCtrlP1.lastAngle = angle;
+            let offsetAngle = angle - bCtrlP.lastAngle;
+            this.rotate(offsetAngle);
+
+            if (Bbox.isAbsorbAngle) { // 角度吸附
+                let absorbAngle = 0
+                if (this.angle <= 2 && !absorbAngle) {
+                    absorbAngle = 0 - this.angle
+                }
+                if (this.angle >= 43 && this.angle <= 47 && !absorbAngle) {
+                    absorbAngle = 45 - this.angle
+                }
+                if (this.angle >= 88 && this.angle <= 92 && !absorbAngle) {
+                    absorbAngle = 90 - this.angle
+                }
+                if (this.angle >= 133 && this.angle <= 137 && !absorbAngle) {
+                    absorbAngle = 135 - this.angle
+                }
+                if (this.angle >= 178 && this.angle <= 182 && !absorbAngle) {
+                    absorbAngle = 180 - this.angle
+                }
+                if (this.angle >= 223 && this.angle <= 227 && !absorbAngle) {
+                    absorbAngle = 225 - this.angle
+                }
+                if (this.angle >= 268 && this.angle <= 272 && !absorbAngle) {
+                    absorbAngle = 270 - this.angle
+                }
+                if (this.angle >= 313 && this.angle <= 317 && !absorbAngle) {
+                    absorbAngle = 315 - this.angle
+                }
+                if (this.angle >= 358 && !absorbAngle) {
+                    absorbAngle = 360 - this.angle
+                }
+                this.rotate(absorbAngle);
+                angle += absorbAngle;
+            }
+
+            bCtrlP.lastAngle = angle;
         })
 
         // 左边
-        let bCtrlP2 = new BCtrlPnt(this, () => {
+        let bCtrlP2 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
         });
-        bCtrlP1.name = CtrlType.WIDTH_CTRL;
+        bCtrlP2.name = CtrlType.WIDTH_CTRL;
         bCtrlP2.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
@@ -158,12 +187,12 @@ export default class Bbox extends Rect {
         })
 
         // 右边
-        let bCtrlP3 = new BCtrlPnt(this, () => {
+        let bCtrlP3 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
         });
-        bCtrlP1.name = CtrlType.WIDTH_CTRL;
+        bCtrlP3.name = CtrlType.WIDTH_CTRL;
         bCtrlP3.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
@@ -196,12 +225,12 @@ export default class Bbox extends Rect {
         })
 
         // 上边
-        let bCtrlP4 = new BCtrlPnt(this, () => {
+        let bCtrlP4 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
         });
-        bCtrlP1.name = CtrlType.HEIGHT_CTRL;
+        bCtrlP4.name = CtrlType.HEIGHT_CTRL;
         bCtrlP4.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
@@ -233,12 +262,12 @@ export default class Bbox extends Rect {
         })
 
         // 下边
-        let bCtrlP5 = new BCtrlPnt(this, () => {
+        let bCtrlP5 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
         });
-        bCtrlP1.name = CtrlType.HEIGHT_CTRL;
+        bCtrlP5.name = CtrlType.HEIGHT_CTRL;
         bCtrlP5.translateEvents.push(() => {
             const pointArr = this.pointArr;
             const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
@@ -320,10 +349,10 @@ export default class Bbox extends Rect {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[1]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[2], bbox.vctX, -lenX)  // 关联点长度同步移动
 
-                    const lenY = bbox.keepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
+                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[2], bbox.vctY, -lenY)  // 关联点长度同步移动
 
-                    if (bbox.keepRatio) {
+                    if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
                         pointArr[0].x = pnt3.x;
                         pointArr[0].y = pnt3.y;
@@ -364,10 +393,10 @@ export default class Bbox extends Rect {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[0]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[3], bbox.vctX, lenX)  // 关联点长度同步移动
 
-                    const lenY = bbox.keepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[2]); // 控制点到vct的距离， 移动的距离
+                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[2]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
 
-                    if (bbox.keepRatio) {
+                    if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[2], bbox.vctY, -lenY)  // 关联点长度同步移动
                         pointArr[1].x = pnt3.x;
                         pointArr[1].y = pnt3.y;
@@ -408,7 +437,7 @@ export default class Bbox extends Rect {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[0], bbox.vctX, lenX)  // 关联点长度同步移动
 
-                    const lenY = bbox.keepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
+                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[0], bbox.vctY, lenY)  // 关联点长度同步移动
 
                     pointArr[1].x = pnt.x;
@@ -417,7 +446,7 @@ export default class Bbox extends Rect {
                     pointArr[3].x = pnt2.x;
                     pointArr[3].y = pnt2.y;
 
-                    if (bbox.keepRatio) {
+                    if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[1], bbox.vctY, lenY)  // 关联点长度同步移动
                         pointArr[2].x = pnt3.x;
                         pointArr[2].y = pnt3.y;
@@ -452,10 +481,10 @@ export default class Bbox extends Rect {
                     const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
                     const pnt = getPntInVct(pointArr[1], bbox.vctX, -lenX)  // 关联点长度同步移动
 
-                    const lenY = bbox.keepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[0]); // 控制点到vct的距离， 移动的距离
+                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[0]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[1], bbox.vctY, lenY)  // 关联点长度同步移动
 
-                    if (bbox.keepRatio) {
+                    if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[0], bbox.vctY, lenY)  // 关联点长度同步移动
                         pointArr[3].x = pnt3.x;
                         pointArr[3].y = pnt3.y;
@@ -496,8 +525,8 @@ export default class Bbox extends Rect {
         }
     }
 
-    getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
-        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
+    getCtrlPnts(): (CtrlPnt | RCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'RCtrlPnt') && f.parent == this) as (CtrlPnt | RCtrlPnt)[];
     }
 
     // // 子元素 宽高发生变化时, 旋转有问题

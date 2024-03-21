@@ -1,5 +1,5 @@
-import Rect from "../basic-shape/Rect";
-import Feature from "../Feature";
+import Rect from "../../basic-shape/Rect";
+import Feature from "../../Feature";
 
 // 控制点元素，依赖pointArr
 class CtrlPnt extends Rect {
@@ -25,7 +25,7 @@ class CtrlPnt extends Rect {
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }
 
-    onUpdateParentPos() {  // 拖拽时修改父元素的点位置
+    onUpdateParentPos() {  // 控制点拖拽时修改主元素对应的点位置
         let pos = this.getCenterPos();
         if (this.parent) {
             this.parent.pointArr[this.index] = {
@@ -35,10 +35,9 @@ class CtrlPnt extends Rect {
         }
     }
 
-    onUpdatePosByParent() {  // 父元素位置变化时实时更新控制点位置
+    onUpdatePosByParent() {  // 主元素位置变化时实时更新控制点位置
         if (this.parent) {
-            let x = this.parent.pointArr[this.index].x;
-            let y = this.parent.pointArr[this.index].y;
+            let { x, y } = this.parent.pointArr[this.index];
             this.setPos(x, y)
         }
     }

@@ -224,18 +224,9 @@ class GridSystem {
     private mouseDown = (ev: any) => {
         const lastFocusNode = this.getFocusNode();
         this.timer2 && cancelAnimationFrame(this.timer2);
-        const curPageSlicePos = {
-            x: this.pageSlicePos.x,
-            y: this.pageSlicePos.y,
-        }
-        const velocity = {   // 速度分量
-            x: 0,
-            y: 0
-        };
-        const lastMove = {  // 上一次鼠标位置
-            x: 0,
-            y: 0
-        }
+        const curPageSlicePos = { x: this.pageSlicePos.x, y: this.pageSlicePos.y }
+        const velocity = { x: 0, y: 0 }; // 速度分量
+        const lastMove = { x: 0, y: 0 } // 上一次鼠标位置
 
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
@@ -257,12 +248,8 @@ class GridSystem {
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) {
-                    this.enableSelectArea(false)
-                }
-                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) {
-                    lastFocusNode.onblur();
-                }
+                if (!(this.getFocusNode() instanceof SelectArea) && !this.isCtrlFeature(this.focusNode)) this.enableSelectArea(false)
+                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
@@ -283,7 +270,6 @@ class GridSystem {
                                 mx += offsetX;
                                 my += offsetY;
                                 focusNode._orientations = orientations;
-
                             }
                             moveFlag = true;
                         }
@@ -623,7 +609,7 @@ class GridSystem {
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
+    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, RCtrlPnt, AnchorPnt
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as BasicFeature;
@@ -1344,7 +1330,7 @@ class GridSystem {
     // 判断是否时控制点元素
     isCtrlFeature(f?: Feature | null | undefined) {
         if (!f) return false;
-        return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'CCtrlPnt'
+        return f.className === 'CtrlPnt' || f.className === 'RCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
     }
 
     // ------------------------网格坐标相关方法--------------------------

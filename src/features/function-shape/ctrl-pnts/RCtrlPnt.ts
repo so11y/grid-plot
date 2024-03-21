@@ -1,10 +1,10 @@
-import { IPoint } from "../../Interface";
-import { createVctor } from "../../utils";
-import Rect from "../basic-shape/Rect";
-import Bbox from "./Bbox";
+import { IPoint } from "../../../Interface";
+import { createVctor } from "../../../utils";
+import Rect from "../../basic-shape/Rect";
+import Bbox from "../Bbox";
 
 // 自定义控制点元素
-class BCtrlPnt extends Rect {
+class RCtrlPnt extends Rect {
 
     getPoint: () => IPoint;
     lastAngle: number;
@@ -15,7 +15,7 @@ class BCtrlPnt extends Rect {
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
         this.getPoint = fn;
-        this.className = "BCtrlPnt";
+        this.className = "RCtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
@@ -47,4 +47,4 @@ class BCtrlPnt extends Rect {
     }
 }
 
-export default BCtrlPnt;
+export default RCtrlPnt;

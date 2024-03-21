@@ -5,7 +5,6 @@ import Rect from "../basic-shape/Rect";
 class AnchorPnt extends Rect {
 
     getPoint: () => IPoint;
-    lastAngle: number = 0;
     isBinding = false;  // 是否与link绑定了
     parent: BasicFeature;
 

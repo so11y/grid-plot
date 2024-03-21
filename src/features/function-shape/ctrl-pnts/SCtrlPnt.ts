@@ -1,10 +1,11 @@
-import Rect from "../basic-shape/Rect";
+import Rect from "../../basic-shape/Rect";
 
-class CCtrlPnt extends Rect {
+// 线段使用的控制点 staticCtrlPnt
+class SCtrlPnt extends Rect {
 
     constructor(x: number = 0, y: number = 0, width: number = 14) {   // 相对坐标
         super(x, y, width, width);
-        this.className = "CCtrlPnt";
+        this.className = "SCtrlPnt";
         this.isFixedSize = true;
         this.isShowAdsorbLine = false;
         this.isOnlyCenterAdsorb = true;
@@ -17,4 +18,4 @@ class CCtrlPnt extends Rect {
 
 }
 
-export default CCtrlPnt;
+export default SCtrlPnt;
