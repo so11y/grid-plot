@@ -248,7 +248,8 @@ class GridSystem {
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) this.enableSelectArea(false)
+                console.log(this.getFocusNode(), "this.getFocusNode()");
+                if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
                 if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
@@ -774,7 +775,7 @@ class GridSystem {
     }
     downMoveToFeature(line: Line, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
         this.cbSelectFeature = false;
-        let adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
+        let adsorbPnt = new AdsorbPnt(8, false);
         let lastLineWidth = 0
         let lastTime = 0
         var clear = (remove = true) => {

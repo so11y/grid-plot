@@ -244,7 +244,7 @@ class Feature {
     }
 
     addFeature(feature: BasicFeature, props?: Partial<Props>) {
-        if (!isBasicFeature(feature) || this.children.find(cf => cf === feature)) return;  // 非基础元素不添加 或者 已经存在
+        if (this.children.find(cf => cf === feature)) return;  // 非基础元素不添加 或者 已经存在
         this.children.push(feature);
         feature.parent = this;
         feature.isFixedPos = this.isFixedPos;
