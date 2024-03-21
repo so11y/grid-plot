@@ -647,13 +647,13 @@ function reset(clear = false) {
     let img = new Img("/img2.png", 400, 100);
     gls.addFeature(img, false)
 
-    // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    // group.rotate(60)
-    group.translate(100)
-    group.cbTransformChild = true;
-    gls.addFeature(group, false)
-    rect.name = "bigrect"
+    // // 合并为组
+    // let group = new Group([rect, rect2, circle]);
+    // // group.rotate(60)
+    // group.translate(100)
+    // group.cbTransformChild = true;
+    // gls.addFeature(group, false)
+    // rect.name = "bigrect"
     // rect.onMousemove = () => {
     //     console.log(222);
     // }

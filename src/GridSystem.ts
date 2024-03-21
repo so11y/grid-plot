@@ -18,6 +18,7 @@ import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
 
 class GridSystem {
+
     static Gls: GridSystem;
     static Stack: Stack | null;
     static Bbox: Bbox | null;
@@ -60,7 +61,7 @@ class GridSystem {
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
     cbSelectFeature: boolean = true;  // 画布中的元素是否可被选中
-    cbAdsorption: boolean = false;  // 元素拖拽是否启用吸附
+    cbAdsorption: boolean = true;  // 元素拖拽是否启用吸附
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
@@ -267,23 +268,23 @@ class GridSystem {
                 focusNode.isFocused = true;
                 mousemove = (e: any) => {
                     if (focusNode) {
+                        // console.log(focusNode, "focusNode");
                         const { x: moveX, y: moveY } = getMousePos(this.dom, e);
-                        const { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
-                        if (lastMove.x && lastMove.y) {  // 移动元素
+                        let { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
+                        if (lastMove.x && lastMove.y) {
                             focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
-                            // if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
-                            //     let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
-                            //         gridCompute: focusNode.adsorbTypes.includes("grid"),
-                            //         featureCompute: focusNode.adsorbTypes.includes("feature"),
-                            //         onlyCenter: focusNode.isOnlyCenterAdsorb
-                            //     });
-                            //     // if(offsetX>0 || offsetY > 0){
-                            //     //     focusNode.translate(offsetX, offsetY)
-                            //     //     focusNode._orientations = orientations;
-                            //     // }else {
-                            //     // focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
-                            //     // }
-                            // }
+                            if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
+                                let { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
+                                    gridCompute: focusNode.adsorbTypes.includes("grid"),
+                                    featureCompute: focusNode.adsorbTypes.includes("feature"),
+                                    onlyCenter: focusNode.isOnlyCenterAdsorb
+                                });
+                                focusNode.translate(offsetX, offsetY)
+                                mx += offsetX;
+                                my += offsetY;
+                                focusNode._orientations = orientations;
+
+                            }
                             moveFlag = true;
                         }
                         lastMove.x = mx;
@@ -373,8 +374,8 @@ class GridSystem {
         let min = gridSize * .2;
         let max = gridSize * .8;
 
-        function getDeviation(num: number): number {
-            var gridSize = CoordinateSystem.GRID_SIZE;
+        function getDeviation(num: number): number {   // 附近可吸附的位置
+            const gridSize = CoordinateSystem.GRID_SIZE;
             return (num / gridSize) % gridSize;
         }
 

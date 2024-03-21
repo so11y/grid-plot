@@ -55,7 +55,6 @@ class Img extends Rect {
             // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
             ctx.globalAlpha = this.opacity;
-            this.gls.test = leftTop;
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
         }
