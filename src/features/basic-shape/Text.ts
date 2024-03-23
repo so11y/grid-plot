@@ -130,8 +130,8 @@ class Text extends Rect {
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();
-            ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
+            ctx.clip(path);   // 要放在旋转后面
             ctx.textBaseline = "top";
             ctx.fillStyle = this.color;
             ctx.lineWidth = this.fontWeight;

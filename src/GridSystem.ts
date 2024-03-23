@@ -1019,8 +1019,8 @@ class GridSystem {
         props.isStroke != undefined && (feature.isStroke = props.isStroke)
         props.isShowAdsorbLine != undefined && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
         props.isOnlyCenterAdsorb != undefined && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
-        props.isOnlyHorizonalDrag != undefined && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
-        props.isOnlyVerticalDrag != undefined && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
+        props.isOnlyHorizonalMove != undefined && (feature.isOnlyHorizonalMove = props.isOnlyHorizonalMove)
+        props.isOnlyVerticalMove != undefined && (feature.isOnlyVerticalMove = props.isOnlyVerticalMove)
 
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
@@ -1083,8 +1083,8 @@ class GridSystem {
                 isOverflowHidden: f.isOverflowHidden,  // 子元素超出是否隐藏
                 isShowAdsorbLine: f.isShowAdsorbLine,  // 是否显示吸附辅助线
                 isOnlyCenterAdsorb: f.isOnlyCenterAdsorb,  // 是否只以中心对其
-                isOnlyHorizonalDrag: f.isOnlyHorizonalDrag,  // 是否只能 水平 方向拖拽
-                isOnlyVerticalDrag: f.isOnlyVerticalDrag,  // 是否只能 垂直 方向拖拽
+                isOnlyHorizonalMove: f.isOnlyHorizonalMove,  // 是否只能 水平 方向拖拽
+                isOnlyVerticalMove: f.isOnlyVerticalMove,  // 是否只能 垂直 方向拖拽
 
                 pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
 

@@ -55,16 +55,16 @@ export default class Group extends Feature {
         const center = this.getCenterPos();
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
         features.forEach((f, i) => {
-            const fPointArr = this.getPointArr(JSON.parse(JSON.stringify(f.pointArr)), -angle, center); // 获取旋转之前的点
+            const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
             const [minX, maxX, minY, maxY] = f.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
-            const len = getLenOfPntToLine({ x: minX, y: 0 }, pointArr[0], pointArr[3]);
-            const dx = len * Math.cos(angle * Math.PI / 180);
-            const dy = len * Math.sin(angle * Math.PI / 180);
+            // const len = getLenOfPntToLine({ x: minX, y: 0 }, pointArr[0], pointArr[3]);
+            // const dx = len * Math.cos(angle * Math.PI / 180);
+            // const dy = len * Math.sin(angle * Math.PI / 180);
             if (i == 0) {
-                console.log(minX, "minX");
+                console.log(fPointArr[0], "minX");
                 this.gls.test = this.gls.getPixelPos({ x: minX, y: 0 })
             }
-            f.translate(-dx, -dy)
+            // f.translate(-dx, -dy)
         })
     }
     toBottomAlign(features: Feature[] = this.children) {

@@ -52,8 +52,8 @@ class Img extends Rect {
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
-            // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
+            ctx.clip(path);   // 放在旋转后面
             ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();

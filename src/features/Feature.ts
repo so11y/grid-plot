@@ -59,8 +59,8 @@ class Feature {
     isStroke: boolean = true;  // 是否渲染边框
     isShowAdsorbLine: boolean = true;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
-    isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
-    isOnlyVerticalDrag: boolean = false;  // 是否只能 垂直 方向拖拽
+    isOnlyHorizonalMove: boolean = false;  // 是否只能 水平 方向拖拽
+    isOnlyVerticalMove: boolean = false;  // 是否只能 垂直 方向拖拽
     isHorizonalRevert = false;  // 水平翻转
     isVerticalRevert = false;  // 垂直翻转
 
@@ -126,8 +126,8 @@ class Feature {
         if (!this.cbMove) return;
         this.pointArr = this.pointArr.map(p => {
             return {
-                x: !this.isOnlyVerticalDrag ? p.x += offsetX : p.x,
-                y: !this.isOnlyHorizonalDrag ? p.y += offsetY : p.y
+                x: !this.isOnlyVerticalMove ? p.x += offsetX : p.x,
+                y: !this.isOnlyHorizonalMove ? p.y += offsetY : p.y
             }
         })
         // 照顾fixedSize元素

@@ -57,7 +57,6 @@ class Rect extends Feature {
             // path.roundRect(leftTop.x, leftTop.y, width, height, r);
             path = this.drawRoundedRect(leftTop.x, leftTop.y, width, height, r);
         }
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
         this.isClosePath && path.closePath()
         ctx.lineCap = this.lineCap;
@@ -75,10 +74,10 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
         this.setAngle(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
         return path;
