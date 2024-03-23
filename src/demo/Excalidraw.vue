@@ -242,6 +242,17 @@
                         </a-row>
                     </li>
                     <li>
+                        <div class="title">子元素偏移</div>
+                        <a-row type="flex" align="middle" class="func-wrap" style="margin-bottom: 8px">
+                            <a-button style="background-color: hsl(240 25% 96%)" title="左对齐" @click="toOffset(2)">
+                                <i class="iconfont gls-jiahao"></i>
+                            </a-button>
+                            <a-button style="background-color: hsl(240 25% 96%)" title="垂直对齐" @click="toOffset(-2)">
+                                <i class="iconfont gls-jianhao"></i>
+                            </a-button>
+                        </a-row>
+                    </li>
+                    <li>
                         <div class="title">操作</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制"
@@ -445,6 +456,7 @@ function onSelectTool(index = 0, param?: any) {
             console.log(globalBorderStyle.value, "globalBorderStyle.value");
 
             line.lineDashArr = globalBorderStyle.value;
+            line.tip = "测试111"
             cb = gls?.continuousClickToFeature(line)
             break;
         case 4: // 自由笔
@@ -623,13 +635,17 @@ function reset(clear = false) {
 
     var line = new Line([
         { x: 10, y: 10 },
-        { x: 0, y: 80 },
-        { x: 100, y: 120 },
+        { x: 100, y: 40 },
     ])
     // line.isClosePath = true;
     line.radius = 4;
     // line.rotate(30)
-    line.translate(200)
+    // line.translate(200)
+    // const text2 = new Text("测试文本", 0, 0, 100, 10);
+    // line.addFeature(text2);
+    line.tip = "测试文本"
+    console.log(line);
+    
     // line.enableCtrlPnts();
     gls.addFeature(line, false)
 
@@ -823,6 +839,17 @@ function modifyStyle() {
     }
     message.info('粘贴样式');
 }
+
+function toOffset(offset = 0) {
+    let focuseNode = gls?.getFocusNode();
+    if (focuseNode && gls) {
+        if(focuseNode instanceof Line) {
+            focuseNode.tipOffset.y+=offset;
+        }
+    }
+}
+
+
 
 
 </script>

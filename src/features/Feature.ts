@@ -258,7 +258,10 @@ class Feature {
             }
             f.children.forEach(cf => { setProps(cf) })
         }
-        setProps(feature)
+        setProps(feature);
+        if (!this.gls.features.find(f => f === feature)) {
+            this.gls.addFeature(feature, true)
+        }
     }
     removeChild(feature: Feature) { // 删除指定子元素
         feature.parent = null;
@@ -476,8 +479,8 @@ class Feature {
                     ctx.moveTo(0, centerY)
                     ctx.lineTo(this.gls.ctx.canvas.width, centerY);
                 }
-                ctx.strokeStyle = "rgba(253, 0, 0)";
-                ctx.lineWidth = .4;
+                ctx.strokeStyle = "rgba(254, 0, 0)";
+                ctx.lineWidth = .7;
                 ctx.setLineDash([8, 8]);
                 ctx.stroke();
                 ctx.restore();
@@ -503,12 +506,21 @@ class Feature {
 
     // 一个点围绕某个点旋转angle角度
     getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint) {
-        if(angle === 0){
+        if (angle === 0) {
             return pointArr;
         }
         return pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
+    }
+
+    // 以O点去旋转内容， 文字或者图片
+    setAngle = (ctx: CanvasRenderingContext2D, O: IPoint, angle = this.angle) => {
+        if (angle && angle != 0) {
+            ctx.translate(O.x, O.y)
+            ctx.rotate(angle * Math.PI / 180)
+            ctx.translate(-O.x, -O.y)
+        }
     }
 
     findLastParent(feature: Feature = this): Feature | undefined {

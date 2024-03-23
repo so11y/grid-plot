@@ -110,19 +110,6 @@ class Rect extends Feature {
         this.pointArr = getRectPoint(this.position, this.size);
     }
 
-    // 以左上角去旋转内容， 文字或者图片
-    setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
-        if (this.angle && this.angle != 0) {
-            const boxInfo = {
-                x: leftTop.x,
-                y: leftTop.y,
-            }
-            ctx.translate(boxInfo.x, boxInfo.y)
-            ctx.rotate(this.angle * Math.PI / 180)
-            ctx.translate(-boxInfo.x, -boxInfo.y)
-        }
-    }
-
     // 获取矩形的宽度，包括旋转，不是包围盒
     getSize(pointArr: IPoint[] = this.pointArr) {
         let leftTop = { x: 0, y: 0 };

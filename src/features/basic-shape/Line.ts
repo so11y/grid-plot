@@ -1,6 +1,8 @@
 import Feature from "../Feature";
 import { IPoint } from "../../Interface";
 import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
+import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
+import { FontFamily } from "@/Constants";
 
 class Line extends Feature {
 
@@ -14,6 +16,10 @@ class Line extends Feature {
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
     curveCtrlPnt: CtrlPnt[] = [];
+    tip: string = '';
+    tipSize = 18;
+    tipColor = "#000"
+    tipOffset = { x: 0, y: 0 }
 
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
@@ -62,7 +68,7 @@ class Line extends Feature {
                 //     const center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
                 //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
                 // } else {
-                    path.lineTo(p.x, p.y)
+                path.lineTo(p.x, p.y)
                 // }
             }
         })
@@ -88,8 +94,29 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
+        this.drawTip(ctx, pointArr, lineWidth);
         ctx.restore()
         return path;
+    }
+
+    drawTip(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth = 0) {
+        if (pointArr.length > 1 && this.tip) {
+            const startP = pointArr[0];
+            const endP = pointArr[pointArr.length - 1];
+            const center = getMidOfTwoPnts(startP, endP);
+            let angle = getAngleOfTwoPnts(startP, endP);
+            if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
+                angle += 180
+            }
+            ctx.save()
+            ctx.font = `${this.tipSize}px ${FontFamily.HEITI}`;
+            const { width } = ctx.measureText(this.tip);
+            ctx.fillStyle = this.tipColor;
+            this.setAngle(ctx, center, angle);
+            ctx.fillText(this.tip, center.x - width / 2 + this.tipOffset.x, center.y - lineWidth + this.tipOffset.y);
+            ctx.fill();
+            ctx.restore()
+        }
     }
 
     enableCtrlPnts(bool = true) {
@@ -98,13 +125,13 @@ class Line extends Feature {
             this.pointArr.forEach((p, i) => {
                 new CtrlPnt(this, i);
                 // if (i > 0) {
-                    // const centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
-                    // const ccp = new CtrlPnt(this, i);
-                    // this.addFeature(ccp, true)  // 这里是为了方便同时移动
-                    // this.curveCtrlPnt[i] = ccp;
+                // const centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
+                // const ccp = new CtrlPnt(this, i);
+                // this.addFeature(ccp, true)  // 这里是为了方便同时移动
+                // this.curveCtrlPnt[i] = ccp;
                 // }
             })
-        }else {
+        } else {
             this.clearCtrlPos();
         }
         console.log(this.children, this.curveCtrlPnt);

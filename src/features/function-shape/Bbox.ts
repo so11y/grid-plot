@@ -351,18 +351,18 @@ export default class Bbox extends Rect {
                     const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[2], bbox.vctY, -lenY)  // 关联点长度同步移动
 
+                    pointArr[3].x = pnt.x;
+                    pointArr[3].y = pnt.y;
+
+                    pointArr[1].x = pnt2.x;
+                    pointArr[1].y = pnt2.y;
+                    
                     if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
                         pointArr[0].x = pnt3.x;
                         pointArr[0].y = pnt3.y;
                         this.setPos(pnt3.x, pnt3.y)
                     }
-
-                    pointArr[3].x = pnt.x;
-                    pointArr[3].y = pnt.y;
-
-                    pointArr[1].x = pnt2.x;
-                    pointArr[1].y = pnt2.y;
 
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
@@ -395,18 +395,18 @@ export default class Bbox extends Rect {
                     const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[2]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
 
+                    pointArr[2].x = pnt.x;
+                    pointArr[2].y = pnt.y;
+
+                    pointArr[0].x = pnt2.x;
+                    pointArr[0].y = pnt2.y;
+
                     if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[2], bbox.vctY, -lenY)  // 关联点长度同步移动
                         pointArr[1].x = pnt3.x;
                         pointArr[1].y = pnt3.y;
                         this.setPos(pnt3.x, pnt3.y)
                     }
-
-                    pointArr[2].x = pnt.x;
-                    pointArr[2].y = pnt.y;
-
-                    pointArr[0].x = pnt2.x;
-                    pointArr[0].y = pnt2.y;
 
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
@@ -483,6 +483,12 @@ export default class Bbox extends Rect {
                     const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[0]); // 控制点到vct的距离， 移动的距离
                     const pnt2 = getPntInVct(pointArr[1], bbox.vctY, lenY)  // 关联点长度同步移动
 
+                    pointArr[0].x = pnt.x;
+                    pointArr[0].y = pnt.y;
+
+                    pointArr[2].x = pnt2.x;
+                    pointArr[2].y = pnt2.y;
+
                     if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[0], bbox.vctY, lenY)  // 关联点长度同步移动
                         pointArr[3].x = pnt3.x;
@@ -490,11 +496,7 @@ export default class Bbox extends Rect {
                         this.setPos(pnt3.x, pnt3.y)
                     }
 
-                    pointArr[0].x = pnt.x;
-                    pointArr[0].y = pnt.y;
 
-                    pointArr[2].x = pnt2.x;
-                    pointArr[2].y = pnt2.y;
 
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {

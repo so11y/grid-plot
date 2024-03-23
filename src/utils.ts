@@ -83,8 +83,8 @@ function getVectorCenter(point1: IPoint, point2: IPoint) {
 }
 
 //  求两个向量之间的夹角
-function get2vectorAngle(vector1: IPoint, vector2: IPoint) {
-    var angle = Math.atan2(vector2.y, vector2.x) - Math.atan2(vector1.y, vector1.x);
+function get2vectorAngle(vector1: Vector, vector2: Vector) {
+    var angle = Math.atan2(vector2[1], vector2[0]) - Math.atan2(vector1[1], vector1[0]);
     // if (angle < 0) angle += 2 * Math.PI;
     return angle;
 }
@@ -408,10 +408,17 @@ function isCtrlFeature(f?: any) {
     return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
 }
 
+function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
+    var deltaX = point2.x - point1.x;
+    var deltaY = point2.y - point1.y;
+    return Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+}
+
 export {
     getMousePos,
     getUuid,
     calculateBezierPointForCubic,
+    getAngleOfTwoPnts,
     getVectorLength,
     getVectorCenter,
     get2vectorAngle,
