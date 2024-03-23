@@ -316,7 +316,7 @@ class Feature {
                     return { x: p.x, y: 2 * centerPos.y - p.y }
                 })
                 this.isVerticalRevert = !this.isVerticalRevert;
-                this.angle = 180 - this.angle;
+                this.angle = 360 - this.angle;
                 break;
             }
             default:

@@ -128,14 +128,14 @@ class Rect extends Feature {
             leftTop = pointArr[0]
         }
         if(this.isHorizonalRevert && this.isVerticalRevert){
-            leftTop = pointArr[0]
+            leftTop = pointArr[2]
         }
         if(this.isHorizonalRevert && !this.isVerticalRevert){
             leftTop = pointArr[1]
         }
         if(!this.isHorizonalRevert && this.isVerticalRevert){
-            leftTop = pointArr[1]
-        }
+            leftTop = pointArr[3]
+        }  
         return {
             leftTop,
             width: getLenOfTwoPnts(pointArr[0], pointArr[1]),
@@ -144,7 +144,7 @@ class Rect extends Feature {
     }
 
     /**
-* 获得元素宽高比
+* 获得元素宽高比 
 * @returns 
 */
     getRatio() {
