@@ -661,6 +661,7 @@ function reset(clear = false) {
     //     console.log(11);
     // }
     group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
+    group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.VERTICAL))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
