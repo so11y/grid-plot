@@ -19,7 +19,7 @@ class MiniMap extends GridSystem {
     constructor(gls: GridSystem, width = 300, height = 170) {
         // MiniMap.miniMap = null;
         if (!gls.extent || isNaN(gls.extent[0]) || isNaN(gls.extent[1]) || isNaN(gls.extent[2]) || isNaN(gls.extent[3])) { throw new Error("GridSystem必须设置拖拽范围!"); }
-        let canvasDom = document.createElement("canvas");
+        const canvasDom = document.createElement("canvas");
         canvasDom.width = width;
         canvasDom.height = height;
         canvasDom.style.position = "fixed";
@@ -39,7 +39,7 @@ class MiniMap extends GridSystem {
     }
 
     setMyCanvas(canvasDom: HTMLCanvasElement) {
-        let { x, y, width, height } = this.gls.dom.getBoundingClientRect();
+        const { x, y, width, height } = this.gls.dom.getBoundingClientRect();
         canvasDom.style.left = `${x + width - canvasDom.width}px`
         canvasDom.style.top = `${y + height - canvasDom.height}px`
     }
@@ -60,20 +60,20 @@ class MiniMap extends GridSystem {
     }
 
     dragViewRect = (e: any) => {
-        let { x, y } = getMousePos(this.dom, e)
-        let that = this;
-        let glsTotalWidth = this.gls.extent[1] + this.gls.ctx.canvas.width + this.gls.extent[3];
-        let glsTotalHeight = this.gls.extent[0] + this.gls.ctx.canvas.height + this.gls.extent[2];
+        const { x, y } = getMousePos(this.dom, e)
+        const that = this;
+        const glsTotalWidth = this.gls.extent[1] + this.gls.ctx.canvas.width + this.gls.extent[3];
+        const glsTotalHeight = this.gls.extent[0] + this.gls.ctx.canvas.height + this.gls.extent[2];
 
         if (x > this.viewRect.x && x < this.viewRect.x + this.viewRect.width && y > this.viewRect.y && y < this.viewRect.y + this.viewRect.height) {
             this.isDraging = true;
-            let vx = this.viewRect.x;
-            let vy = this.viewRect.y;
+            const vx = this.viewRect.x;
+            const vy = this.viewRect.y;
             function mousemove(e: any) {
                 that.dom.style.cursor = "move"
-                let { x: x1, y: y1 } = getMousePos(that.dom, e);
-                let dx = vx + (x1 - x);
-                let dy = vy + (y1 - y);
+                const { x: x1, y: y1 } = getMousePos(that.dom, e);
+                const dx = vx + (x1 - x);
+                const dy = vy + (y1 - y);
                 that.viewRect.x = dx;
                 that.viewRect.y = dy;
                 // 判断是否超出边界
@@ -100,8 +100,8 @@ class MiniMap extends GridSystem {
 
     setViewRect() {
         // 主页面区域总宽高
-        let glsTotalWidth = this.gls.extent[1] + this.gls.ctx.canvas.width + this.gls.extent[3];
-        let glsTotalHeight = this.gls.extent[0] + this.gls.ctx.canvas.height + this.gls.extent[2];
+        const glsTotalWidth = this.gls.extent[1] + this.gls.ctx.canvas.width + this.gls.extent[3];
+        const glsTotalHeight = this.gls.extent[0] + this.gls.ctx.canvas.height + this.gls.extent[2];
 
         // 跟新小地图可视框
         this.viewRect.x = (this.gls.extent[3] - this.gls.pageSlicePos.x + this.gls.firstPageSlicePos.x) / glsTotalWidth * this.ctx.canvas.width

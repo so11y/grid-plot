@@ -9,7 +9,7 @@ class AnchorPnt extends Rect {
     parent: BasicFeature;
 
     constructor(parent: BasicFeature, fn: () => IPoint, width: number = 14) {   // 相对坐标
-        let pos = fn();
+        const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
         this.className = "AnchorPnt";
@@ -30,7 +30,7 @@ class AnchorPnt extends Rect {
 
     onUpdatePosByParent() {
         if (this.isFocused) return;
-        let pos = this.getPoint();
+        const pos = this.getPoint();
         this.setPos(pos.x, pos.y);
     }
 }

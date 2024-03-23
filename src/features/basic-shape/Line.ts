@@ -1,8 +1,6 @@
 import Feature from "../Feature";
 import { IPoint } from "../../Interface";
 import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
-import { getMidOfTwoPnts } from "@/utils";
-// import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
 
 class Line extends Feature {
 
@@ -25,7 +23,7 @@ class Line extends Feature {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
-        let path = new Path2D();
+        const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
         if (this.isFreeStyle) {
@@ -61,7 +59,7 @@ class Line extends Feature {
                 path.moveTo(p.x, p.y)
             } else {
                 // if (this.curveCtrlPnt[i]) {
-                //     let center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
+                //     const center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
                 //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
                 // } else {
                     path.lineTo(p.x, p.y)
@@ -100,8 +98,8 @@ class Line extends Feature {
             this.pointArr.forEach((p, i) => {
                 new CtrlPnt(this, i);
                 // if (i > 0) {
-                    // let centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
-                    // let ccp = new CtrlPnt(this, i);
+                    // const centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
+                    // const ccp = new CtrlPnt(this, i);
                     // this.addFeature(ccp, true)  // 这里是为了方便同时移动
                     // this.curveCtrlPnt[i] = ccp;
                 // }
@@ -113,14 +111,14 @@ class Line extends Feature {
     }
 
     clearCtrlPos() {
-        let ctrlPnts = this.getCtrlPnts();
+        const ctrlPnts = this.getCtrlPnts();
         ctrlPnts.forEach(cp => {
             this.gls.removeFeature(cp, false);
         })
     }
 
     getCtrlPnts() {
-        let ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CtrlPnt) && f.parent === this);
+        const ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CtrlPnt) && f.parent === this);
         return ctrlPnts;
     }
 

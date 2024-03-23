@@ -596,13 +596,13 @@ function reset(clear = false) {
     // rect.isOverflowHidden = true;
     gls.addFeature(rect, false)
 
-    const text = new Text(`当内容
-特别多的时候，canvas不会自动
-换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
-    text.fitSize = true;
-    text.radius = 2
-    // text.rotate(30)
-    gls.addFeature(text, false);
+//     const text = new Text(`当内容
+// 特别多的时候，canvas不会自动
+// 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 460, 100, 200, 50);
+//     text.fitSize = true;
+//     text.radius = 2
+//     // text.rotate(30)
+//     gls.addFeature(text, false);
     // rect.addFeature(text);
 
     let rect2 = new Rect(150, 150, 50, 50)
@@ -621,46 +621,46 @@ function reset(clear = false) {
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
-    // var line = new Line([
-    //     { x: 10, y: 10 },
-    //     { x: 0, y: 80 },
-    //     { x: 100, y: 120 },
-    // ])
-    // line.radius = 20;
-    // // line.rotate(30)
-    // line.translate(200)
-    // gls.addFeature(line, false)
-
     var line = new Line([
         { x: 10, y: 10 },
         { x: 0, y: 80 },
         { x: 100, y: 120 },
     ])
-    // line.isClosePath = true;
-    line.radius = 4;
+    line.radius = 20;
     // line.rotate(30)
     line.translate(200)
-    line.enableCtrlPnts();
     gls.addFeature(line, false)
 
+    // var line = new Line([
+    //     { x: 10, y: 10 },
+    //     { x: 0, y: 80 },
+    //     { x: 100, y: 120 },
+    // ])
+    // // line.isClosePath = true;
+    // line.radius = 4;
+    // // line.rotate(30)
+    // line.translate(200)
+    // // line.enableCtrlPnts();
+    // gls.addFeature(line, false)
 
-    let img = new Img("/img2.png", 400, 100);
-    gls.addFeature(img, false)
+
+    // let img = new Img("/img2.png", 400, 100);
+    // gls.addFeature(img, false)
 
     // 合并为组
     let group = new Group([rect, rect2, circle]);
     // group.rotate(60)
     group.translate(100)
-    group.cbTransformChild = true;
+    group.cbTransformChild = false;
     gls.addFeature(group, false)
     rect.name = "bigrect"
-    rect.onMousemove = () => {
-        console.log(222);
-    }
+    // rect.onMousemove = () => {
+    //     console.log(222);
+    // }
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    // group.resizeEvents.push(group.toSpaceBetween.bind(group, group.children, AlignType.HORIZONAL))
+    group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);

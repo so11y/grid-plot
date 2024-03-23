@@ -11,7 +11,7 @@ class BCtrlPnt extends Rect {
     parent: Bbox | null = null;
 
     constructor(parent: Bbox, fn: () => IPoint, width: number = 14) {   // 相对坐标
-        let pos = fn();
+        const pos = fn();
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
         this.getPoint = fn;
@@ -42,7 +42,7 @@ class BCtrlPnt extends Rect {
     // 更新自己的位置, 除了自己正在被操控时
     onUpdatePosByParent() {
         if (this.isFocused) return;
-        let pos = this.getPoint();
+        const pos = this.getPoint();
         this.setPos(pos.x, pos.y);
     }
 }

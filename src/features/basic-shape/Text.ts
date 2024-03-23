@@ -67,18 +67,18 @@ class Text extends Rect {
                 this.textArr = this.getFormatStr(lastWidth, this.gls.getPixelLen(this.fontSize));
             }
         })
-        this.dbclickEvents.push((e: any) => {
-            this.cursorIndex = -1;
-            this.editble = true;
-            Text.mousePos = getMousePos(this.gls.dom, e);
-            this.createInputDom(Text.mousePos)
-        })
-        this.blurEvents.push((e: any) => {
-            this.cursorIndex = -1;
-            this.editble = false;
-            Text.mousePos = { x: 0, y: 0 };
-            this.removeInputDom();
-        })
+        // this.dbclickEvents.push((e: any) => {
+        //     this.cursorIndex = -1;
+        //     this.editble = true;
+        //     Text.mousePos = getMousePos(this.gls.dom, e);
+        //     this.createInputDom(Text.mousePos)
+        // })
+        // this.blurEvents.push((e: any) => {
+        //     this.cursorIndex = -1;
+        //     this.editble = false;
+        //     Text.mousePos = { x: 0, y: 0 };
+        //     this.removeInputDom();
+        // })
         this.textArr = this.getFormatStr(width, this.gls.getPixelLen(this.fontSize));
     }
 
@@ -126,7 +126,7 @@ class Text extends Rect {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
-        let path = super.draw(ctx, pointArr, lineWidth, radius);
+        const path = super.draw(ctx, pointArr, lineWidth, radius);
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();
@@ -139,10 +139,10 @@ class Text extends Rect {
             const fontSize = Feature.TargetRender.getRatioSize(this.fontSize);
             ctx.font = `${this.bold ? 'bold' : ''} ${fontSize}px ${this.fontFamily}`;
             for (let i = 0; i < this.textArr.length; i++) {
-                let txt = this.textArr[i];
+                const txt = this.textArr[i];
                 ctx.fillText(txt, leftTop.x, leftTop.y + i * fontSize)
             }
-            // let { textArr, contentHeight } = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
+            // const { textArr, contentHeight } = this.toFormateStr(ctx, fontSize, width, leftTop.x, leftTop.y);
             // this.textArr = textArr;
             // this.gls.test = textArr[35].pos;
             // this.contentHeight = contentHeight;
@@ -205,7 +205,7 @@ class Text extends Rect {
         //         Text.cursorPos.y = startY + contentHeight;
         //     }
         //     if (this.cursorIndex < 0) {
-        //         let realMousePosY = 0;
+        //         const realMousePosY = 0;
         //         const mouseY = Text.mousePos.y - startY;
         //         if (mouseY < 0) {
         //             realMousePosY = 0;
@@ -238,54 +238,54 @@ class Text extends Rect {
     }
 
 
-    createInputDom = (pos: IPoint) => {
-        Text.inputDom = document.createElement("textarea") as HTMLTextAreaElement;
-        let [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints();
-        let { x, y } = this.gls.getPixelPos(leftTop);
-        let { x: x1, y: y1 } = this.gls.getPixelPos(rightTop);
-        let fontSize = this.gls.getRatioSize(this.fontSize)
-        Text.inputDom.style.position = "fixed";
-        Text.inputDom.style.opacity = '1';
-        Text.inputDom.style.left = `${x - 500}px`;
-        Text.inputDom.style.top = `${y}px`;
-        Text.inputDom.style.width = `${x1 - x}px`;
-        Text.inputDom.rows = this.textArr.length;
-        Text.inputDom.style.padding = `${0}px`;
-        Text.inputDom.style.border = `none`;
-        Text.inputDom.style.resize = `none`;
-        Text.inputDom.style.transform = `rotate(${this.angle}deg)`;
-        Text.inputDom.style.transformOrigin = `center center`;
-        Text.inputDom.style.outline = `none`;
-        // Text.inputDom.style.opacity = `0`;
-        // Text.inputDom.style.background = `transparent`;
-        Text.inputDom.style.background = `#fff`;
-        Text.inputDom.style.fontFamily = `${this.fontFamily}`;
-        Text.inputDom.style.fontWeight = `${this.fontWeight}`;
-        Text.inputDom.style.fontSize = `${fontSize}px`;
-        Text.inputDom.value = this.text;
-        document.body.appendChild(Text.inputDom);
-        setTimeout(() => {
-            if (Text.inputDom) {
-                setCursorPosition(Text.inputDom, this.cursorIndex)
-                Text.inputDom.focus();
-                Text.inputDom.oninput = () => {
-                    if (Text.inputDom) {
-                        this.text = Text.inputDom.value;
-                        this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
-                        this.cursorIndex = getCursorPosition(Text.inputDom).end;
-                    }
-                }
-                Text.inputDom.onkeydown = () => {
-                    setTimeout(() => {
-                        if (Text.inputDom) {
-                            this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
-                            this.cursorIndex = getCursorPosition(Text.inputDom).end;
-                        }
-                    }, 100)
-                }
-            }
-        }, 100)
-    }
+    // createInputDom = (pos: IPoint) => {
+    //     Text.inputDom = document.createElement("textarea") as HTMLTextAreaElement;
+    //     const [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints();
+    //     const { x, y } = this.gls.getPixelPos(leftTop);
+    //     const { x: x1, y: y1 } = this.gls.getPixelPos(rightTop);
+    //     const fontSize = this.gls.getRatioSize(this.fontSize)
+    //     Text.inputDom.style.position = "fixed";
+    //     Text.inputDom.style.opacity = '1';
+    //     Text.inputDom.style.left = `${x - 500}px`;
+    //     Text.inputDom.style.top = `${y}px`;
+    //     Text.inputDom.style.width = `${x1 - x}px`;
+    //     Text.inputDom.rows = this.textArr.length;
+    //     Text.inputDom.style.padding = `${0}px`;
+    //     Text.inputDom.style.border = `none`;
+    //     Text.inputDom.style.resize = `none`;
+    //     Text.inputDom.style.transform = `rotate(${this.angle}deg)`;
+    //     Text.inputDom.style.transformOrigin = `center center`;
+    //     Text.inputDom.style.outline = `none`;
+    //     // Text.inputDom.style.opacity = `0`;
+    //     // Text.inputDom.style.background = `transparent`;
+    //     Text.inputDom.style.background = `#fff`;
+    //     Text.inputDom.style.fontFamily = `${this.fontFamily}`;
+    //     Text.inputDom.style.fontWeight = `${this.fontWeight}`;
+    //     Text.inputDom.style.fontSize = `${fontSize}px`;
+    //     Text.inputDom.value = this.text;
+    //     document.body.appendChild(Text.inputDom);
+    //     setTimeout(() => {
+    //         if (Text.inputDom) {
+    //             setCursorPosition(Text.inputDom, this.cursorIndex)
+    //             Text.inputDom.focus();
+    //             Text.inputDom.oninput = () => {
+    //                 if (Text.inputDom) {
+    //                     this.text = Text.inputDom.value;
+    //                     this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
+    //                     this.cursorIndex = getCursorPosition(Text.inputDom).end;
+    //                 }
+    //             }
+    //             Text.inputDom.onkeydown = () => {
+    //                 setTimeout(() => {
+    //                     if (Text.inputDom) {
+    //                         this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
+    //                         this.cursorIndex = getCursorPosition(Text.inputDom).end;
+    //                     }
+    //                 }, 100)
+    //             }
+    //         }
+    //     }, 100)
+    // }
 
     removeInputDom() {
         if (Text.inputDom) {
@@ -302,9 +302,9 @@ class Text extends Rect {
         const padding = this.gls.getRatioSize(this.padding);
         const lineHeight = this.gls.getRatioSize(this.lineHeight);
 
-        let { width, height, leftTop } = this.getSize(pointArr);
-        let svgStr = super.getSvg(pointArr, lineWidth, radius);
-        let fontSize = this.gls.getRatioSize(this.fontSize)
+        const { width, height, leftTop } = this.getSize(pointArr);
+        const svgStr = super.getSvg(pointArr, lineWidth, radius);
+        const fontSize = this.gls.getRatioSize(this.fontSize)
 
         var textArr = ''
         var contentHeight = 0; //绘制字体距离canvas顶部初始的高度

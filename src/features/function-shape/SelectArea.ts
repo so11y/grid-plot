@@ -13,6 +13,7 @@ class SelectArea extends Group {
         super([]);
         this.callback = fn;
         this.className = "SelectArea";
+        this.name = "SelectArea";
         this.cbTransformChild = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "rgba(220, 233, 126, .4)"
         document.addEventListener("mousedown", this.setPointArr);
@@ -60,6 +61,8 @@ class SelectArea extends Group {
                 document.removeEventListener("mousedown", this.setPointArr)
                 document.removeEventListener("mousemove", mouseMove)
                 document.removeEventListener("mouseup", mouseUp)
+                console.log(this.cbTransformChild);
+                
             }
             document.addEventListener("mousemove", mouseMove);
             document.addEventListener("mouseup", mouseUp);

@@ -26,8 +26,8 @@ export default class Bbox extends Rect {
     constructor(target: BasicFeature | SelectArea) {   // 相对坐标
         // const angle = target.angle;
         // target.rotate(-angle)
-        let center = target.getCenterPos();
-        let [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+        const center = target.getCenterPos();
+        const [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
         this.className = 'Bbox';
         this.isFixedPos = target.isFixedPos;
@@ -53,11 +53,11 @@ export default class Bbox extends Rect {
         target.pntExtentPer.left = []
         target.pntExtentPer.right = []
         target && target.pointArr.forEach(p => {
-            let lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
-            let lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
+            const lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
+            const lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
 
-            let lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
-            let lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
+            const lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
+            const lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
             // console.log(target);
             // if (target instanceof Text) {
             //     target.pntExtentPer.left.push({
@@ -89,12 +89,12 @@ export default class Bbox extends Rect {
     initBCtrlPnt() {
         const pointArr = this.pointArr;
         pointArr.forEach((p, i) => {
-            let ctrlP = new CtrlPnt(this, i, Bbox.ctrlPSize);
+            const ctrlP = new CtrlPnt(this, i, Bbox.ctrlPSize);
             ctrlP.name = CtrlType.SIZE_CTRL;
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
         })
         // 旋转点
-        let bCtrlP = new BCtrlPnt(this, () => {
+        const bCtrlP = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
@@ -106,10 +106,10 @@ export default class Bbox extends Rect {
         bCtrlP.translateEvents.push(() => {
             const bboxPos = this.getCenterPos(); // bbox的中心点
             const bctrlPos = bCtrlP.getCenterPos(); // 旋转控制点的中心点
-            let vct1: Vector = [0, -100];
-            let vct2 = createVctor(bboxPos, bctrlPos);
+            const vct1: Vector = [0, -100];
+            const vct2 = createVctor(bboxPos, bctrlPos);
             let angle = getRotateAng(vct1, vct2);
-            let offsetAngle = angle - bCtrlP.lastAngle;
+            const offsetAngle = angle - bCtrlP.lastAngle;
             this.rotate(offsetAngle);
 
             if (Bbox.isAbsorbAngle) { // 角度吸附
@@ -149,7 +149,7 @@ export default class Bbox extends Rect {
         })
 
         // 左边
-        let bCtrlP2 = new BCtrlPnt(this, () => {
+        const bCtrlP2 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
@@ -168,7 +168,7 @@ export default class Bbox extends Rect {
             if (this.lastLenX) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
+                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -186,7 +186,7 @@ export default class Bbox extends Rect {
         })
 
         // 右边
-        let bCtrlP3 = new BCtrlPnt(this, () => {
+        const bCtrlP3 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
@@ -205,7 +205,7 @@ export default class Bbox extends Rect {
             if (this.lastLenX) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        let newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
+                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -224,7 +224,7 @@ export default class Bbox extends Rect {
         })
 
         // 上边
-        let bCtrlP4 = new BCtrlPnt(this, () => {
+        const bCtrlP4 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
@@ -243,7 +243,7 @@ export default class Bbox extends Rect {
             if (this.lastLenY) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
+                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -261,7 +261,7 @@ export default class Bbox extends Rect {
         })
 
         // 下边
-        let bCtrlP5 = new BCtrlPnt(this, () => {
+        const bCtrlP5 = new BCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
@@ -280,7 +280,7 @@ export default class Bbox extends Rect {
             if (this.lastLenY) {
                 var setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        let newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
+                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -299,32 +299,32 @@ export default class Bbox extends Rect {
 
         if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
             // 左边 锚点
-            let aCtrlP1 = new AnchorPnt(this, () => {
+            const aCtrlP1 = new AnchorPnt(this, () => {
                 const pointArr = this.pointArr;
                 const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-                let newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
+                const newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
                 return newLeftCenter;
             });
             aCtrlP1.name = "leftAnchor";
             aCtrlP1.mousedownEvents.push(() => {
                 this.gls.initAnchorPnts();
-                let anchorPnts = this.target.getAnchorPnts();
-                let link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
+                const anchorPnts = this.target.getAnchorPnts();
+                const link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
                 link.name = 'tempLink';
             })
             aCtrlP1.mouseupEvents.push(() => {
                 let touchedAnchor: AnchorPnt | undefined;
-                let anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
-                let hasTouch = anchorPnts.some(a => {
-                    let touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
+                const anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
+                const hasTouch = anchorPnts.some(a => {
+                    const touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
                     if (touched) touchedAnchor = a;
                     return touched
                 })
-                let tempLink = this.gls.features.find(f => f.name === 'tempLink');
+                const tempLink = this.gls.features.find(f => f.name === 'tempLink');
                 tempLink && this.gls.removeFeature(tempLink, false);
                 if (hasTouch && touchedAnchor) {
-                    let anchorPnts = this.target.getAnchorPnts();
-                    let startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
+                    const anchorPnts = this.target.getAnchorPnts();
+                    const startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
                     startAnchor.isBinding = true;
                     touchedAnchor.isBinding = true;
                     new Link(startAnchor, touchedAnchor);
@@ -367,10 +367,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                let newPntX = getPntInVct(p, getRotateVct(bbox.vctX, 180), (lenX - bbox.lastLenX) * feature.pntExtentPer.right[i].x);
+                                const newPntX = getPntInVct(p, getRotateVct(bbox.vctX, 180), (lenX - bbox.lastLenX) * feature.pntExtentPer.right[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                let newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -411,10 +411,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                let newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -455,10 +455,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                let newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -499,10 +499,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                let newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * -feature.pntExtentPer.right[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * -feature.pntExtentPer.right[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                let newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -530,16 +530,16 @@ export default class Bbox extends Rect {
 
     // // 子元素 宽高发生变化时, 旋转有问题
     // updateSize(){
-    //     let [minX, maxX, minY, maxY] = this.target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
-    //     let center = this.target.getCenterPos();
+    //     const [minX, maxX, minY, maxY] = this.target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+    //     const center = this.target.getCenterPos();
     //     this.setSize(maxX - minX, maxY - minY)
     //     this.setPos(center.x, center.y)
     // }
 
     destroy() {
         // super.destroy();
-        let ctrlPnts = this.getCtrlPnts();
-        let anchorPnts = this.getAnchorPnts();
+        const ctrlPnts = this.getCtrlPnts();
+        const anchorPnts = this.getAnchorPnts();
         ctrlPnts.forEach(cp => {
             this.gls.removeFeature(cp, false);
         })

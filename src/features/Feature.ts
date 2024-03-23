@@ -2,7 +2,7 @@ import { AlignType, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Props, Size } from "../Interface";
-import { getLenOfTwoPnts, getMidOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
+import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
 
@@ -57,7 +57,7 @@ class Feature {
     isOutScreen: boolean = false;  // 是否在屏幕外
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
-    isShowAdsorbLine: boolean = false;  // 是否显示吸附辅助线
+    isShowAdsorbLine: boolean = true;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
     isOnlyVerticalDrag: boolean = false;  // 是否只能 垂直 方向拖拽
@@ -65,6 +65,7 @@ class Feature {
     isVerticalRevert = false;  // 垂直翻转
 
     // 节点功能
+    cbCapture: boolean = true;  // 是否可被选择
     cbSelect: boolean = true;  // 是否可被选择
     cbMove: boolean = true;  // 是否可被拖拽
     cbAdsorb: boolean = true;
@@ -113,7 +114,7 @@ class Feature {
     }
 
     rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(), cbRotate = true) {
-        this.pointArr = this.getRotatePnts(this.pointArr, angle, O)
+        this.pointArr = this.getPointArr(this.pointArr, angle, O)
         this.angle += angle;
         cbRotate && this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
@@ -139,7 +140,7 @@ class Feature {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
-        let path = new Path2D();
+        const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
                 path.moveTo(p.x, p.y)
@@ -166,7 +167,7 @@ class Feature {
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
         return path;
@@ -174,8 +175,8 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            if (this.cbSelect && this.gls.cbSelectFeature) {
-                let mousePos = this.gls.mousePos;
+            if (this.cbCapture && this.gls.cbSelectFeature) {
+                const mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.isClosePath) {
                     isPointIn = path ? ctx.isPointInPath(path, mousePos.x, mousePos.y) : ctx.isPointInPath(mousePos.x, mousePos.y)
@@ -194,25 +195,27 @@ class Feature {
     }
 
     getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
+
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
         let maxY = -Infinity;
 
-        for (let point of pointArr) {
+        for (const point of pointArr) {
             minX = Math.min(minX, point.x);
             maxX = Math.max(maxX, point.x);
             minY = Math.min(minY, point.y);
             maxY = Math.max(maxY, point.y);
         }
-        this.size.width = Math.abs(maxX - minX);
-        this.size.height = Math.abs(maxY - minY);
+
+        // this.size.width = Math.abs(maxX - minX);
+        // this.size.height = Math.abs(maxY - minY);
         return [minX, maxX, minY, maxY];
     }
 
     // [leftTop, rightTop, rightBottom, leftBottom]
     getRectWrapPoints(pointArr: IPoint[] = this.pointArr): IPoint[] {
-        let [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
+        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
         if (minX != null && minY != null && maxX != null && maxY != null) {
             return [
                 { x: minX, y: minY },
@@ -225,7 +228,7 @@ class Feature {
     }
 
     getCenterPos(pointArr: IPoint[] = this.pointArr): IPoint {
-        let [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
+        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
         return {
             x: (minX + maxX) / 2,
             y: (minY + maxY) / 2,
@@ -234,7 +237,7 @@ class Feature {
 
     addPoint(point: IPoint, isLimitDistance = this.pntDistanceLimit > 0) {
         if (isLimitDistance) {
-            let prevPnt = this.pointArr[this.pointArr.length - 1];
+            const prevPnt = this.pointArr[this.pointArr.length - 1];
             if (prevPnt && getLenOfTwoPnts(point, prevPnt) < this.pntDistanceLimit) {
                 console.warn("两点距离太近了, 就不添加了!");
                 return;
@@ -264,7 +267,7 @@ class Feature {
 
     toFixedPos() {
         if (!this.isFixedPos) {
-            let { x, y } = this.gls.getPixelPos({ x: this.position.x, y: this.position.y });
+            const { x, y } = this.gls.getPixelPos({ x: this.position.x, y: this.position.y });
             this.position.x = x;
             this.position.y = y;
         }
@@ -272,7 +275,7 @@ class Feature {
     }
     toRelativePos() {
         if (this.isFixedPos) {
-            let { x, y } = this.gls.getRelativePos({ x: this.position.x, y: this.position.y });
+            const { x, y } = this.gls.getRelativePos({ x: this.position.x, y: this.position.y });
             this.position.x = x;
             this.position.y = y;
         }
@@ -296,12 +299,12 @@ class Feature {
 
     // 水平翻转, 垂直翻转
     revert(direction: AlignType, center?: IPoint, isParent = true) {
-        if (!center) center = this.getCenterPos();
-        this.children.forEach(cf => {
+        if (!center) center = this.getCenterPos();  // 获取包围盒中心点
+        this.children.forEach(cf => {  // 遍历子元素翻转,如果他有子元素的话
             cf.revert(direction, center, false)
         })
         switch (direction) {
-            case AlignType.HORIZONAL: {
+            case AlignType.HORIZONAL: {  // 水平翻转
                 const centerPos = center as IPoint;
                 this.pointArr = this.pointArr.map(p => {
                     return { x: 2 * centerPos.x - p.x, y: p.y }
@@ -310,13 +313,13 @@ class Feature {
                 this.angle = 360 - this.angle;
                 break;
             }
-            case AlignType.VERTICAL: {
+            case AlignType.VERTICAL: { // 垂直翻转
                 const centerPos = center as IPoint;
                 this.pointArr = this.pointArr.map(p => {
                     return { x: p.x, y: 2 * centerPos.y - p.y }
                 })
                 this.isVerticalRevert = !this.isVerticalRevert;
-                this.angle = 180 - this.angle;
+                this.angle = 360 - this.angle;
                 break;
             }
             default:
@@ -443,11 +446,11 @@ class Feature {
             y: getLenOfTwoPnts(leftTop, rightBottom),
         }
     }
-    
+
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            let [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
-            let { x: centerX, y: centerY } = this.getCenterPos(pointArr);
+        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
+            const [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
+            const { x: centerX, y: centerY } = this.getCenterPos(pointArr);
             if (this._orientations) {
                 ctx.save();
                 ctx.beginPath()
@@ -473,8 +476,8 @@ class Feature {
                     ctx.moveTo(0, centerY)
                     ctx.lineTo(this.gls.ctx.canvas.width, centerY);
                 }
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = .8;
+                ctx.strokeStyle = "rgba(253, 0, 0)";
+                ctx.lineWidth = .4;
                 ctx.setLineDash([8, 8]);
                 ctx.stroke();
                 ctx.restore();
@@ -488,8 +491,8 @@ class Feature {
 
     // 将元素移动到画中间
     toCenter(feature: Feature) {
-        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
-        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
+        const { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        const { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
         gsap.to(this.gls.pageSlicePos, {
             duration: 0.25,
             x: this.gls.pageSlicePos.x + distX,
@@ -499,7 +502,10 @@ class Feature {
     }
 
     // 一个点围绕某个点旋转angle角度
-    getRotatePnts(pointArr = this.pointArr, angle: number = this.angle, O: IPoint) {
+    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint) {
+        if(angle === 0){
+            return pointArr;
+        }
         return pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })

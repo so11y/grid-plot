@@ -20,6 +20,8 @@ class AdsorbPnt extends Rect {
         this.isFixedSize = true;
         this.cbAdsorption = cbAdsorption;
         this.cbCrossLine = cbCrossLine;
+        this.cbCapture = false;
+        this.cbSelect = false;
         this.crossLineStrokeStyle = "#2471A3";
         this.gls.addFeature(this, false)
         document.addEventListener("mousemove", this.setPos.bind(this));
@@ -27,8 +29,8 @@ class AdsorbPnt extends Rect {
 
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius?: number): Path2D {
-        let path = super.draw(ctx, pointArr, lineWidth, radius);
-        // let center = this.getCenterPos(pointArr);
+        const path = super.draw(ctx, pointArr, lineWidth, radius);
+        // const center = this.getCenterPos(pointArr);
         // if (this.cbCrossLine) {
         //     ctx.save();
         //     ctx.beginPath();
@@ -46,18 +48,18 @@ class AdsorbPnt extends Rect {
     }
 
     setPos(e: any) {
-        let gls = this.gls;
-        let { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.dom, e));
+        const gls = this.gls;
+        const { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.dom, e));
         this.position = {
             x: rx,
             y: ry
         };
         if (this.cbAdsorption) {
-            let { x: x1, y: y1 } = gls.getAdsorbPos({ x: rx, y: ry });
+            const { x: x1, y: y1 } = gls.getAdsorbPos({ x: rx, y: ry });
             this.position.x += x1;
             this.position.y += y1;
         }
-        super.setPos(this.position.x, this.position.y);
+        // super.setPos(this.position.x, this.position.y);
     }
 
     destory() {

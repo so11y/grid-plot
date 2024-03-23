@@ -83,7 +83,7 @@ export default class Shortcuts {
         if (!Array.isArray(kns)) {
             kns = [kns]
         }
-        let keyNames = kns.map(kn => kn.toString().toUpperCase());
+        const keyNames = kns.map(kn => kn.toString().toUpperCase());
         // if (keyNames.length == 1 && (keyNames[0] === 'CTRL' || keyNames[0] === 'SHIFT' || keyNames[0] === 'ALT')) {
         //     throw new Error("快捷键不能只有CTRL或SHIFT或ALT一个!");
         // }

@@ -15,14 +15,14 @@ class Stack {
     }
 
     record() {
-        let featurePropsArr: Props[] = [];
+        const featurePropsArr: Props[] = [];
         while (this.pointer != this.statusList.length - 1) {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
             this.statusList.pop();
         }
-        let features = this.gls.features.filter(f => isBasicFeature(f)) as BasicFeature[]
+        const features = this.gls.features.filter(f => isBasicFeature(f)) as BasicFeature[]
         features.forEach(f => {
-            let fProps = this.gls.recordFeature(f);
+            const fProps = this.gls.recordFeature(f);
             featurePropsArr.push(fProps as Props)
         })
         this.statusList.push(featurePropsArr);
@@ -35,15 +35,15 @@ class Stack {
     undo() {
         console.log(111);
 
-        let curFeaturesPropsArr = this.statusList[this.pointer];
-        let prevFeaturesPropsArr = this.statusList[this.pointer - 1];
+        const curFeaturesPropsArr = this.statusList[this.pointer];
+        const prevFeaturesPropsArr = this.statusList[this.pointer - 1];
         if (!prevFeaturesPropsArr) return;
         if (curFeaturesPropsArr.length >= prevFeaturesPropsArr.length) {  // 有修改或是新增元素,撤销需要修改或删除元素
             curFeaturesPropsArr.forEach(cs => {
-                let ps = prevFeaturesPropsArr.find(p => p.id === cs.id);
+                const ps = prevFeaturesPropsArr.find(p => p.id === cs.id);
                 if (ps) {
-                    let id = ps.id;
-                    let feature = this.gls.features.find(f => id === f.id);
+                    const id = ps.id;
+                    const feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
                         this.gls.modifyFeature(feature as BasicFeature, ps);
                     }
@@ -53,7 +53,7 @@ class Stack {
             })
         } else {  // 有元素被删除了，撤销需要恢复创建之前的元素
             prevFeaturesPropsArr.forEach(ps => {
-                let cs = curFeaturesPropsArr.find(cs => cs.id === ps.id);
+                const cs = curFeaturesPropsArr.find(cs => cs.id === ps.id);
                 if (!cs) {
                     this.gls.createFeature(ps);
                 }
@@ -67,22 +67,22 @@ class Stack {
     }
 
     restore() {
-        let curFeaturesPropsArr = this.statusList[this.pointer];
-        let nextFeaturesPropsArr = this.statusList[this.pointer + 1];
+        const curFeaturesPropsArr = this.statusList[this.pointer];
+        const nextFeaturesPropsArr = this.statusList[this.pointer + 1];
         if (!nextFeaturesPropsArr) return;
         if (curFeaturesPropsArr.length > nextFeaturesPropsArr.length) {  // 需要删除
             curFeaturesPropsArr.forEach(cs => {
-                let ns = nextFeaturesPropsArr.find(ns => cs.id === ns.id);
+                const ns = nextFeaturesPropsArr.find(ns => cs.id === ns.id);
                 if (!ns) {
                     this.gls.removeFeature(cs.id, false);
                 }
             })
         } else {
             nextFeaturesPropsArr.forEach(ns => {
-                let cs = curFeaturesPropsArr.find(c => c.id === ns.id);
+                const cs = curFeaturesPropsArr.find(c => c.id === ns.id);
                 if (cs) {
-                    let id = ns.id;
-                    let feature = this.gls.features.find(f => id === f.id);
+                    const id = ns.id;
+                    const feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
                         this.gls.modifyFeature(feature as BasicFeature, ns);
                     }
