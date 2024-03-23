@@ -605,7 +605,7 @@ function reset(clear = false) {
 //     gls.addFeature(text, false);
     // rect.addFeature(text);
 
-    let rect2 = new Rect(150, 250, 50, 50)
+    let rect2 = new Rect(150, 150, 50, 50)
     rect2.fillStyle = "transparent"
     gls.addFeature(rect2, false)
 
@@ -618,7 +618,7 @@ function reset(clear = false) {
     // rect4.addFeature(text2, { cbSelect: false })
     // rect4.rotate(45)
 
-    let circle = new Circle(280, 380, 30, 30)
+    let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
     // var line = new Line([
@@ -660,7 +660,7 @@ function reset(clear = false) {
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.VERTICAL))
+    group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
