@@ -118,7 +118,7 @@ export default class Group extends Feature {
         })
     }
 
-    // 均匀分布子元素, 两边吗没有空隙
+    // 均匀分布子元素, 两边没有空隙
     toSpaceBetween(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
         const angle = this.angle;
         const center = this.getCenterPos();
@@ -130,10 +130,9 @@ export default class Group extends Feature {
 
         if (features.length > 1) {
             switch (flexFLow) {
-                case AlignType.HORIZONAL:
+                case AlignType.HORIZONAL:  // 水平方向
                     {
-
-                        let childTotalWidth = 0;
+                        let childTotalWidth = 0;   // 子元素宽度总和
                         features.forEach((f, i) => {
                             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
                             const [leftTop, rightTop] = f.getRectWrapPoints(fPointArr);
@@ -142,7 +141,7 @@ export default class Group extends Feature {
                         const spaceLen = (wrapWidth - childTotalWidth) / (features.length - 1)   // 每一段可分配空间
                         if (spaceLen < 0) return
                         features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
-                        this.toLeftAlign(features);
+                        this.toLeftAlign(features);   // 先左对齐让子元素处于同一起点
                         let lastLen = 0  // 之前所有的子元素宽度+之前所有分配的空间长度
 
                         features.forEach((f, i) => {
@@ -158,7 +157,7 @@ export default class Group extends Feature {
                         })
                         break;
                     }
-                case AlignType.VERTICAL:
+                case AlignType.VERTICAL:  // 垂直方向同理
                     {
                         let childTotalHeight = 0;
                         features.forEach((f, i) => {
