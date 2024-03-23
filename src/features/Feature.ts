@@ -140,7 +140,7 @@ class Feature {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
-        let path = new Path2D();
+        const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
                 path.moveTo(p.x, p.y)
@@ -176,7 +176,7 @@ class Feature {
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
             if (this.cbCapture && this.gls.cbSelectFeature) {
-                let mousePos = this.gls.mousePos;
+                const mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.isClosePath) {
                     isPointIn = path ? ctx.isPointInPath(path, mousePos.x, mousePos.y) : ctx.isPointInPath(mousePos.x, mousePos.y)
@@ -201,7 +201,7 @@ class Feature {
         let minY = Infinity;
         let maxY = -Infinity;
 
-        for (let point of pointArr) {
+        for (const point of pointArr) {
             minX = Math.min(minX, point.x);
             maxX = Math.max(maxX, point.x);
             minY = Math.min(minY, point.y);
@@ -215,7 +215,7 @@ class Feature {
 
     // [leftTop, rightTop, rightBottom, leftBottom]
     getRectWrapPoints(pointArr: IPoint[] = this.pointArr): IPoint[] {
-        let [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
+        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
         if (minX != null && minY != null && maxX != null && maxY != null) {
             return [
                 { x: minX, y: minY },
@@ -228,7 +228,7 @@ class Feature {
     }
 
     getCenterPos(pointArr: IPoint[] = this.pointArr): IPoint {
-        let [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
+        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
         return {
             x: (minX + maxX) / 2,
             y: (minY + maxY) / 2,
@@ -237,7 +237,7 @@ class Feature {
 
     addPoint(point: IPoint, isLimitDistance = this.pntDistanceLimit > 0) {
         if (isLimitDistance) {
-            let prevPnt = this.pointArr[this.pointArr.length - 1];
+            const prevPnt = this.pointArr[this.pointArr.length - 1];
             if (prevPnt && getLenOfTwoPnts(point, prevPnt) < this.pntDistanceLimit) {
                 console.warn("两点距离太近了, 就不添加了!");
                 return;
@@ -267,7 +267,7 @@ class Feature {
 
     toFixedPos() {
         if (!this.isFixedPos) {
-            let { x, y } = this.gls.getPixelPos({ x: this.position.x, y: this.position.y });
+            const { x, y } = this.gls.getPixelPos({ x: this.position.x, y: this.position.y });
             this.position.x = x;
             this.position.y = y;
         }
@@ -275,7 +275,7 @@ class Feature {
     }
     toRelativePos() {
         if (this.isFixedPos) {
-            let { x, y } = this.gls.getRelativePos({ x: this.position.x, y: this.position.y });
+            const { x, y } = this.gls.getRelativePos({ x: this.position.x, y: this.position.y });
             this.position.x = x;
             this.position.y = y;
         }
@@ -449,8 +449,8 @@ class Feature {
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
-            let [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
-            let { x: centerX, y: centerY } = this.getCenterPos(pointArr);
+            const [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
+            const { x: centerX, y: centerY } = this.getCenterPos(pointArr);
             if (this._orientations) {
                 ctx.save();
                 ctx.beginPath()
@@ -491,8 +491,8 @@ class Feature {
 
     // 将元素移动到画中间
     toCenter(feature: Feature) {
-        let { x, y } = this.gls.getPixelPos(feature.getCenterPos());
-        let { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
+        const { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        const { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
         gsap.to(this.gls.pageSlicePos, {
             duration: 0.25,
             x: this.gls.pageSlicePos.x + distX,

@@ -48,7 +48,7 @@ class Img extends Rect {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
-        let path = super.draw(ctx, pointArr, lineWidth, radius);
+        const path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
@@ -92,8 +92,8 @@ class Img extends Rect {
     }
 
     getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-        let { width, height, leftTop } = this.getSize(pointArr);
-        let svgStr = super.getSvg(pointArr, lineWidth, radius);
+        const { width, height, leftTop } = this.getSize(pointArr);
+        const svgStr = super.getSvg(pointArr, lineWidth, radius);
         return svgStr + `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})">
             <image href="${this.src}" x="${leftTop.x}" y="${leftTop.y}"  width="${width}" height="${height}"

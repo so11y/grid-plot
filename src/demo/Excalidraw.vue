@@ -621,15 +621,15 @@ function reset(clear = false) {
     let circle = new Circle(280, 180, 30, 30)
     gls.addFeature(circle, false)
 
-    // var line = new Line([
-    //     { x: 10, y: 10 },
-    //     { x: 0, y: 80 },
-    //     { x: 100, y: 120 },
-    // ])
-    // line.radius = 20;
-    // // line.rotate(30)
-    // line.translate(200)
-    // gls.addFeature(line, false)
+    var line = new Line([
+        { x: 10, y: 10 },
+        { x: 0, y: 80 },
+        { x: 100, y: 120 },
+    ])
+    line.radius = 20;
+    // line.rotate(30)
+    line.translate(200)
+    gls.addFeature(line, false)
 
     // var line = new Line([
     //     { x: 10, y: 10 },
@@ -660,7 +660,7 @@ function reset(clear = false) {
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
+    group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);

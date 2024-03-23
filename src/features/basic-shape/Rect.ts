@@ -7,7 +7,7 @@ class Rect extends Feature {
     radius = 0;   // 做成圆,radius = width/10
 
     constructor(x: number = 0, y: number = 0, width: number = 15, height: number = 15) {   // 相对坐标
-        let pointArr = getRectPoint({ x, y }, { width, height })
+        const pointArr = getRectPoint({ x, y }, { width, height })
         super(pointArr);
         this.className = "Rect";
         this.position.x = x;
@@ -22,10 +22,10 @@ class Rect extends Feature {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点
         //         if (this.isClosePath) {
-        //             let nextPnt = pointArr[i + 1];
-        //             let prevPnt = pointArr[pointArr.length - 1];
+        //             const nextPnt = pointArr[i + 1];
+        //             const prevPnt = pointArr[pointArr.length - 1];
         //             if (nextPnt && prevPnt) {
-        //                 let midPnt = getMidOfTwoPnts(prevPnt, p)
+        //                 const midPnt = getMidOfTwoPnts(prevPnt, p)
         //                 path.moveTo(midPnt.x, midPnt.y)
         //                 path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //             }
@@ -33,13 +33,13 @@ class Rect extends Feature {
         //             path.moveTo(p.x, p.y)
         //         }
         //     } else if (i != pointArr.length - 1) {  // 中间点
-        //         let nextPnt = pointArr[i + 1];
+        //         const nextPnt = pointArr[i + 1];
         //         if (nextPnt) {
         //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //         }
         //     } else {   // 最后一个点
         //         if (this.isClosePath) {
-        //             let nextPnt = pointArr[0];
+        //             const nextPnt = pointArr[0];
         //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
         //         } else {
         //             path.lineTo(p.x, p.y)
@@ -50,7 +50,7 @@ class Rect extends Feature {
         const { width, height, leftTop } = this.getSize(pointArr);
         let path;
         if (this.isFixedSize) {
-            let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
+            const { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
             path = this.drawRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
         } else {
@@ -86,7 +86,7 @@ class Rect extends Feature {
 
     // 绘制圆角矩形
     drawRoundedRect(x: number, y: number, width: number, height: number, r: number) {
-        let path = new Path2D();
+        const path = new Path2D();
         path.moveTo(x + r, y);
         path.lineTo(x + width / 4 - r, y);
         path.arc(x + width - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
@@ -114,7 +114,7 @@ class Rect extends Feature {
     // 以左上角去旋转内容， 文字或者图片
     setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
         if (this.angle && this.angle != 0) {
-            let boxInfo = {
+            const boxInfo = {
                 x: leftTop.x,
                 y: leftTop.y,
             }
@@ -151,12 +151,12 @@ class Rect extends Feature {
 * @returns 
 */
     getRatio() {
-        let { width, height } = this.getSize()
+        const { width, height } = this.getSize()
         return width / height;
     }
 
     getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-        let { width, height, leftTop } = this.getSize(pointArr);
+        const { width, height, leftTop } = this.getSize(pointArr);
         return `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
             <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>

@@ -1,5 +1,4 @@
 import { CoordinateSystem, LinkStyle } from "../../Constants";
-import GridSystem from "../../GridSystem";
 import { IPoint, Vector } from "../../Interface";
 import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPointInPolygon } from "../../utils";
 import AnchorPnt from "../function-shape/AnchorPnt";
@@ -16,7 +15,7 @@ interface NearNode {
 }
 // 获取当前节点附近的6个点,分别是 左, 上, 右, 下, 左上, 右上, 右下, 左下
 function getNearNodes(startPos: NearNode, endPos: IPoint, unitLen = 1) {
-    let leftNode = {
+    const leftNode = {
         name: "left",
         x: startPos.x - unitLen,
         y: startPos.y,
@@ -26,7 +25,7 @@ function getNearNodes(startPos: NearNode, endPos: IPoint, unitLen = 1) {
     };
     setDistProp(leftNode);
 
-    let topNode = {
+    const topNode = {
         name: "top",
         x: startPos.x,
         y: startPos.y - unitLen,
@@ -37,7 +36,7 @@ function getNearNodes(startPos: NearNode, endPos: IPoint, unitLen = 1) {
     setDistProp(topNode);
 
 
-    let rightNode = {
+    const rightNode = {
         name: "right",
         x: startPos.x + unitLen,
         y: startPos.y,
@@ -47,7 +46,7 @@ function getNearNodes(startPos: NearNode, endPos: IPoint, unitLen = 1) {
     };
     setDistProp(rightNode);
 
-    let bottomNode = {
+    const bottomNode = {
         name: "bottom",
         x: startPos.x,
         y: startPos.y + unitLen,
@@ -88,18 +87,18 @@ export default class Link extends Line {
         this.gls.addFeature(this, false)
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
         let newPnts: IPoint[] = [];
         switch (this.linkStyle) {
             case LinkStyle.BROKEN:
-                // let center = this.startFeature.getCenterPos();
-                // let center2 = this.endFeature.getCenterPos();
-                // let startPos = getMidOfTwoPnts(this.startFeature.pointArr[0], this.startFeature.pointArr[1])
-                // let endPos = getMidOfTwoPnts(this.endFeature.pointArr[0], this.endFeature.pointArr[3])
-                // let vct = createVctor(center, startPos)
-                // let vct2 = createVctor(center2, endPos)
-                // let newStartPos = getPntInVct(center, vct, 30);
-                // let newEndPos = getPntInVct(center2, vct2, 30);
+                // const center = this.startFeature.getCenterPos();
+                // const center2 = this.endFeature.getCenterPos();
+                // const startPos = getMidOfTwoPnts(this.startFeature.pointArr[0], this.startFeature.pointArr[1])
+                // const endPos = getMidOfTwoPnts(this.endFeature.pointArr[0], this.endFeature.pointArr[3])
+                // const vct = createVctor(center, startPos)
+                // const vct2 = createVctor(center2, endPos)
+                // const newStartPos = getPntInVct(center, vct, 30);
+                // const newEndPos = getPntInVct(center2, vct2, 30);
                 // this.gls.test = this.gls.getPixelPos(newEndPos);
                 newPnts = this.getBrokenPoints(pointArr[0], pointArr[1]);
                 // newPnts.unshift(this.gls.getPixelPos(startPos))
@@ -113,28 +112,28 @@ export default class Link extends Line {
                 newPnts = pointArr;
                 break;
         }
-        let path = super.draw(ctx, newPnts, lineWidth);
+        const path = super.draw(ctx, newPnts, lineWidth, r);
         return path;
     }
 
     getBezierPoints(startPos: IPoint, endPos: IPoint): IPoint[] {
-        let divide = Math.abs(startPos.x - endPos.x) / this.gls.scale / 2;
-        let dirct = startPos.x > endPos.x ? 1 : -1
-        let vct: Vector = [endPos.x - startPos.x, endPos.y - startPos.y];
-        let cp1 = getPntInVct(startPos, vct, divide * this.gls.scale);
-        let cp2 = getPntInVct(startPos, vct, getVctLen(vct) + divide * this.gls.scale);
-        let rcp1 = getRotatePnt(startPos, cp1, -10 * dirct);
-        let rcp2 = getRotatePnt(endPos, cp2, 150 * dirct);
-        let points = getPntsOf3Bezier(startPos, rcp1, rcp2, endPos, this.pntsLimit);
+        const divide = Math.abs(startPos.x - endPos.x) / this.gls.scale / 2;
+        const dirct = startPos.x > endPos.x ? 1 : -1
+        const vct: Vector = [endPos.x - startPos.x, endPos.y - startPos.y];
+        const cp1 = getPntInVct(startPos, vct, divide * this.gls.scale);
+        const cp2 = getPntInVct(startPos, vct, getVctLen(vct) + divide * this.gls.scale);
+        const rcp1 = getRotatePnt(startPos, cp1, -10 * dirct);
+        const rcp2 = getRotatePnt(endPos, cp2, 150 * dirct);
+        const points = getPntsOf3Bezier(startPos, rcp1, rcp2, endPos, this.pntsLimit);
         return points;
     }
 
     getBrokenPoints(startPos: IPoint, endPos: IPoint) {
-        let coordList: IPoint[] = [];
+        const coordList: IPoint[] = [];
         const unitLen = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE / this.gls.scale;
         var getCoordList = (): IPoint[] => {
-            let nearNodeArr = getNearNodes(startPos, endPos, unitLen);
-            let minFNode = nearNodeArr.sort((a, b) => a.f - b.f)[0]; // 离目标最近的点
+            const nearNodeArr = getNearNodes(startPos, endPos, unitLen);
+            const minFNode = nearNodeArr.sort((a, b) => a.f - b.f)[0]; // 离目标最近的点
             if (minFNode) {
                 coordList.push({ x: minFNode.x, y: minFNode.y });
                 startPos = minFNode;
@@ -153,7 +152,7 @@ export default class Link extends Line {
     // 流光
     flowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPoint[], lineWidth = 0) {
         ctx.beginPath();
-        let flowPnts = curvePnts.slice(startIndex, startIndex + Math.ceil(this.pntsLimit * .2)) // 取总长度的百分之20片段
+        const flowPnts = curvePnts.slice(startIndex, startIndex + Math.ceil(this.pntsLimit * .2)) // 取总长度的百分之20片段
         flowPnts.forEach((p, i) => {
             if (i == 0) {
                 ctx.moveTo(p.x, p.y);

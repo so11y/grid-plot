@@ -26,7 +26,7 @@ class CtrlPnt extends Rect {
     }
 
     onUpdateParentPos() {  // 控制点拖拽时修改主元素对应的点位置
-        let pos = this.getCenterPos();
+        const pos = this.getCenterPos();
         if (this.parent) {
             this.parent.pointArr[this.index] = {
                 x: pos.x,
@@ -37,7 +37,7 @@ class CtrlPnt extends Rect {
 
     onUpdatePosByParent() {  // 主元素位置变化时实时更新控制点位置
         if (this.parent) {
-            let { x, y } = this.parent.pointArr[this.index];
+            const { x, y } = this.parent.pointArr[this.index];
             this.setPos(x, y)
         }
     }

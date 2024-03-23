@@ -37,15 +37,15 @@ export default class GridLine {
         const canvasXHeight = CanvasHeight - gls.pageSlicePos.y;
         const canvasYWidth = CanvasWidth - gls.pageSlicePos.x;
 
-        let yPageSliceTotal = Math.ceil(canvasYWidth / gridSize); // 计算需要绘画y轴的条数
-        let xPageSliceTotal = Math.ceil(canvasXHeight / gridSize);
+        const yPageSliceTotal = Math.ceil(canvasYWidth / gridSize); // 计算需要绘画y轴的条数
+        const xPageSliceTotal = Math.ceil(canvasXHeight / gridSize);
 
         // 从 pageSlicePos.y 处开始往 Y 轴负方向画 X 轴网格
-        let xRemaining = gls.pageSlicePos.y;
-        let xRemainingTotal = Math.ceil(xRemaining / gridSize);
+        const xRemaining = gls.pageSlicePos.y;
+        const xRemainingTotal = Math.ceil(xRemaining / gridSize);
         // 从 pageSlicePos.x 处开始往 X 轴负方向画 Y 轴网格
-        let yRemaining = gls.pageSlicePos.x;
-        let yRemainingTotal = Math.ceil(yRemaining / gridSize);
+        const yRemaining = gls.pageSlicePos.x;
+        const yRemainingTotal = Math.ceil(yRemaining / gridSize);
 
         switch (this.mode) {
             case 1:
@@ -155,8 +155,8 @@ export default class GridLine {
 
                 const width = gls.getRatioSize(this.width);
                 const height = gls.getRatioSize(this.height);
-                let ySliceTotal = Math.ceil(width / gridSize); // 计算需要绘画y轴的条数
-                let xSliceTotal = Math.ceil(height / gridSize);
+                const ySliceTotal = Math.ceil(width / gridSize); // 计算需要绘画y轴的条数
+                const xSliceTotal = Math.ceil(height / gridSize);
                 gls.ctx.fillStyle = this.background
                 gls.ctx.fillRect(gls.pageSlicePos.x - width, gls.pageSlicePos.y - height, width * 2, height * 2);
 
