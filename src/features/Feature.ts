@@ -296,12 +296,12 @@ class Feature {
 
     // 水平翻转, 垂直翻转
     revert(direction: AlignType, center?: IPoint, isParent = true) {
-        if (!center) center = this.getCenterPos();
-        this.children.forEach(cf => {
+        if (!center) center = this.getCenterPos();  // 获取包围盒中心点
+        this.children.forEach(cf => {  // 遍历子元素翻转,如果他有子元素的话
             cf.revert(direction, center, false)
         })
         switch (direction) {
-            case AlignType.HORIZONAL: {
+            case AlignType.HORIZONAL: {  // 水平翻转
                 const centerPos = center as IPoint;
                 this.pointArr = this.pointArr.map(p => {
                     return { x: 2 * centerPos.x - p.x, y: p.y }
@@ -310,7 +310,7 @@ class Feature {
                 this.angle = 360 - this.angle;
                 break;
             }
-            case AlignType.VERTICAL: {
+            case AlignType.VERTICAL: { // 垂直翻转
                 const centerPos = center as IPoint;
                 this.pointArr = this.pointArr.map(p => {
                     return { x: p.x, y: 2 * centerPos.y - p.y }
