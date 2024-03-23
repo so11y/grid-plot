@@ -20,6 +20,8 @@ class AdsorbPnt extends Rect {
         this.isFixedSize = true;
         this.cbAdsorption = cbAdsorption;
         this.cbCrossLine = cbCrossLine;
+        this.cbCapture = false;
+        this.cbSelect = false;
         this.crossLineStrokeStyle = "#2471A3";
         this.gls.addFeature(this, false)
         document.addEventListener("mousemove", this.setPos.bind(this));
@@ -57,7 +59,7 @@ class AdsorbPnt extends Rect {
             this.position.x += x1;
             this.position.y += y1;
         }
-        super.setPos(this.position.x, this.position.y);
+        // super.setPos(this.position.x, this.position.y);
     }
 
     destory() {

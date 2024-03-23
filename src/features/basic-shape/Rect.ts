@@ -18,7 +18,6 @@ class Rect extends Feature {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
-        let path = new Path2D();
         // if (radius == 0) {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点
@@ -49,13 +48,14 @@ class Rect extends Feature {
         // })
         // } else {
         const { width, height, leftTop } = this.getSize(pointArr);
+        let path;
         if (this.isFixedSize) {
             let { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
-            this.drawRoundedRect(path, x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
+            path = this.drawRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
         } else {
             // path.roundRect(leftTop.x, leftTop.y, width, height, r);
-            this.drawRoundedRect(path, leftTop.x, leftTop.y, width, height, r);
+            path = this.drawRoundedRect(leftTop.x, leftTop.y, width, height, r);
         }
         this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
@@ -85,7 +85,8 @@ class Rect extends Feature {
     }
 
     // 绘制圆角矩形
-    drawRoundedRect(path: Path2D, x: number, y: number, width: number, height: number, r: number) {
+    drawRoundedRect(x: number, y: number, width: number, height: number, r: number) {
+        let path = new Path2D();
         path.moveTo(x + r, y);
         path.lineTo(x + width / 4 - r, y);
         path.arc(x + width - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
@@ -112,30 +113,32 @@ class Rect extends Feature {
 
     // 以左上角去旋转内容， 文字或者图片
     setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
-        let boxInfo = {
-            x: leftTop.x,
-            y: leftTop.y,
+        if (this.angle && this.angle != 0) {
+            let boxInfo = {
+                x: leftTop.x,
+                y: leftTop.y,
+            }
+            ctx.translate(boxInfo.x, boxInfo.y)
+            ctx.rotate(this.angle * Math.PI / 180)
+            ctx.translate(-boxInfo.x, -boxInfo.y)
         }
-        ctx.translate(boxInfo.x, boxInfo.y)
-        ctx.rotate(this.angle * Math.PI / 180)
-        ctx.translate(-boxInfo.x, -boxInfo.y)
     }
 
     // 获取矩形的宽度，包括旋转，不是包围盒
     getSize(pointArr: IPoint[] = this.pointArr) {
-        let leftTop = {x: 0, y: 0};
-        if(!this.isHorizonalRevert && !this.isVerticalRevert){
+        let leftTop = { x: 0, y: 0 };
+        if (!this.isHorizonalRevert && !this.isVerticalRevert) {
             leftTop = pointArr[0]
         }
-        if(this.isHorizonalRevert && this.isVerticalRevert){
+        if (this.isHorizonalRevert && this.isVerticalRevert) {
             leftTop = pointArr[2]
         }
-        if(this.isHorizonalRevert && !this.isVerticalRevert){
+        if (this.isHorizonalRevert && !this.isVerticalRevert) {
             leftTop = pointArr[1]
         }
-        if(!this.isHorizonalRevert && this.isVerticalRevert){
+        if (!this.isHorizonalRevert && this.isVerticalRevert) {
             leftTop = pointArr[3]
-        }  
+        }
         return {
             leftTop,
             width: getLenOfTwoPnts(pointArr[0], pointArr[1]),
@@ -153,7 +156,7 @@ class Rect extends Feature {
     }
 
     getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
-        let { width, height, leftTop} = this.getSize(pointArr);
+        let { width, height, leftTop } = this.getSize(pointArr);
         return `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
             <rect x="${leftTop.x}" y="${leftTop.y}" rx="${radius}" ry="${radius}" width="${width}" height="${height}"/>

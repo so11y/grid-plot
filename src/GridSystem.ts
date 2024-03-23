@@ -178,6 +178,7 @@ class GridSystem {
             if (feature instanceof SelectArea) {
                 let group = new Group(feature.children);
                 this.addFeature(group)
+                this.toMinIndex(group)
             }
         })
         GridSystem.Shortcuts.addEvent("esc", () => {
@@ -248,7 +249,6 @@ class GridSystem {
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                console.log(this.getFocusNode(), "this.getFocusNode()");
                 if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
                 if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
             }
@@ -605,7 +605,7 @@ class GridSystem {
         this.features.push(feature);
         if (!feature.zIndex) {
             let features = this.features.filter(f => !isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
-            feature.zIndex = features.length;
+            if(!feature.zIndex) feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录

@@ -2,7 +2,7 @@ import { AlignType, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { BasicFeature, IPoint, Props, Size } from "../Interface";
-import { getLenOfTwoPnts, getMidOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
+import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
 
@@ -57,7 +57,7 @@ class Feature {
     isOutScreen: boolean = false;  // 是否在屏幕外
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
-    isShowAdsorbLine: boolean = false;  // 是否显示吸附辅助线
+    isShowAdsorbLine: boolean = true;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalDrag: boolean = false;  // 是否只能 水平 方向拖拽
     isOnlyVerticalDrag: boolean = false;  // 是否只能 垂直 方向拖拽
@@ -65,6 +65,7 @@ class Feature {
     isVerticalRevert = false;  // 垂直翻转
 
     // 节点功能
+    cbCapture: boolean = true;  // 是否可被选择
     cbSelect: boolean = true;  // 是否可被选择
     cbMove: boolean = true;  // 是否可被拖拽
     cbAdsorb: boolean = true;
@@ -113,7 +114,7 @@ class Feature {
     }
 
     rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(), cbRotate = true) {
-        this.pointArr = this.getRotatePnts(this.pointArr, angle, O)
+        this.pointArr = this.getPointArr(this.pointArr, angle, O)
         this.angle += angle;
         cbRotate && this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
@@ -166,7 +167,7 @@ class Feature {
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
+        this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
         return path;
@@ -174,7 +175,7 @@ class Feature {
 
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
-            if (this.cbSelect && this.gls.cbSelectFeature) {
+            if (this.cbCapture && this.gls.cbSelectFeature) {
                 let mousePos = this.gls.mousePos;
                 let isPointIn = false;
                 if (this.isClosePath) {
@@ -194,6 +195,7 @@ class Feature {
     }
 
     getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
+
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
@@ -205,8 +207,9 @@ class Feature {
             minY = Math.min(minY, point.y);
             maxY = Math.max(maxY, point.y);
         }
-        this.size.width = Math.abs(maxX - minX);
-        this.size.height = Math.abs(maxY - minY);
+
+        // this.size.width = Math.abs(maxX - minX);
+        // this.size.height = Math.abs(maxY - minY);
         return [minX, maxX, minY, maxY];
     }
 
@@ -443,9 +446,9 @@ class Feature {
             y: getLenOfTwoPnts(leftTop, rightBottom),
         }
     }
-    
+
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
+        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
             let [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
             let { x: centerX, y: centerY } = this.getCenterPos(pointArr);
             if (this._orientations) {
@@ -473,8 +476,8 @@ class Feature {
                     ctx.moveTo(0, centerY)
                     ctx.lineTo(this.gls.ctx.canvas.width, centerY);
                 }
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = .8;
+                ctx.strokeStyle = "rgba(253, 0, 0)";
+                ctx.lineWidth = .4;
                 ctx.setLineDash([8, 8]);
                 ctx.stroke();
                 ctx.restore();
@@ -499,7 +502,10 @@ class Feature {
     }
 
     // 一个点围绕某个点旋转angle角度
-    getRotatePnts(pointArr = this.pointArr, angle: number = this.angle, O: IPoint) {
+    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint) {
+        if(angle === 0){
+            return pointArr;
+        }
         return pointArr.map(p => {
             return getRotatePnt(O, p, angle)
         })
