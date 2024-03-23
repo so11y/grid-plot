@@ -297,41 +297,41 @@ export default class Bbox extends Rect {
             this.ratio = this.getRatio();
         })
 
-        if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
-            // 左边 锚点
-            const aCtrlP1 = new AnchorPnt(this, () => {
-                const pointArr = this.pointArr;
-                const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-                const newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
-                return newLeftCenter;
-            });
-            aCtrlP1.name = "leftAnchor";
-            aCtrlP1.mousedownEvents.push(() => {
-                this.gls.initAnchorPnts();
-                const anchorPnts = this.target.getAnchorPnts();
-                const link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
-                link.name = 'tempLink';
-            })
-            aCtrlP1.mouseupEvents.push(() => {
-                let touchedAnchor: AnchorPnt | undefined;
-                const anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
-                const hasTouch = anchorPnts.some(a => {
-                    const touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
-                    if (touched) touchedAnchor = a;
-                    return touched
-                })
-                const tempLink = this.gls.features.find(f => f.name === 'tempLink');
-                tempLink && this.gls.removeFeature(tempLink, false);
-                if (hasTouch && touchedAnchor) {
-                    const anchorPnts = this.target.getAnchorPnts();
-                    const startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
-                    startAnchor.isBinding = true;
-                    touchedAnchor.isBinding = true;
-                    new Link(startAnchor, touchedAnchor);
-                }
-                this.gls.removeAnchorPnts();
-            })
-        }
+        // if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
+        //     // 左边 锚点
+        //     const aCtrlP1 = new AnchorPnt(this, () => {
+        //         const pointArr = this.pointArr;
+        //         const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
+        //         const newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
+        //         return newLeftCenter;
+        //     });
+        //     aCtrlP1.name = "leftAnchor";
+        //     aCtrlP1.mousedownEvents.push(() => {
+        //         this.gls.initAnchorPnts();
+        //         const anchorPnts = this.target.getAnchorPnts();
+        //         const link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
+        //         link.name = 'tempLink';
+        //     })
+        //     aCtrlP1.mouseupEvents.push(() => {
+        //         let touchedAnchor: AnchorPnt | undefined;
+        //         const anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
+        //         const hasTouch = anchorPnts.some(a => {
+        //             const touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
+        //             if (touched) touchedAnchor = a;
+        //             return touched
+        //         })
+        //         const tempLink = this.gls.features.find(f => f.name === 'tempLink');
+        //         tempLink && this.gls.removeFeature(tempLink, false);
+        //         if (hasTouch && touchedAnchor) {
+        //             const anchorPnts = this.target.getAnchorPnts();
+        //             const startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
+        //             startAnchor.isBinding = true;
+        //             touchedAnchor.isBinding = true;
+        //             new Link(startAnchor, touchedAnchor);
+        //         }
+        //         this.gls.removeAnchorPnts();
+        //     })
+        // }
 
         this.getCtrlPnts().forEach(cp => cp.dragendEvents.push(() => {
             GridSystem.Stack && GridSystem.Stack.record()

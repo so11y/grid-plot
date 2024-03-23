@@ -94,23 +94,23 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, pointArr, lineWidth);
+        this.drawTip(ctx, [pointArr[0], pointArr[pointArr.length - 1]], lineWidth);
         ctx.restore()
         return path;
     }
 
-    drawTip(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth = 0) {
-        if (pointArr.length > 1 && this.tip) {
+    drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
+        if (pointArr.length == 2 && this.tip) {  // 只接受起点和终点, 文本
             const startP = pointArr[0];
-            const endP = pointArr[pointArr.length - 1];
+            const endP = pointArr[1];
             const center = getMidOfTwoPnts(startP, endP);
-            let angle = getAngleOfTwoPnts(startP, endP);
+            let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
             if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
-                angle += 180
+                angle += 180  // 镜像翻转,文字始终朝上
             }
             ctx.save()
             ctx.font = `${this.tipSize}px ${FontFamily.HEITI}`;
-            const { width } = ctx.measureText(this.tip);
+            const { width } = ctx.measureText(this.tip);  // 文本的宽度
             ctx.fillStyle = this.tipColor;
             this.setAngle(ctx, center, angle);
             ctx.fillText(this.tip, center.x - width / 2 + this.tipOffset.x, center.y - lineWidth + this.tipOffset.y);

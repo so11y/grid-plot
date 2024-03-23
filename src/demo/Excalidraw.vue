@@ -600,73 +600,55 @@ function reset(clear = false) {
     setSize(canvasDom);
     startTime(gls as GridSystem);
 
-    let rect = new Rect(100, 100, 100, 100)
-    rect.radius = 2;
-    rect.rotate(60)
-    // rect.isFixedPos = true;
-    // rect.fillStyle = "transparent"
-    // rect.isOverflowHidden = true;
-    gls.addFeature(rect, false)
+    //     let rect = new Rect(100, 100, 100, 100)
+    //     rect.radius = 2;
+    //     rect.rotate(60)
+    //     // rect.isFixedPos = true;
+    //     // rect.fillStyle = "transparent"
+    //     // rect.isOverflowHidden = true;
+    //     gls.addFeature(rect, false)
 
-    const text = new Text(`当内容
-特别多的时候，canvas不会自动
-换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    text.fitSize = true;
-    text.radius = 2
-    // text.rotate(30)
-    gls.addFeature(text, false);
-    // rect.addFeature(text);
+    //     const text = new Text(`当内容
+    // 特别多的时候，canvas不会自动
+    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    //     text.fitSize = true;
+    //     text.radius = 2
+    //     // text.rotate(30)
+    //     gls.addFeature(text, false);
+    //     // rect.addFeature(text);
 
-    let rect2 = new Rect(150, 150, 50, 50)
-    rect2.fillStyle = "transparent"
-    gls.addFeature(rect2, false)
+    //     let rect2 = new Rect(150, 150, 50, 50)
+    //     rect2.fillStyle = "transparent"
+    //     gls.addFeature(rect2, false)
 
-    // let rect4 = new Rect(350, 200, 50, 50);
-    // // rect4.isFixedSize = true;
-    // gls.addFeature(rect4, false)
-    // const text2 = new Text("测试文本", 350, 200);
-    // text.fitSize = true;
-    // gls.addFeature(text2, false);
-    // rect4.addFeature(text2, { cbSelect: false })
-    // rect4.rotate(45)
-
-    let circle = new Circle(280, 180, 30, 30)
-    gls.addFeature(circle, false)
+    // let circle = new Circle(280, 180, 30, 30)
+    // gls.addFeature(circle, false)
 
     var line = new Line([
-        { x: 10, y: 10 },
-        { x: 100, y: 40 },
+        { x: 310, y: 60 },
+        { x: 400, y: 90 },
     ])
-    // line.isClosePath = true;
-    line.radius = 4;
-    // line.rotate(30)
-    // line.translate(200)
-    // const text2 = new Text("测试文本", 0, 0, 100, 10);
-    // line.addFeature(text2);
     line.tip = "测试文本"
-    console.log(line);
-    
+    line.tipSize = 21
     // line.enableCtrlPnts();
     gls.addFeature(line, false)
 
 
-    let img = new Img("/img2.png", 400, 100);
-    gls.addFeature(img, false)
+    // let img = new Img("/img2.png", 400, 100);
+    // gls.addFeature(img, false)
 
     // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    // group.rotate(60)
-    group.translate(-10, 100)
-    group.cbTransformChild = false;
-    gls.addFeature(group, false)
-    rect.name = "bigrect"
+    // let group = new Group([rect, rect2, circle]);
+    // group.translate(-10, 100)
+    // group.cbTransformChild = false;
+    // gls.addFeature(group, false)
     // rect.onMousemove = () => {
     //     console.log(222);
     // }
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
+    // group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
