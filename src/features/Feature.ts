@@ -57,7 +57,7 @@ class Feature {
     isOutScreen: boolean = false;  // 是否在屏幕外
     isOverflowHidden: boolean = false;  // 子元素超出是否隐藏
     isStroke: boolean = true;  // 是否渲染边框
-    isShowAdsorbLine: boolean = true;  // 是否显示吸附辅助线
+    isShowAdsorbLine: boolean = false;  // 是否显示吸附辅助线
     isOnlyCenterAdsorb: boolean = false;  // 是否只以中心对其
     isOnlyHorizonalMove: boolean = false;  // 是否只能 水平 方向拖拽
     isOnlyVerticalMove: boolean = false;  // 是否只能 垂直 方向拖拽

@@ -13,8 +13,8 @@ export default class GridLine {
     background: string;
     lineWidth = .2;
 
-    constructor(mode = 3, width: number = 200, height: number = 200, background = 'rgba(226, 225, 224 ,.2)') {
-        this.solidColor = "rgba(66, 73, 73, 1)"; // 实线颜色
+    constructor(mode = 3, width: number = 200, height: number = 200, background = 'rgba(0,0,0 ,1)') {
+        this.solidColor = "rgba(255, 255, 255, .6)"; // 实线颜色
         this.dashedColor = "rgba(0,0,0,.1)"; // 虚线颜色
         this.zeroColor = "rgba(0,0,0,.4)"; // 坐标系颜色 #358bf3
         this.crossLen = 1
@@ -156,7 +156,6 @@ export default class GridLine {
                 break;
 
             case 3:
-
                 const width = gls.getRatioSize(this.width);
                 const height = gls.getRatioSize(this.height);
                 const ySliceTotal = Math.ceil(width / gridSize); // 计算需要绘画y轴的条数

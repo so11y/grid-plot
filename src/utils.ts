@@ -1,13 +1,14 @@
 
-import { IBBox, IPoint, IVctor, Size, Vector } from "./Interface";
+import { CoordinateSystem } from "./Constants";
+import { IPoint, IVctor, Size, Vector } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
- * @param dom 
+ * @param domElement 
  * @param e 
  * @returns 
  */
-function getMousePos(dom: HTMLCanvasElement, e: any | IPoint): IPoint {
+function getMousePos(domElement: HTMLCanvasElement, e: any | IPoint): IPoint {
     let downX: number;
     let downY: number;
     if (e.x && e.y) {
@@ -18,7 +19,7 @@ function getMousePos(dom: HTMLCanvasElement, e: any | IPoint): IPoint {
         downY = e.clientY;
     }
 
-    let { left, top } = dom.getBoundingClientRect();
+    let { left, top } = domElement.getBoundingClientRect();
 
     let xDist = downX - left;
     let yDist = downY - top;
@@ -395,8 +396,13 @@ function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
     return Math.atan2(deltaY, deltaX) * 180 / Math.PI;
 }
 
+function getUnitSize() {
+    return CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE
+}
+
 export {
     getMousePos,
+    getUnitSize,
     getUuid,
     crossMul,
     randomNum,

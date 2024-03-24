@@ -1,3 +1,4 @@
+import { FontFamily } from "./Constants";
 import Circle from "./features/basic-shape/Circle";
 import Img from "./features/basic-shape/Img";
 import Line from "./features/basic-shape/Line";
@@ -32,15 +33,15 @@ interface IVctor {
     1: number
 }
 
-interface IBBox {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    left?: number,
-    right?: number,
-    top?: number,
-    bottom?: number,
+interface Txt {
+    txt: string,
+    fontSize:number,
+    color: string,
+    fontFamily: FontFamily,
+    offset: IPoint,
+    lineHeight?: number,
+    fontWeight?:number,
+    bolder: boolean,
 }
 
 type Props = Partial<Feature & Text & Img & Link & Group> & {
@@ -52,4 +53,4 @@ type BasicFeature = Line | Rect | Circle | Group
 
 type Vector = [number, number]
 
-export type { IPoint, RelativePos, PixelPos, Size, IVctor, IBBox, Props, BasicFeature, Vector };
+export type { IPoint, RelativePos, PixelPos, Size, IVctor, Txt, Props, BasicFeature, Vector };

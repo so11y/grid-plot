@@ -20,13 +20,13 @@ class SelectArea extends Group {
 
     setPointArr = (e: any) => {
         if (e.buttons == 1) {
-            let startP = this.gls.getRelativePos(getMousePos(this.gls.dom, e));
+            let startP = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
             this.pointArr[0] = startP;
             this.gls.addFeature(this, false);
             var mouseMove = (ev: any) => {
                 switch (this.drawMode) {
                     case DrawAreaMode.RECT: {
-                        let endP = this.gls.getRelativePos(getMousePos(this.gls.dom, ev));
+                        let endP = this.gls.getRelativePos(getMousePos(this.gls.domElement, ev));
                         this.pointArr[1] = {
                             x: endP.x,
                             y: startP.y
@@ -42,7 +42,7 @@ class SelectArea extends Group {
                     }
                         break;
                     case DrawAreaMode.IRREGULAR: {
-                        let moveP = this.gls.getRelativePos(getMousePos(this.gls.dom, ev));
+                        let moveP = this.gls.getRelativePos(getMousePos(this.gls.domElement, ev));
                         this.addPoint(moveP);
                     }
                         break;

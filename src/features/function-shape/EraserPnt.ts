@@ -41,7 +41,7 @@ class EraserPnt extends Rect {
     }
 
     removeTarget(e: any) {
-        this.position = this.gls.getRelativePos(getMousePos(this.gls.dom, e));
+        this.position = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
         if (this.isMouseDown) {
             let focusNode = this.gls.features.find(f => f.isPointIn);  // 寻找鼠标悬浮元素
             if(focusNode){

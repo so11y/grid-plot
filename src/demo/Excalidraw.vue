@@ -83,16 +83,16 @@
                         <div class="title">画布背景</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button size="small" style="background-color: #ffc9c9"
-                                @click="() => { gls && (gls.backgroundColor = '#ffc9c9') }"></a-button>
+                                @click="() => { gls && (gls.background = '#ffc9c9') }"></a-button>
                             <a-button size="small" style="background-color: #b2f2bb"
-                                @click="() => { gls && (gls.backgroundColor = '#b2f2bb') }"></a-button>
+                                @click="() => { gls && (gls.background = '#b2f2bb') }"></a-button>
                             <a-button size="small" style="background-color: #a5d8ff"
-                                @click="() => { gls && (gls.backgroundColor = '#a5d8ff') }"></a-button>
+                                @click="() => { gls && (gls.background = '#a5d8ff') }"></a-button>
                             <a-button size="small" style="background-color: #ffec99"
-                                @click="() => { gls && (gls.backgroundColor = '#ffec99') }"></a-button>
+                                @click="() => { gls && (gls.background = '#ffec99') }"></a-button>
                             <a-divider type="vertical"></a-divider>
                             <input type="color" class="color-picker" ref="color-picker"
-                                @input="(e: any) => { gls && (gls.backgroundColor = e.target.value) }" />
+                                @input="(e: any) => { gls && (gls.background = e.target.value) }" />
                         </a-row>
                     </li>
                 </ul>
@@ -396,6 +396,7 @@ import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 import { BasicFeature } from "@/Interface";
+import { getUnitSize, getMousePos } from "../utils"
 
 const cvs = ref(null);
 const activeI = ref(-1);
@@ -456,7 +457,7 @@ function onSelectTool(index = 0, param?: any) {
             console.log(globalBorderStyle.value, "globalBorderStyle.value");
 
             line.lineDashArr = globalBorderStyle.value;
-            line.tip = "测试111"
+            line.tipInfo.txt = "测试111"
             cb = gls.value?.continuousClickToFeature(line)
             break;
         case 4: // 自由笔
@@ -541,7 +542,7 @@ function onShowPreview() {
     isShowSaveImage.value = true;
     setTimeout(() => {
         if (gls.value) {
-            var base64 = gls.value.dom.toDataURL("image/png");
+            var base64 = gls.value.domElement.toDataURL("image/png");
             let img = document.getElementById("preview-img") as HTMLImageElement;
             img.src = base64;
             previewImg.value = base64;
@@ -595,15 +596,11 @@ function reset(clear = false) {
     }
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls.value = new GridSystem(canvasDom);
-    // gls.loadData();
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
     let rect = new Rect(100, 100, 100, 100)
     rect.radius = 2;
     rect.rotate(60)
-    // rect.isFixedPos = true;
-    // rect.fillStyle = "transparent"
-    // rect.isOverflowHidden = true;
     gls.value.addFeature(rect, false)
 
     const text = new Text(`当内容
@@ -626,8 +623,8 @@ function reset(clear = false) {
         { x: 210, y: 60 },
         { x: 300, y: 90 },
     ])
-    line.tip = "测试文本"
-    line.tipSize = 21
+    line.tipInfo.txt = "测试文本"
+    line.tipInfo.fontSize = 21
     // line.enableCtrlPnts();
     gls.value.addFeature(line, false)
 
@@ -648,21 +645,25 @@ function reset(clear = false) {
     // }
     group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
-    // line.cbTransform = false;
-    // const text2 = new Text("测试文本", 60, 80, 100, 10);
-    // // text2.fitSize = true;
-    // gls.value.addFeature(text2, false);
-    // line.addFeature(text2, false);
-    // line.enableCtrlPnts();
+    // 网格坐标
+    let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
+    let width = getUnitSize();
+    let rect4 = new Rect(gpos.x, gpos.y, width, width);
+    rect4.fillStyle = "transparent"
+    gls.value.addFeature(rect4, false);
 
-    // console.log(group, rect, rect2);
+    document.addEventListener("mousedown", (e:any)=>{
+        if(gls.value){
+            let ppos = getMousePos(gls.value.domElement, e);
+            let rpos = gls.value.getRelativePos(ppos);
+            let gpos = gls.value.getGridPosByRelativePos(rpos);
+            let nrpos = gls.value.getRelativePosByGridPos(gpos)
+            
+            rect4.setPos(nrpos.x, nrpos.y)
+        }
+    })
 
-    // setTimeout(() => {
-    //     gls.value.removeFeature(rect4)
-    // }, 1000);
 
-    // img.fillStyle = "transparent"
-    // img.rotate(20)
     gls.value.enableStack();
 }
 
@@ -824,7 +825,7 @@ function toOffset(offset = 0) {
     let focuseNode = gls.value?.getFocusNode();
     if (focuseNode && gls.value) {
         if (focuseNode instanceof Line) {
-            focuseNode.tipOffset.y += offset;
+            focuseNode.tipInfo.offset && (focuseNode.tipInfo.offset.y += offset);
         }
     }
 }

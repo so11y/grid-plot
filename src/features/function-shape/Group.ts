@@ -1,7 +1,7 @@
 
 import { AlignType } from "@/Constants";
 import { BasicFeature, IPoint } from "@/Interface";
-import { getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, isBasicFeature } from "@/utils";
+import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
 export default class Group extends Feature {
@@ -13,8 +13,9 @@ export default class Group extends Feature {
         // this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
         this.isClosePath = true;
-        this.fillStyle = "rgba(250, 242, 180, .5)"
-        this.hoverStyle = "rgba(250, 242, 180, .8)"
+        this.fillStyle = "rgba(250, 242, 180, .1)"
+        this.hoverStyle = "rgba(250, 242, 180, .2)"
+        this.focusStyle = "rgba(250, 242, 180, .3)"
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
         this.zIndex = -1;

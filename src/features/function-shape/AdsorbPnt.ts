@@ -48,7 +48,7 @@ class AdsorbPnt extends Rect {
 
     setPos(e: any) {
         const gls = this.gls;
-        const { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.dom, e));
+        const { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.domElement, e));
         this.position = {
             x: rx,
             y: ry

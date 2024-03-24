@@ -1,11 +1,9 @@
 import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { BasicFeature, Vector } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPntInPolygon } from "../../utils";
-import Link from "../basic-shape/Link";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct } from "../../utils";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
-import AnchorPnt from "./AnchorPnt";
 import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
 import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
@@ -33,7 +31,6 @@ export default class Bbox extends Rect {
         this.isFixedPos = target.isFixedPos;
         // this.rotate(angle)
         // target.rotate(angle)
-        this.addFeature(target);
         this.target = target;
         this.fillStyle = this.focusStyle = this.hoverStyle = "transparent";
         this.isStroke = true;
@@ -42,6 +39,7 @@ export default class Bbox extends Rect {
         this.lineDashArr = [8, 8]
         this.lineWidth = .06;
         this.ratio = this.getRatio();
+        this.addFeature(target);
         this.initBCtrlPnt();
         this.setVct();
         this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
@@ -58,13 +56,6 @@ export default class Bbox extends Rect {
 
             const lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             const lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
-            // console.log(target);
-            // if (target instanceof Text) {
-            //     target.pntExtentPer.left.push({
-            //         x: -lenX / width,
-            //         y: -lenY / height,
-            //     })
-            // }
             target.pntExtentPer.left.push({
                 x: lenX / width,
                 y: lenY / height,

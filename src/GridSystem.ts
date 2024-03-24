@@ -5,7 +5,7 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
 import { BasicFeature, IPoint, PixelPos, Props, RelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMidOfTwoPnts, getMousePos, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getMidOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -43,11 +43,11 @@ class GridSystem {
         y: 0
     }
 
-    dom: HTMLCanvasElement;
+    domElement: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
     timer2: number = 0;
-    backgroundColor: string = '#fff'
+    background: string = 'rgba(0,0,0,1)'
 
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
@@ -80,8 +80,8 @@ class GridSystem {
     constructor(canvasDom: HTMLCanvasElement, isMain: boolean = true) {
         // 当前 canvas 的 0 0 坐标，我们设置 canvas 左上角顶点为 0 0，向右👉和向下👇是 X Y 轴正方向，0，0 为 pageSlicePos 初始值
         isMain && (GridSystem.Gls = this, Feature.Gls = this);
-        this.dom = canvasDom;
-        this.ctx = this.dom.getContext('2d') || new CanvasRenderingContext2D();
+        this.domElement = canvasDom;
+        this.ctx = this.domElement.getContext('2d') || new CanvasRenderingContext2D();
         this.initEventListener();
     }
 
@@ -89,7 +89,7 @@ class GridSystem {
         // console.log("clear");
         // console.time();
 
-        this.ctx.fillStyle = this.backgroundColor;
+        this.ctx.fillStyle = this.background;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
         fn && fn()
@@ -144,13 +144,13 @@ class GridSystem {
     }
 
     initEventListener() {
-        this.dom.addEventListener("mousemove", this.mouseMove);
-        this.dom.addEventListener("mousedown", this.mouseDown);
-        this.dom.addEventListener("mousewheel", this.mouseWheel);
-        this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
+        this.domElement.addEventListener("mousemove", this.mouseMove);
+        this.domElement.addEventListener("mousedown", this.mouseDown);
+        this.domElement.addEventListener("mousewheel", this.mouseWheel);
+        this.domElement.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.dom.ondrop = this.dropToFeature.bind(this);
+        this.domElement.ondrop = this.dropToFeature.bind(this);
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -221,7 +221,7 @@ class GridSystem {
 
     private mouseMove = (e: any) => {
         this.onmousemove && this.onmousemove(e);
-        const pos = getMousePos(this.dom, e);
+        const pos = getMousePos(this.domElement, e);
         this.mousePos.x = pos.x;
         this.mousePos.y = pos.y;
         document.dispatchEvent(new CustomEvent(Events.MOUSE_MOVE, { detail: e }));
@@ -236,7 +236,7 @@ class GridSystem {
 
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
-        const { x: downX, y: downY } = getMousePos(this.dom, ev);
+        const { x: downX, y: downY } = getMousePos(this.domElement, ev);
         const { x: px, y: py } = this.pageSlicePos;
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
         let moveFlag = false;
@@ -263,7 +263,7 @@ class GridSystem {
                 mousemove = (e: any) => {
                     if (focusNode) {
                         // console.log(focusNode, "focusNode");
-                        const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                        const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
                         let { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
                         if (lastMove.x && lastMove.y) {
                             focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
@@ -287,7 +287,7 @@ class GridSystem {
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
                 mousemove = (e: any) => {
-                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                    const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
                     this.ondrag && this.ondrag(e);
                     this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
                     this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
@@ -532,7 +532,7 @@ class GridSystem {
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         this.onzoom && this.onzoom(e);
         e.preventDefault();
-        const { x, y } = getMousePos(this.dom, e);
+        const { x, y } = getMousePos(this.domElement, e);
         if (e.wheelDelta > 0) {
             const nextScale = scale || this.scale + CoordinateSystem.SCALE_ABILITY
             if (nextScale > CoordinateSystem.MAX_SCALESIZE) {
@@ -851,7 +851,7 @@ class GridSystem {
         return clear;
     }
 
-    async clipboardToFeature(pos = getMousePos(this.dom, this.mousePos)) { // 读取剪贴板内容生成文字或图片
+    async clipboardToFeature(pos = getMousePos(this.domElement, this.mousePos)) { // 读取剪贴板内容生成文字或图片
         try {
             const clipboardData = await navigator.clipboard.read();
             pos = this.getRelativePos(pos)
@@ -898,7 +898,7 @@ class GridSystem {
         var data = e.dataTransfer;
         const files = data.files;  // file继承与blob
         if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
-            const pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
+            const pos = this.getRelativePos(getMousePos(this.domElement, { x: e.clientX, y: e.clientY }))
             const reader = new FileReader();
             reader.readAsDataURL(files[0]);  // base64
             reader.onload = () => {
@@ -933,7 +933,7 @@ class GridSystem {
                 break;
             case 'Text':
                 if (props.position && props.size) {
-                    feature = new Text(props.text, props.position.x, props.position.y, props.size.width, props.size.height)
+                    feature = new Text(props.textInfo ? props.textInfo.txt : '占位符', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
@@ -1038,11 +1038,7 @@ class GridSystem {
 
         if (feature instanceof Text) {
             props.fitSize != undefined && (feature.fitSize = props.fitSize);
-            props.fontWeight != undefined && (feature.fontWeight = props.fontWeight);
-            props.color != undefined && (feature.color = props.color);
-            props.fontFamily != undefined && (feature.fontFamily = props.fontFamily);
-            props.text != undefined && (feature.text = props.text);
-            props.lineHeight != undefined && (feature.lineHeight = props.lineHeight);
+            props.textInfo != undefined && (feature.textInfo = props.textInfo);
         }
 
         if (feature instanceof Line) {
@@ -1066,13 +1062,10 @@ class GridSystem {
             isStroke: f.isStroke,  // 是否渲染边框
             radius: f instanceof Rect ? f.radius : 0,
             fitSize: f instanceof Text ? f.fitSize : false,
-            fontWeight: f instanceof Text ? f.fontWeight : 0,
-            color: f instanceof Text ? f.color : '',
-            fontFamily: f instanceof Text ? f.fontFamily : undefined,
-            lineHeight: f instanceof Text ? f.lineHeight : 0,
+            textInfo: f instanceof Text ? f.textInfo : {},
         }
         if (onlyStyle) {
-            return styleProps
+            return styleProps as Partial<Props>
         } else {
             return {
                 id: f.id,
@@ -1095,7 +1088,6 @@ class GridSystem {
 
                 isFixedSize: f instanceof Rect ? f.isFixedSize : false,
                 src: f instanceof Img ? f.src : '',
-                text: f instanceof Text ? f.text : '',
                 isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
                 lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
                 children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
@@ -1219,7 +1211,7 @@ class GridSystem {
                     point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                     point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
-                ctx.fillStyle = this.backgroundColor
+                ctx.fillStyle = this.background
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
@@ -1240,7 +1232,7 @@ class GridSystem {
             }
         })
     }
-    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
+    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, background = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
         let svgstr = '';
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
         var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
@@ -1284,7 +1276,7 @@ class GridSystem {
                 }
                 addChildrenSvg(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-                    <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
+                    <rect x="0" y="0" width="${width}" height="${height}" fill="${background}"/>
                         ${svgstr}
                     </svg>`)
                 // 使用剪切板API进行复制
@@ -1321,13 +1313,13 @@ class GridSystem {
         this.back2center(point.x, point.y, lastGirdSize)
     }
     getCenterPos() { // 获取中心点
-        const centerP = { x: this.dom.width / 2, y: this.dom.height / 2 };
+        const centerP = { x: this.domElement.width / 2, y: this.domElement.height / 2 };
         const canvasR = this.getRelativePos(centerP)
         return [centerP, canvasR]
     }
     // 求点与canvas中心的距离
     getCenterDist(point: IPoint) {
-        const canvasCenter = { x: this.dom.width / 2, y: this.dom.height / 2 }
+        const canvasCenter = { x: this.domElement.width / 2, y: this.domElement.height / 2 }
         return {
             x: canvasCenter.x - point.x,
             y: canvasCenter.y - point.y
@@ -1339,38 +1331,20 @@ class GridSystem {
     }
 
     // ------------------------网格坐标相关方法--------------------------
-    // // 判断某个网格内有没有元素
-    // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
-    //     const target: Feature | undefined;
-    //     for (const index = 0; index < pool.length; index++) {
-    //         const block = pool[index];
-    //         if (block.gridPos.x == gx && block.gridPos.y == gy) {
-    //             target = block;
-    //             break;
-    //         }
-    //     }
-    //     return target;
-    // }
     // 根据相对坐标获取网格坐标
-    getGridPosByRelativePos(x: number, y: number): IPoint {
-        const gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
-        const gx = x / gridSize;
-        const gy = y / gridSize;
+    getGridPosByRelativePos(point: IPoint): IPoint {
+        const gridSize = getUnitSize();  // 实际网格单元大小
+        const gx = point.x > 0 ? Math.ceil(point.x / gridSize) : Math.floor(point.x / gridSize);
+        const gy = point.y > 0 ? Math.ceil(point.y / gridSize) : Math.floor(point.y / gridSize);
         return { x: gx, y: gy }
-    }
-    // // 根据鼠标,像素坐标获取网格坐标
-    // getGridPosByPixelPos(x: number, y: number): IPoint {
-    //     const gridSize = CoordinateSystem.GRID_SIZE * this.scale;  // 实际网格单元大小
-    //     const gx = x > this.pageSlicePos.x ? Math.ceil((x - this.pageSlicePos.x) / gridSize) : Math.floor((x - this.pageSlicePos.x) / gridSize);
-    //     const gy = y > this.pageSlicePos.y ? Math.ceil((y - this.pageSlicePos.y) / gridSize) : Math.floor((y - this.pageSlicePos.y) / gridSize);
-    //     return { x: gx, y: gy }
-    // }
+    } 
     // 根据网格坐标获取相对坐标
-    getRelativePosByGridPos(x: number, y: number): IPoint {
-        const gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
+    getRelativePosByGridPos(point: IPoint): IPoint {
+        if (point.x === 0 || point.y === 0) throw "坐标不合法,x或y不能为0"
+        const gridSize = getUnitSize();  // 实际网格单元大小
         return {
-            x: x > 0 ? gridSize * (x - 1) : gridSize * x,
-            y: y > 0 ? gridSize * (y - 1) : gridSize * y,
+            x: point.x > 0 ? gridSize * (point.x - 1) + gridSize / 2 : gridSize * point.x + gridSize / 2,
+            y: point.y > 0 ? gridSize * (point.y - 1) + gridSize / 2 : gridSize * point.y + gridSize / 2,
         }
     }
 

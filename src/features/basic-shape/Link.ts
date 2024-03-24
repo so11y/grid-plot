@@ -1,6 +1,6 @@
-import { CoordinateSystem, LinkStyle } from "../../Constants";
+import { LinkStyle } from "../../Constants";
 import { IPoint, Vector } from "../../Interface";
-import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPntInPolygon } from "../../utils";
+import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getUnitSize, getVctLen, isPntInPolygon } from "../../utils";
 import AnchorPnt from "../function-shape/AnchorPnt";
 import Line from "./Line";
 let startIndex = 0;
@@ -130,7 +130,7 @@ export default class Link extends Line {
 
     getBrokenPoints(startPos: IPoint, endPos: IPoint) {
         const coordList: IPoint[] = [];
-        const unitLen = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE / this.gls.scale;
+        const unitLen = getUnitSize() / this.gls.scale;
         var getCoordList = (): IPoint[] => {
             const nearNodeArr = getNearNodes(startPos, endPos, unitLen);
             const minFNode = nearNodeArr.sort((a, b) => a.f - b.f)[0]; // 离目标最近的点

@@ -1,5 +1,5 @@
 import Feature from "../Feature";
-import { IPoint } from "../../Interface";
+import { IPoint, Txt } from "../../Interface";
 import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
 import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
 import { FontFamily } from "@/Constants";
@@ -16,10 +16,15 @@ class Line extends Feature {
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
     curveCtrlPnt: CtrlPnt[] = [];
-    tip: string = '';
-    tipSize = 18;
-    tipColor = "#000"
-    tipOffset = { x: 0, y: 0 }
+
+    tipInfo: Txt = {
+        txt: '',
+        fontSize: 18,
+        color: "rgba(174, 253, 181)",
+        offset: { x: 0, y: 0 },
+        fontFamily: FontFamily.HEITI,
+        bolder: false,
+    };
 
     constructor(pointArr: IPoint[] = []) {
         super(pointArr);
@@ -100,7 +105,7 @@ class Line extends Feature {
     }
 
     drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
-        if (pointArr.length == 2 && this.tip) {  // 只接受起点和终点, 文本
+        if (pointArr.length == 2 && this.tipInfo.txt) {  // 只接受起点和终点, 文本
             const startP = pointArr[0];
             const endP = pointArr[1];
             const center = getMidOfTwoPnts(startP, endP);
@@ -109,11 +114,11 @@ class Line extends Feature {
                 angle += 180  // 镜像翻转,文字始终朝上
             }
             ctx.save()
-            ctx.font = `${this.tipSize}px ${FontFamily.HEITI}`;
-            const { width } = ctx.measureText(this.tip);  // 文本的宽度
-            ctx.fillStyle = this.tipColor;
+            ctx.font = `${this.tipInfo.fontSize}px ${FontFamily.HEITI}`;
+            const { width } = ctx.measureText(this.tipInfo.txt);  // 文本的宽度
+            ctx.fillStyle = this.tipInfo.color;
             this.setAngle(ctx, center, angle);
-            ctx.fillText(this.tip, center.x - width / 2 + this.tipOffset.x, center.y - lineWidth + this.tipOffset.y);
+            ctx.fillText(this.tipInfo.txt, center.x - width / 2 + this.tipInfo.offset.x, center.y - lineWidth + this.tipInfo.offset.y);
             ctx.fill();
             ctx.restore()
         }
@@ -124,12 +129,6 @@ class Line extends Feature {
         if (bool) {
             this.pointArr.forEach((p, i) => {
                 new CtrlPnt(this, i);
-                // if (i > 0) {
-                // const centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
-                // const ccp = new CtrlPnt(this, i);
-                // this.addFeature(ccp, true)  // 这里是为了方便同时移动
-                // this.curveCtrlPnt[i] = ccp;
-                // }
             })
         } else {
             this.clearCtrlPos();
