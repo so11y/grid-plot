@@ -1,4 +1,4 @@
-import { BasicFeature } from "@/Interface";
+import { IBasicFeature } from "@/Interface";
 import { DrawAreaMode, SelectMode } from "../../Constants";
 import { isPntInPolygon, getMousePos, isBasicFeature } from "../../utils";
 import Group from "./Group";
@@ -53,7 +53,7 @@ class SelectArea extends Group {
             var mouseUp = () => {
                 let featuresIn = this.getSelectFeature();
                 featuresIn.forEach(fi => {
-                    this.addFeature(fi as BasicFeature)
+                    this.addFeature(fi as IBasicFeature)
                 })
                 this.gls.enableBbox(this)
                 this.callback(featuresIn);

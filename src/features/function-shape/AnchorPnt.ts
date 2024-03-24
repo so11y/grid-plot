@@ -1,4 +1,4 @@
-import { BasicFeature, IPoint } from "../../Interface";
+import { IBasicFeature, IPoint } from "../../Interface";
 import Rect from "../basic-shape/Rect";
 
 // 自定义控制点元素
@@ -6,9 +6,9 @@ class AnchorPnt extends Rect {
 
     getPoint: () => IPoint;
     isBinding = false;  // 是否与link绑定了
-    parent: BasicFeature;
+    parent: IBasicFeature;
 
-    constructor(parent: BasicFeature, fn: () => IPoint, width: number = 14) {   // 相对坐标
+    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 14) {   // 相对坐标
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;

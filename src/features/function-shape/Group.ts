@@ -1,12 +1,12 @@
 
 import { AlignType } from "@/Constants";
-import { BasicFeature, IPoint } from "@/Interface";
+import { IBasicFeature, IPoint, IRelativePos } from "@/Interface";
 import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
 export default class Group extends Feature {
 
-    constructor(features: BasicFeature[]) {   // 相对坐标
+    constructor(features: IBasicFeature[]) {   // 相对坐标
         super([]);
         features.forEach(f => this.add(f))
         this.className = 'Group';
@@ -22,18 +22,18 @@ export default class Group extends Feature {
         this.cbTransformChild = false;
     }
 
-    add(feature: BasicFeature) {
+    add(feature: IBasicFeature) {
         if (!isBasicFeature(feature)) return;
         if (feature.isFixedPos || feature.isFixedSize) return;  // 非基础元素不添加
         this.addFeature(feature, { cbSelect: false });
         this.toResize(this.children);
     }
-    remove(feature: BasicFeature) {
+    remove(feature: IBasicFeature) {
         this.removeChild(feature);
         this.toResize(this.children);
     }
-    toResize(features: BasicFeature[]) {  // 重新创建后重设大小
-        const allPointArr: IPoint[] = [];
+    toResize(features: IBasicFeature[]) {  // 重新创建后重设大小
+        const allPointArr: IRelativePos[] = [];
         features.map(f => allPointArr.push(...f.pointArr));
         this.pointArr = this.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
     }

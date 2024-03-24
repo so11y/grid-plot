@@ -3,7 +3,7 @@ import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
-import { BasicFeature, IPoint, PixelPos, Props, RelativePos } from "./Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
 import { beautifyHTML, getMidOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
@@ -53,7 +53,7 @@ class GridSystem {
     features: Feature[] = [];  // 所有元素的集合
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
-    dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
+    dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
     friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
@@ -249,7 +249,7 @@ class GridSystem {
                 if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
                     if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
-                        const bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
+                        const bbox = this.enableBbox(focusNode as IBasicFeature | SelectArea);
                         bbox && (focusNode = bbox);
                     }
                 };
@@ -620,39 +620,39 @@ class GridSystem {
     getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
-                return this.focusNode.children[0] as BasicFeature;
+                return this.focusNode.children[0] as IBasicFeature;
             }
             if (isCtrlFeature(this.focusNode)) {
                 if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
-                    return this.focusNode.parent.children[0] as BasicFeature;
+                    return this.focusNode.parent.children[0] as IBasicFeature;
                 } else {  // 比如线段的ctrlNode
-                    return this.focusNode.parent as BasicFeature;
+                    return this.focusNode.parent as IBasicFeature;
                 }
             }
-            return this.focusNode as BasicFeature;
+            return this.focusNode as IBasicFeature;
         }
         return;
     }
 
     // --------------------------调整元素上下层级相关--------------------------------
-    toMinusIndex(feature: BasicFeature) {
+    toMinusIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         swapElements<Feature>(this.features, index, index - 1);
         this.resortIndex();
     }
-    toPlusIndex(feature: BasicFeature) {
+    toPlusIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         swapElements<Feature>(this.features, index, index + 1);
         this.resortIndex();
     }
-    toMinIndex(feature: BasicFeature) {
+    toMinIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         this.features.splice(index, 1);
         this.features.unshift(feature);
         this.resortIndex();
     }
     // 将元素置顶，在画布最上层显示
-    toMaxIndex(feature: BasicFeature) {
+    toMaxIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         this.features.splice(index, 1);
         this.features.push(feature);
@@ -666,7 +666,7 @@ class GridSystem {
 
     // ------------------ 获取像素，或相对坐标，宽度等-------------------------
     // 获取像素位置`坐标
-    getPixelPos(point: RelativePos, isFixedPos?: boolean): PixelPos {
+    getPixelPos(point: IRelativePos, isFixedPos?: boolean): IPixelPos {
         if (isFixedPos) {
             return point
         } else {
@@ -683,7 +683,7 @@ class GridSystem {
         return this.pageSlicePos.y + (num / CoordinateSystem.GRID_SIZE) * this.scale
     }
     // 获取相对位置坐标
-    getRelativePos(point: PixelPos, isFixedPos?: boolean): RelativePos {
+    getRelativePos(point: IPixelPos, isFixedPos?: boolean): IRelativePos {
         if (isFixedPos) {
             return point
         } else {
@@ -912,9 +912,9 @@ class GridSystem {
     }
 
     // -------------------创建feature, 修改feature属性, 读取feature属性---------------------------
-    createFeature(props: Props, newProps?: Partial<Props>) {
+    createFeature(props: IProps, newProps?: Partial<IProps>) {
         newProps && (props = Object.assign({}, props, newProps));
-        let feature: BasicFeature | undefined;
+        let feature: IBasicFeature | undefined;
         if (this.features.find(f => f.id === props.id)) return;
         switch (props.className) {
             case 'Img':
@@ -978,7 +978,7 @@ class GridSystem {
                 if (props.children) {
                     props.children.forEach(cfProp => {
                         const cf = this.features.find(f => f.id === cfProp.id);
-                        feature && feature.addFeature(cf as BasicFeature || this.createFeature(cfProp), false)
+                        feature && feature.addFeature(cf as IBasicFeature || this.createFeature(cfProp), false)
                     })
                     if (feature instanceof Group) {  // gourp添加子元素需要resize
                         feature.toResize(feature.children);
@@ -990,7 +990,7 @@ class GridSystem {
         }
         return feature;
     }
-    modifyFeature(feature: BasicFeature, props: Props) {
+    modifyFeature(feature: IBasicFeature, props: IProps) {
         props.id != undefined && (feature.id = props.id);
         props.className != undefined && (feature.className = props.className)
         if (props.pointArr) {
@@ -1048,7 +1048,7 @@ class GridSystem {
 
         return feature;
     }
-    recordFeature(f: BasicFeature, onlyStyle = false): Partial<Props> {  // 复制或读取元素属性
+    recordFeature(f: IBasicFeature, onlyStyle = false): Partial<IProps> {  // 复制或读取元素属性
         const styleProps = {
             fillStyle: f.fillStyle,
             focusStyle: f.focusStyle,
@@ -1065,7 +1065,7 @@ class GridSystem {
             textInfo: f instanceof Text ? f.textInfo : {},
         }
         if (onlyStyle) {
-            return styleProps as Partial<Props>
+            return styleProps as Partial<IProps>
         } else {
             return {
                 id: f.id,
@@ -1084,13 +1084,13 @@ class GridSystem {
                 isOnlyHorizonalMove: f.isOnlyHorizonalMove,  // 是否只能 水平 方向拖拽
                 isOnlyVerticalMove: f.isOnlyVerticalMove,  // 是否只能 垂直 方向拖拽
 
-                pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
+                pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IRelativePos[],
 
                 isFixedSize: f instanceof Rect ? f.isFixedSize : false,
                 src: f instanceof Img ? f.src : '',
                 isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
                 lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
-                children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
+                children: f.children.map(cf => this.recordFeature(cf as IBasicFeature)) as IProps[],
                 ...styleProps
                 // parent: f.parent ? f.parent.id: '',
                 // startFeatureId: f instanceof Link ? f.startFeatureId : '',
@@ -1114,7 +1114,7 @@ class GridSystem {
             }
         }
     }
-    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
+    enableBbox(f: IBasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
         const bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
         if (f && !f.isFixedSize && f.cbTransform) {
@@ -1142,13 +1142,13 @@ class GridSystem {
     }
 
     // -------------------保存画布状态,读取画布状态,加载状态---------------------------
-    save(featurePropsArr?: Props[]) {
+    save(featurePropsArr?: IProps[]) {
         if (!featurePropsArr) {
             featurePropsArr = [];
             this.features.forEach(f => {
                 if (isBasicFeature(f)) {
-                    const fProps = this.recordFeature(f as BasicFeature);
-                    featurePropsArr && featurePropsArr.push(fProps as Props)
+                    const fProps = this.recordFeature(f as IBasicFeature);
+                    featurePropsArr && featurePropsArr.push(fProps as IProps)
                 }
             })
         }
@@ -1156,10 +1156,10 @@ class GridSystem {
         localStorage.setItem("features", str);
         return str
     }
-    loadData(featurePropsArr?: Props[]) {
+    loadData(featurePropsArr?: IProps[]) {
         if (!featurePropsArr) {
             try {
-                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
+                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as IProps[];
             } catch (error) {
                 featurePropsArr = []
             }
@@ -1182,7 +1182,7 @@ class GridSystem {
     // ----------------------剪切板相关---------------------------
     copyImageToClipboard(feature = this.getFocusNode(), padding = 10): Promise<Blob> { // 复制元素为png到剪贴板
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
-        var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
+        var drawChildren = (ctx: CanvasRenderingContext2D, features: IBasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
                 if (isBasicFeature(cf)) {
                     const pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
@@ -1235,7 +1235,7 @@ class GridSystem {
     copySvgToClipboard(feature = this.getFocusNode(), padding = 10, background = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
         let svgstr = '';
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
-        var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
+        var addChildrenSvg = (features: IBasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
             features.forEach(cf => {
                 if (isBasicFeature(cf)) {
                     const pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
@@ -1337,7 +1337,7 @@ class GridSystem {
         const gx = point.x > 0 ? Math.ceil(point.x / gridSize) : Math.floor(point.x / gridSize);
         const gy = point.y > 0 ? Math.ceil(point.y / gridSize) : Math.floor(point.y / gridSize);
         return { x: gx, y: gy }
-    } 
+    }
     // 根据网格坐标获取相对坐标
     getRelativePosByGridPos(point: IPoint): IPoint {
         if (point.x === 0 || point.y === 0) throw "坐标不合法,x或y不能为0"
@@ -1389,7 +1389,7 @@ class GridSystem {
 
     // -----------------锚点的操作----------------------
     initAnchorPnts() {
-        const features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        const features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as IBasicFeature[];
         features.forEach(f => {
             const anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {

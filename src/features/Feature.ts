@@ -1,7 +1,7 @@
 import { AlignType, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { BasicFeature, IPoint, Props, Size } from "../Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
 import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
@@ -11,7 +11,7 @@ class Feature {
     static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
 
-    pointArr: IPoint[] = [];
+    pointArr: IRelativePos[] = [];
     fillStyle: string = 'transparent';
     strokeStyle: string = '#f08c00';
     hoverStyle: string = '#fff1b5';
@@ -30,13 +30,13 @@ class Feature {
     hidden: boolean = false;   // 是否隐藏
     position: IPoint = { x: 0, y: 0 }  // 位置
     offset: IPoint = { x: 0, y: 0 } // 相对于父元素中心点偏移
-    size: Size = { width: 0, height: 0 }  // 宽高
+    size: ISize = { width: 0, height: 0 }  // 宽高
     scale: IPoint = { x: 1, y: 1 };
     angle: number = 0;
     radius: number = 0;
 
     parent: Feature | null = null;  // 父元素
-    children: BasicFeature[] = [];  // 子节点
+    children: IBasicFeature[] = [];  // 子节点
     gls: GridSystem = Feature.Gls;
     adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
     pntDistanceLimit = 2;  // 距离太近的两个点,就不重复添加了
@@ -107,7 +107,7 @@ class Feature {
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
-    constructor(pointArr: IPoint[] = []) {
+    constructor(pointArr: IRelativePos[] = []) {
         // 相对坐标
         this.pointArr = pointArr;
         this.id = getUuid();
@@ -139,7 +139,7 @@ class Feature {
         this.ontranslate();
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r: number) {
         const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
@@ -246,7 +246,7 @@ class Feature {
         this.pointArr.push(point);
     }
 
-    addFeature(feature: BasicFeature, props?: Partial<Props>) {
+    addFeature(feature: IBasicFeature, props?: Partial<IProps>) {
         if (this.children.find(cf => cf === feature)) return;  // 非基础元素不添加 或者 已经存在
         this.children.push(feature);
         feature.parent = this;
@@ -285,7 +285,7 @@ class Feature {
         this.isFixedPos = false;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {
         let path = ''
         pointArr.forEach((p, i) => {
             if (i === 0) {
@@ -450,7 +450,7 @@ class Feature {
         }
     }
 
-    drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPoint[]) {   // 吸附的对齐线
+    drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
             const [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = this.getCenterPos(pointArr);

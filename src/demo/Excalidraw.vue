@@ -193,19 +193,19 @@
                         <div class="title">图层</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于顶层"
-                                @click="gls?.toMaxIndex(gls.getFocusNode() as BasicFeature); message.info('置于顶层')">
+                                @click="gls?.toMaxIndex(gls.getFocusNode() as IBasicFeature); message.info('置于顶层')">
                                 <i class="iconfont gls-zhiyudingceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="上移一层"
-                                @click="gls?.toPlusIndex(gls.getFocusNode() as BasicFeature);; message.info('上移一层')">
+                                @click="gls?.toPlusIndex(gls.getFocusNode() as IBasicFeature);; message.info('上移一层')">
                                 <i class="iconfont gls-shangyiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="下移一层"
-                                @click="gls?.toMinusIndex(gls.getFocusNode() as BasicFeature);; message.info('下移一层')">
+                                @click="gls?.toMinusIndex(gls.getFocusNode() as IBasicFeature);; message.info('下移一层')">
                                 <i class="iconfont gls-xiayiyiceng"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="置于底层"
-                                @click="gls?.toMinIndex(gls.getFocusNode() as BasicFeature); message.info('置于底层')">
+                                @click="gls?.toMinIndex(gls.getFocusNode() as IBasicFeature); message.info('置于底层')">
                                 <i class="iconfont gls-zhiyudiceng"></i>
                             </a-button>
                         </a-row>
@@ -260,7 +260,7 @@
                         <div class="title">操作</div>
                         <a-row type="flex" align="middle" class="func-wrap">
                             <a-button style="background-color: hsl(240 25% 96%)" title="复制"
-                                @click="gls?.focusNode && gls?.recordFeature(gls.focusNode as BasicFeature); message.info('复制了')">
+                                @click="gls?.focusNode && gls?.recordFeature(gls.focusNode as IBasicFeature); message.info('复制了')">
                                 <i class="iconfont gls-fuzhi"></i>
                             </a-button>
                             <a-button style="background-color: hsl(240 25% 96%)" title="删除"
@@ -384,6 +384,7 @@ import { AlignType } from "@/Constants";
 import Circle from "@/features/basic-shape/Circle";
 import Img from "@/features/basic-shape/Img";
 import Line from "@/features/basic-shape/Line";
+import Link from "@/features/basic-shape/Link";
 import Rect from "@/features/basic-shape/Rect";
 import Text from "@/features/basic-shape/Text";
 import Feature from "@/features/Feature";
@@ -392,10 +393,10 @@ import Group from "@/features/function-shape/Group";
 import GridLine from "@/GridLine";
 import { message } from "ant-design-vue";
 import { onMounted, ref } from "vue";
-import { DrawAreaMode } from "../Constants";
+import { DrawAreaMode, FontFamily } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
-import { BasicFeature } from "@/Interface";
+import { IBasicFeature } from "@/Interface";
 import { getUnitSize, getMousePos } from "../utils"
 
 const cvs = ref(null);
@@ -596,6 +597,7 @@ function reset(clear = false) {
     }
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
     gls.value = new GridSystem(canvasDom);
+    gls.value.loadFont(FontFamily.SHISHANG)
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
     let rect = new Rect(100, 100, 100, 100)
@@ -645,24 +647,35 @@ function reset(clear = false) {
     // }
     group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
-    // 网格坐标
-    let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
+    // // 网格坐标
+    // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
+    // let width = getUnitSize();
+    // let rect4 = new Rect(gpos.x, gpos.y, width, width);
+    // rect4.fillStyle = "transparent"
+    // gls.value.addFeature(rect4, false);
+
+    // document.addEventListener("mousedown", (e:any)=>{
+    //     if(gls.value){
+    //         let ppos = getMousePos(gls.value.domElement, e);
+    //         let rpos = gls.value.getRelativePos(ppos);
+    //         let gpos = gls.value.getGridPosByRelativePos(rpos);
+    //         let nrpos = gls.value.getRelativePosByGridPos(gpos)
+
+    //         rect4.setPos(nrpos.x, nrpos.y)
+    //     }
+    // })
+
     let width = getUnitSize();
-    let rect4 = new Rect(gpos.x, gpos.y, width, width);
-    rect4.fillStyle = "transparent"
-    gls.value.addFeature(rect4, false);
+    let rect5 = new Rect(0, 0, width, width);
+    rect5.cbTransform = false;
+    gls.value.addFeature(rect5, false);
 
-    document.addEventListener("mousedown", (e:any)=>{
-        if(gls.value){
-            let ppos = getMousePos(gls.value.domElement, e);
-            let rpos = gls.value.getRelativePos(ppos);
-            let gpos = gls.value.getGridPosByRelativePos(rpos);
-            let nrpos = gls.value.getRelativePosByGridPos(gpos)
-            
-            rect4.setPos(nrpos.x, nrpos.y)
-        }
-    })
+    let rect6 = new Rect(120, 120, width, width);
+    rect6.cbTransform = false;
+    gls.value.addFeature(rect6, false);
 
+    let link = new Link(rect5, rect6);
+    gls.value.addFeature(link, false);
 
     gls.value.enableStack();
 }

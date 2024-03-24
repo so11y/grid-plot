@@ -1,5 +1,5 @@
 import { AlignType, CoordinateSystem } from "@/Constants";
-import { IPoint } from "../../Interface";
+import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 
 class Img extends Rect {
@@ -47,7 +47,7 @@ class Img extends Rect {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
         const path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
@@ -91,7 +91,7 @@ class Img extends Rect {
         }
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
         const { width, height, leftTop } = this.getSize(pointArr);
         const svgStr = super.getSvg(pointArr, lineWidth, radius);
         return svgStr + `

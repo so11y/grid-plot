@@ -1,7 +1,7 @@
 // 绘制自定义文字
 
 import { FontFamily, CtrlType, AlignType } from "../../Constants";
-import { IPoint, Txt } from "../../Interface";
+import { IPoint, IPixelPos, ITxt } from "../../Interface";
 import Rect from "./Rect";
 import Feature from "../Feature";
 
@@ -12,14 +12,14 @@ class Text extends Rect {
     static lastDate = Date.now()
     static inputDom: HTMLTextAreaElement | null;
 
-    textInfo: Required<Txt> = {
+    textInfo: Required<ITxt> = {
         txt: '',
         fontSize: 1,
         fontFamily: FontFamily.HEITI,
         color: "#000",
         lineHeight: 1,
         fontWeight: 1,
-        offset: {x: 0, y: 0},
+        offset: { x: 0, y: 0 },
         bolder: false,
     }
     fitSize: boolean;
@@ -124,7 +124,7 @@ class Text extends Rect {
         return textArr;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
         const path = super.draw(ctx, pointArr, lineWidth, radius);
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
@@ -293,7 +293,7 @@ class Text extends Rect {
         }
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
         var offscreenCanvas = document.createElement('canvas');
         // 获取离屏Canvas的2D渲染上下文  
         var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;

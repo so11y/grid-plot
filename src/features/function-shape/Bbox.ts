@@ -1,6 +1,6 @@
 import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
-import { BasicFeature, Vector } from "../../Interface";
+import { IBasicFeature, IVctor } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct } from "../../utils";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -15,13 +15,13 @@ export default class Bbox extends Rect {
     static ctrlPSize = 14; // 控制点大小
 
     ratio: number = 1;  // 宽高比, keepRatio用
-    vctX: Vector = [100, 0];
-    vctY: Vector = [0, 100];
+    vctX: IVctor = [100, 0];
+    vctY: IVctor = [0, 100];
     lastLenX = 0;
     lastLenY = 0;
     target: Feature;
 
-    constructor(target: BasicFeature | SelectArea) {   // 相对坐标
+    constructor(target: IBasicFeature | SelectArea) {   // 相对坐标
         // const angle = target.angle;
         // target.rotate(-angle)
         const center = target.getCenterPos();
@@ -97,7 +97,7 @@ export default class Bbox extends Rect {
         bCtrlP.translateEvents.push(() => {
             const bboxPos = this.getCenterPos(); // bbox的中心点
             const bctrlPos = bCtrlP.getCenterPos(); // 旋转控制点的中心点
-            const vct1: Vector = [0, -100];
+            const vct1: IVctor = [0, -100];
             const vct2 = createVctor(bboxPos, bctrlPos);
             let angle = getRotateAng(vct1, vct2);
             const offsetAngle = angle - bCtrlP.lastAngle;

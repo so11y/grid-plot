@@ -13,17 +13,17 @@ interface IPoint {
     y: number,
 }
 
-interface RelativePos {
+interface IRelativePos {
     x: number,
     y: number,
 }
 
-interface PixelPos {
+interface IPixelPos {
     x: number,
     y: number,
 }
 
-interface Size {
+interface ISize {
     width: number,
     height: number,
 }
@@ -33,24 +33,22 @@ interface IVctor {
     1: number
 }
 
-interface Txt {
+interface ITxt {
     txt: string,
-    fontSize:number,
+    fontSize: number,
     color: string,
     fontFamily: FontFamily,
     offset: IPoint,
     lineHeight?: number,
-    fontWeight?:number,
+    fontWeight?: number,
     bolder: boolean,
 }
 
-type Props = Partial<Feature & Text & Img & Link & Group> & {
+type IProps = Partial<Feature & Text & Img & Link & Group> & {
     id: string,
-    children: Props[]
+    children: IProps[]
 }
 
-type BasicFeature = Line | Rect | Circle | Group
+type IBasicFeature = Line | Rect | Circle | Group
 
-type Vector = [number, number]
-
-export type { IPoint, RelativePos, PixelPos, Size, IVctor, Txt, Props, BasicFeature, Vector };
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, IProps, IBasicFeature };

@@ -1,5 +1,5 @@
 import Feature from "../Feature";
-import { IPoint, Txt } from "../../Interface";
+import { IPoint, IPixelPos, IRelativePos, ITxt } from "../../Interface";
 import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
 import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
 import { FontFamily } from "@/Constants";
@@ -17,7 +17,7 @@ class Line extends Feature {
     lineWidthArr: number[] = [];
     curveCtrlPnt: CtrlPnt[] = [];
 
-    tipInfo: Txt = {
+    tipInfo: ITxt = {
         txt: '',
         fontSize: 18,
         color: "rgba(174, 253, 181)",
@@ -26,14 +26,14 @@ class Line extends Feature {
         bolder: false,
     };
 
-    constructor(pointArr: IPoint[] = []) {
+    constructor(pointArr: IRelativePos[] = []) {
         super(pointArr);
         this.className = "Line";
         this.isClosePath = false;
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r: number) {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
@@ -99,9 +99,14 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, [pointArr[0], pointArr[pointArr.length - 1]], lineWidth);
+        this.drawTip(ctx, this.getTipPnt(pointArr), lineWidth);
         ctx.restore()
         return path;
+    }
+
+    getTipPnt(pointArr: IPixelPos[]): [IPoint, IPoint] {
+        if (pointArr.length < 2) throw new Error("参数长度必须大于1");
+        return [pointArr[0], pointArr[pointArr.length - 1]]
     }
 
     drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
@@ -114,7 +119,7 @@ class Line extends Feature {
                 angle += 180  // 镜像翻转,文字始终朝上
             }
             ctx.save()
-            ctx.font = `${this.tipInfo.fontSize}px ${FontFamily.HEITI}`;
+            ctx.font = `${this.tipInfo.fontSize}px ${this.tipInfo.fontFamily}`;
             const { width } = ctx.measureText(this.tipInfo.txt);  // 文本的宽度
             ctx.fillStyle = this.tipInfo.color;
             this.setAngle(ctx, center, angle);
@@ -148,7 +153,7 @@ class Line extends Feature {
         return ctrlPnts;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {
         let path = ''
         if (this.isFreeStyle) {
             pointArr.forEach((p, i) => {

@@ -1,6 +1,6 @@
 
 import { CoordinateSystem } from "./Constants";
-import { IPoint, IVctor, Size, Vector } from "./Interface";
+import { IPoint, IVctor, ISize, IVctor } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
@@ -71,7 +71,7 @@ function crossMul(point1: IPoint, point2: IPoint) {
 }
 
 //  求两个向量之间的夹角
-function getAngleOfTwoVct(vector1: Vector, vector2: Vector) {
+function getAngleOfTwoVct(vector1: IVctor, vector2: IVctor) {
     var angle = Math.atan2(vector2[1], vector2[0]) - Math.atan2(vector1[1], vector1[0]);
     // if (angle < 0) angle += 2 * Math.PI;
     return angle;
@@ -133,12 +133,12 @@ function randomNum(minNum: number, maxNum: number) {
     }
 }
 
-function createVctor(start: IPoint, end: IPoint): Vector {
+function createVctor(start: IPoint, end: IPoint): IVctor {
     let x = end.x - start.x;
     let y = end.y - start.y;
     return [x, y];
 };
-function getVctLen(vct: Vector) {
+function getVctLen(vct: IVctor) {
     return Math.sqrt(vct[0] * vct[0] + vct[1] * vct[1]);
 };
 
@@ -146,7 +146,7 @@ function getVctLen(vct: Vector) {
 * 根据点在向量上的比例计算点坐标, [xO, yO]为起点，[xVct, yVct]为向量，k 为该点在向量方向上的长度
 * 获取
 */
-function getPntInVct(O: IPoint, [xVct, yVct]: Vector, k = 0): IPoint {
+function getPntInVct(O: IPoint, [xVct, yVct]: IVctor, k = 0): IPoint {
     let lenVct = getVctLen([xVct, yVct]);  // 获取向量长度
     let stdVct;
     if (lenVct === 0) {
@@ -214,7 +214,7 @@ function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
 };
 
 
-function getRotateVct(vct: IVctor, angle = 0): Vector {
+function getRotateVct(vct: IVctor, angle = 0): IVctor {
     let rad = angle * Math.PI / 180;
     let x1 = Math.cos(rad) * vct[0] - Math.sin(rad) * vct[1];
     let y1 = Math.sin(rad) * vct[0] + Math.cos(rad) * vct[1];
@@ -277,7 +277,7 @@ function toBase64(img: HTMLImageElement) {
  * endAngle必须大于startAngle, ~[-360, 360]
  * @param xiaoshu bool, 角度是否为整数, true则添加最后一个点
  */
-function getPntsInEllipse(center: Vector, majorRadius: number, minorRadius: number, startAngle: number, endAngle: number, rotateAngle: number, xiaoshu?: boolean) {
+function getPntsInEllipse(center: IVctor, majorRadius: number, minorRadius: number, startAngle: number, endAngle: number, rotateAngle: number, xiaoshu?: boolean) {
     let x = null,
         y = null,
         points = [],
@@ -330,7 +330,7 @@ function isPntInPolygon(point: IPoint, polygon: IPoint[]) {
     return isInside;
 }
 
-function getRectPoint(pos: IPoint, size: Size) {
+function getRectPoint(pos: IPoint, size: ISize) {
     return [
         { x: pos.x - size.width / 2, y: pos.y - size.height / 2 },
         { x: pos.x + size.width / 2, y: pos.y - size.height / 2 },

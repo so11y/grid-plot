@@ -1,4 +1,4 @@
-import { IPoint } from "../../Interface";
+import { IPoint, IPixelPos } from "../../Interface";
 import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
 
@@ -17,7 +17,7 @@ class Rect extends Feature {
         this.isClosePath = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r = 0) {
         // if (radius == 0) {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点
@@ -141,7 +141,7 @@ class Rect extends Feature {
         return width / height;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
         const { width, height, leftTop } = this.getSize(pointArr);
         return `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">
