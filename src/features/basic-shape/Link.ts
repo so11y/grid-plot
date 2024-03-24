@@ -9,7 +9,7 @@ let startIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.CURVE;
+    linkStyle: LinkStyle = LinkStyle.BROKEN;
     targets: [Feature, Feature];
 
     constructor(startFeature: Feature, endFeature: Feature) {
@@ -60,17 +60,16 @@ export default class Link extends Line {
     }
 
     getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1.5): IPixelPos[] {
-        const vct1 = createVctor(startPos, { x: startPos.x, y: 100 });
-        const vct2 = createVctor(endPos, { x: endPos.x, y: 100 });
+        const vct1 = createVctor(startPos, { x: startPos.x, y: -1000000 });
+        const vct2 = createVctor(endPos, { x: endPos.x, y: -1000000 });
         const cp1 = getPntInVct(startPos, vct1, (startPos.y - endPos.y) / ctrlExtent);
         const cp2 = getPntInVct(endPos, vct2, (endPos.y - startPos.y) / ctrlExtent);
         const points = getPntsOf3Bezier(startPos, cp1, cp2, endPos, this.pntsLimit);
-        this.gls.test = cp1
         return points;
     }
 
     getBrokenPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 2): IPixelPos[] {
-        const vct = createVctor(startPos, { x: startPos.x, y: 100 });
+        const vct = createVctor(startPos, { x: startPos.x, y: -1000000 });
         const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) / ctrlExtent);
         const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
         return points;
