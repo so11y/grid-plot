@@ -73,7 +73,7 @@
 ```
 > 获得canvas中心点
 ```
-   gls.getCenterPoint()
+   gls.getCenterOfTwoPnts()
 ```
 > 将画布缩放至指定大小。第一个参数缩放等级， 第二个参数传一个数组坐标，以该点作为中心点缩放
 ```

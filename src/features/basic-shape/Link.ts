@@ -1,6 +1,6 @@
 import { CoordinateSystem, LinkStyle } from "../../Constants";
 import { IPoint, Vector } from "../../Interface";
-import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPointInPolygon } from "../../utils";
+import { getPntInVct, getPntsOf3Bezier, getRectPoint, getRotatePnt, getVctLen, isPntInPolygon } from "../../utils";
 import AnchorPnt from "../function-shape/AnchorPnt";
 import Line from "./Line";
 let startIndex = 0;
@@ -137,7 +137,7 @@ export default class Link extends Line {
             if (minFNode) {
                 coordList.push({ x: minFNode.x, y: minFNode.y });
                 startPos = minFNode;
-                if (isPointInPolygon(minFNode, getRectPoint(endPos, { width: unitLen, height: unitLen }))) {
+                if (isPntInPolygon(minFNode, getRectPoint(endPos, { width: unitLen, height: unitLen }))) {
                     coordList.push({ x: Math.ceil(endPos.x), y: Math.ceil(endPos.y) });
                     return coordList;
                 } else {

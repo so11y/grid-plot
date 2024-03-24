@@ -1173,7 +1173,7 @@ class GridSystem {
     }
 
     // ----------------------剪切板相关---------------------------
-    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> { // 复制元素为png到剪贴板
+    copyImageToClipboard(feature = this.getFocusNode(), padding = 10): Promise<Blob> { // 复制元素为png到剪贴板
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
         var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
             features.forEach(cf => {

@@ -1,6 +1,6 @@
 import { BasicFeature } from "@/Interface";
 import { DrawAreaMode, SelectMode } from "../../Constants";
-import { isPointInPolygon, getMousePos, isBasicFeature } from "../../utils";
+import { isPntInPolygon, getMousePos, isBasicFeature } from "../../utils";
 import Group from "./Group";
 
 class SelectArea extends Group {
@@ -73,12 +73,12 @@ class SelectArea extends Group {
             let pointArr = f.pointArr;
             if (this.selectMode === SelectMode.ALL_P) {
                 return pointArr.every(p => {
-                    return isPointInPolygon(p, this.pointArr);
+                    return isPntInPolygon(p, this.pointArr);
                 });
             }
             if (this.selectMode === SelectMode.ONE_P) {
                 return pointArr.some(p => {
-                    return isPointInPolygon(p, this.pointArr);
+                    return isPntInPolygon(p, this.pointArr);
                 });
             }
             return []

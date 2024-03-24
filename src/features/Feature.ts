@@ -516,7 +516,7 @@ class Feature {
 
     // 以O点去旋转内容， 文字或者图片
     setAngle = (ctx: CanvasRenderingContext2D, O: IPoint, angle = this.angle) => {
-        if (angle && angle != 0) {
+        if (angle) {
             ctx.translate(O.x, O.y)
             ctx.rotate(angle * Math.PI / 180)
             ctx.translate(-O.x, -O.y)

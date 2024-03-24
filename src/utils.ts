@@ -69,27 +69,14 @@ function crossMul(point1: IPoint, point2: IPoint) {
     return point1.x * point2.y - point1.y * point2.x;
 }
 
-// 获取向量的长度
-function getVectorLength(vector: IPoint) {
-    return Math.sqrt(vector.x * vector.x + vector.y * vector.y)
-}
-
-// 获取线段的中点
-function getVectorCenter(point1: IPoint, point2: IPoint) {
-    return {
-        x: (point1.x + point2.x) / 2,
-        y: (point1.y + point2.y) / 2
-    }
-}
-
 //  求两个向量之间的夹角
-function get2vectorAngle(vector1: Vector, vector2: Vector) {
+function getAngleOfTwoVct(vector1: Vector, vector2: Vector) {
     var angle = Math.atan2(vector2[1], vector2[0]) - Math.atan2(vector1[1], vector1[0]);
     // if (angle < 0) angle += 2 * Math.PI;
     return angle;
 }
 
-function getCenterPoint(point1: IPoint, point2: IPoint): IPoint {
+function getCenterOfTwoPnts(point1: IPoint, point2: IPoint): IPoint {
     return {
         x: (point2.x + point1.x) / 2,
         y: (point2.y + point1.y) / 2
@@ -150,9 +137,8 @@ function createVctor(start: IPoint, end: IPoint): Vector {
     let y = end.y - start.y;
     return [x, y];
 };
-
-function getVctLen([x = 0, y = 0]) {
-    return Math.sqrt(x * x + y * y);
+function getVctLen(vct: Vector) {
+    return Math.sqrt(vct[0] * vct[0] + vct[1] * vct[1]);
 };
 
 /**
@@ -325,7 +311,7 @@ function getPntsInEllipse(center: Vector, majorRadius: number, minorRadius: numb
 };
 
 // 判断点是否在多边形内
-function isPointInPolygon(point: IPoint, polygon: IPoint[]) {
+function isPntInPolygon(point: IPoint, polygon: IPoint[]) {
     var j = polygon.length - 1;
     var isInside = false;
 
@@ -390,11 +376,6 @@ function beautifyHTML(html: string, indentSize = 2) {
     return formatted;
 }
 
-// 判断某个数在两个数范围内
-function isBetween(num: number, min: number, max: number) {
-    return num >= Math.min(min, max) && num <= Math.max(min, max);
-}
-
 // ----------------------------判断型方法-------------------------------
 // 判断是否时基础元素
 function isBasicFeature(f?: any) {
@@ -417,36 +398,36 @@ function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
 export {
     getMousePos,
     getUuid,
-    calculateBezierPointForCubic,
-    getAngleOfTwoPnts,
-    getVectorLength,
-    getVectorCenter,
-    get2vectorAngle,
-    getVector,
     crossMul,
-    getCenterPoint,
+    randomNum,
     hex2Rgba,
     rgb2Hex,
-    randomNum,
+
+    calculateBezierPointForCubic,
+    getVector,
+    getVctLen,
     getRotateVct,
     getLenOfPntToLine,
     getLenOfTwoPnts,
     getMidOfTwoPnts,
+    getAngleOfTwoPnts,
+    getAngleOfTwoVct,
+    getCenterOfTwoPnts,
     getRotateAng,
     getPntInVct,
-    getVctLen,
     createVctor,
     getRotatePnt,
     getPntsOf3Bezier,
-    toBase64,
-    isPointInPolygon,
     getRectPoint,
     getPntsInEllipse,
-    swapElements,
-    isBase64,
+
+    toBase64,
     getSizeInBytes,
     beautifyHTML,
-    isBetween,
+    swapElements,
+
+    isBase64,
+    isPntInPolygon,
     isBasicFeature,
     isCtrlFeature,
 }

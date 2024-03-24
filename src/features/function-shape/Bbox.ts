@@ -1,7 +1,7 @@
 import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { BasicFeature, Vector } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPointInPolygon } from "../../utils";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct, isPntInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -316,7 +316,7 @@ export default class Bbox extends Rect {
         //         let touchedAnchor: AnchorPnt | undefined;
         //         const anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
         //         const hasTouch = anchorPnts.some(a => {
-        //             const touched = aCtrlP1.pointArr.some(p => isPointInPolygon(p, a.pointArr))
+        //             const touched = aCtrlP1.pointArr.some(p => isPntInPolygon(p, a.pointArr))
         //             if (touched) touchedAnchor = a;
         //             return touched
         //         })
@@ -356,7 +356,7 @@ export default class Bbox extends Rect {
 
                     pointArr[1].x = pnt2.x;
                     pointArr[1].y = pnt2.y;
-                    
+
                     if (Bbox.isKeepRatio) {
                         const pnt3 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
                         pointArr[0].x = pnt3.x;
