@@ -46,8 +46,12 @@
                 <div :class="['icon-wrap subscript', { 'active': activeI === 7 }]" @click="onSelectTool(7)" title="网格背景">
                     <i class="iconfont gls-wanggeguan"></i>
                 </div>
-                <div :class="['icon-wrap subscript', { 'active': activeI === 7 }]" @click="onSelectTool(8)" title="网格吸附">
+                <div :class="['icon-wrap subscript', { 'active': gls?.cbAdsorption }]" @click="onSelectTool(8)"
+                    title="网格吸附">
                     <i class="iconfont gls-zidongxifu"></i>
+                </div>
+                <div :class="['icon-wrap subscript', { 'active': GridSystem.Eraser }]" @click="onSelectTool(9)" title="橡皮擦">
+                    <i class="iconfont gls-rubber"></i>
                 </div>
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap', { 'active': activeI === 8 }]" @click="onSelectTool(7)" title="更多工具">
@@ -376,7 +380,7 @@
 </template>
     
 <script lang="ts" setup>
-import { AlignType, Events } from "@/Constants";
+import { AlignType } from "@/Constants";
 import Circle from "@/features/basic-shape/Circle";
 import Img from "@/features/basic-shape/Img";
 import Line from "@/features/basic-shape/Line";
@@ -386,16 +390,14 @@ import Feature from "@/features/Feature";
 import SelectArea from "@/features/function-shape/SelectArea";
 import Group from "@/features/function-shape/Group";
 import GridLine from "@/GridLine";
-import { randomNum } from "@/utils";
 import { message } from "ant-design-vue";
-import { nextTick, onMounted, reactive, ref, toRef, toRefs } from "vue";
+import { onMounted, ref } from "vue";
 import { DrawAreaMode } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 import { BasicFeature } from "@/Interface";
 
 const cvs = ref(null);
-const rPanel = ref(null);
 const activeI = ref(-1);
 const isShowSide = ref(false);
 const props = ref<Partial<Feature & Rect & Line>>({
@@ -404,9 +406,7 @@ const props = ref<Partial<Feature & Rect & Line>>({
     radius: 0,
 });
 let gl: GridLine | null = new GridLine();
-let sa: SelectArea | null | undefined = null;
-let gls: GridSystem | null;
-const isShowPropTab = ref(false);
+let gls = ref<GridSystem | null>(null);
 const copyStyles = ref({});
 const isShowSaveImage = ref(false);
 const isShowHelp = ref(false);
@@ -434,7 +434,7 @@ function onSelectTool(index = 0, param?: any) {
     switch (index) {
         case 0: // 选择区域
             message.info("按住左键移动吧!")
-            let sa = gls?.enableSelectArea() as SelectArea;
+            let sa = gls.value?.enableSelectArea() as SelectArea;
             sa && (sa.drawMode = DrawAreaMode.RECT);
             // console.log(111);
             break;
@@ -442,12 +442,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击画布创建吧!")
             let rect = new Rect(0, 0, 50, 20);
             rect.name = '你好'
-            cb = gls?.singleClickToFeature(rect)
+            cb = gls.value?.singleClickToFeature(rect)
             break;
         case 2: // 单击创建Circle
             message.info("点击画布创建吧!")
             let circle = new Circle(0, 0, 50, 50);
-            cb = gls?.singleClickToFeature(circle)
+            cb = gls.value?.singleClickToFeature(circle)
             break;
         case 3: // 点击创建Line
             message.info("点击画布创建吧!")
@@ -457,7 +457,7 @@ function onSelectTool(index = 0, param?: any) {
 
             line.lineDashArr = globalBorderStyle.value;
             line.tip = "测试111"
-            cb = gls?.continuousClickToFeature(line)
+            cb = gls.value?.continuousClickToFeature(line)
             break;
         case 4: // 自由笔
             message.info("点击移动绘制吧!")
@@ -468,7 +468,7 @@ function onSelectTool(index = 0, param?: any) {
                 line.strokeStyle = globalStrokeColor.value || "red"
                 line.hoverStyle = "#666"
                 line.focusStyle = "#666"
-                cb = gls?.downMoveToFeature(line, !!param, () => {
+                cb = gls.value?.downMoveToFeature(line, !!param, () => {
                     line.strokeStyle = globalStrokeColor.value || "red"
                     downMoveToFeature();
                 })
@@ -481,7 +481,7 @@ function onSelectTool(index = 0, param?: any) {
                 message.info("点击画布创建吧!")
                 let text = new Text(txt as string, 0, 0, 20, 10);
                 text.fitSize = true;
-                gls?.singleClickToFeature(text)
+                gls.value?.singleClickToFeature(text)
             }
 
             break;
@@ -495,7 +495,7 @@ function onSelectTool(index = 0, param?: any) {
                     reader.onload = function () {
                         message.info("点击画布创建吧!")
                         let img = new Img(reader.result as string, 0, 0);
-                        gls?.singleClickToFeature(img)
+                        gls.value?.singleClickToFeature(img)
                     }
                 }
             });
@@ -504,9 +504,12 @@ function onSelectTool(index = 0, param?: any) {
             gl ? gl = null : gl = new GridLine()
             break;
         case 8: // 选择区域
-            if (gls) {
-                gls.cbAdsorption = !gls.cbAdsorption;
+            if (gls.value) {
+                gls.value.cbAdsorption = !gls.value.cbAdsorption;
             }
+            break;
+        case 9: // 橡皮擦
+            gls.value?.enableEraserPnt();
             break;
         default:
             break;
@@ -537,8 +540,8 @@ function onSaveImg() {
 function onShowPreview() {
     isShowSaveImage.value = true;
     setTimeout(() => {
-        if (gls) {
-            var base64 = gls.dom.toDataURL("image/png");
+        if (gls.value) {
+            var base64 = gls.value.dom.toDataURL("image/png");
             let img = document.getElementById("preview-img") as HTMLImageElement;
             img.src = base64;
             previewImg.value = base64;
@@ -547,10 +550,10 @@ function onShowPreview() {
 }
 
 function onSaveFile() {
-    if (gls?.features && gls.features.length <= 0) {
+    if (gls.value?.features && gls.value.features.length <= 0) {
         return message.warning("没有元素,保存啥?")
     }
-    let str = gls?.save();
+    let str = gls.value?.save();
     const text = JSON.stringify(str)
     const blob = new Blob([text], {
         type: "text/plain;charset=utf-8"
@@ -559,7 +562,7 @@ function onSaveFile() {
     const objectURL = URL.createObjectURL(blob)
     const domElement = document.createElement('a')
     domElement.href = objectURL;
-    domElement.download = `${new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()}.gls`
+    domElement.download = `${new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()}`
     domElement.click()
     URL.revokeObjectURL(objectURL)
 }
@@ -572,14 +575,10 @@ function onImportFile() {
             })
             reader.onload = function () {
                 let features = JSON.parse(JSON.parse(reader.result as string))
-                gls?.loadData(features);
+                gls.value?.loadData(features);
             }
         }
     });
-}
-
-function darkTheme() {
-
 }
 
 function startTime(gls: GridSystem) {
@@ -590,82 +589,81 @@ function startTime(gls: GridSystem) {
 
 function reset(clear = false) {
     if (clear) localStorage.setItem("features", '');
-    if (gls) {
-        gls.destroy();
-        gls = null;
+    if (gls.value) {
+        gls.value.destroy();
+        gls.value = null;
     }
     let canvasDom = cvs.value as unknown as HTMLCanvasElement;
-    gls = new GridSystem(canvasDom);
+    gls.value = new GridSystem(canvasDom);
     // gls.loadData();
     setSize(canvasDom);
-    startTime(gls as GridSystem);
+    startTime(gls.value as GridSystem);
+    let rect = new Rect(100, 100, 100, 100)
+    rect.radius = 2;
+    rect.rotate(60)
+    // rect.isFixedPos = true;
+    // rect.fillStyle = "transparent"
+    // rect.isOverflowHidden = true;
+    gls.value.addFeature(rect, false)
 
-    //     let rect = new Rect(100, 100, 100, 100)
-    //     rect.radius = 2;
-    //     rect.rotate(60)
-    //     // rect.isFixedPos = true;
-    //     // rect.fillStyle = "transparent"
-    //     // rect.isOverflowHidden = true;
-    //     gls.addFeature(rect, false)
+    const text = new Text(`当内容
+    特别多的时候，canvas不会自动
+    换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    text.fitSize = true;
+    text.radius = 2
+    // text.rotate(30)
+    gls.value.addFeature(text, false);
+    // rect.addFeature(text);
 
-    //     const text = new Text(`当内容
-    // 特别多的时候，canvas不会自动
-    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    //     text.fitSize = true;
-    //     text.radius = 2
-    //     // text.rotate(30)
-    //     gls.addFeature(text, false);
-    //     // rect.addFeature(text);
+    let rect2 = new Rect(150, 150, 50, 50)
+    rect2.fillStyle = "transparent"
+    gls.value.addFeature(rect2, false)
 
-    //     let rect2 = new Rect(150, 150, 50, 50)
-    //     rect2.fillStyle = "transparent"
-    //     gls.addFeature(rect2, false)
-
-    // let circle = new Circle(280, 180, 30, 30)
-    // gls.addFeature(circle, false)
+    let circle = new Circle(280, 180, 30, 30)
+    gls.value.addFeature(circle, false)
 
     var line = new Line([
-        { x: 310, y: 60 },
-        { x: 400, y: 90 },
+        { x: 210, y: 60 },
+        { x: 300, y: 90 },
     ])
     line.tip = "测试文本"
     line.tipSize = 21
     // line.enableCtrlPnts();
-    gls.addFeature(line, false)
+    gls.value.addFeature(line, false)
 
 
-    // let img = new Img("/img2.png", 400, 100);
-    // gls.addFeature(img, false)
+    let img = new Img("/img2.png", 400, 100);
+    gls.value.addFeature(img, false)
 
     // 合并为组
-    // let group = new Group([rect, rect2, circle]);
-    // group.translate(-10, 100)
-    // group.cbTransformChild = false;
-    // gls.addFeature(group, false)
+    let group = new Group([rect, rect2, circle]);
+    group.translate(-10, 100)
+    group.cbTransformChild = false;
+    gls.value.addFeature(group, false)
     // rect.onMousemove = () => {
     //     console.log(222);
     // }
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    // group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
+    group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
     // line.cbTransform = false;
     // const text2 = new Text("测试文本", 60, 80, 100, 10);
     // // text2.fitSize = true;
-    // gls.addFeature(text2, false);
+    // gls.value.addFeature(text2, false);
     // line.addFeature(text2, false);
     // line.enableCtrlPnts();
 
     // console.log(group, rect, rect2);
 
     // setTimeout(() => {
-    //     gls.removeFeature(rect4)
+    //     gls.value.removeFeature(rect4)
     // }, 1000);
 
     // img.fillStyle = "transparent"
     // img.rotate(20)
-    gls.enableStack();
+    gls.value.enableStack();
 }
 
 function linkTo(url: string) {
@@ -683,37 +681,37 @@ function setSize(canvasDom: HTMLCanvasElement) {
 }
 
 function toTopAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toTopAlign();
     message.info('顶对齐');
 }
 function toBottomAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toBottomAlign();
     message.info('底对齐');
 }
 function toRightAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toRightAlign();
     message.info('右对齐');
 }
 function toLeftAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toLeftAlign();
     message.info('左对齐');
 }
 function toHorizonalAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toHorizonalAlign();
     message.info('水平对齐');
 }
 function toVerticalAlign() {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     sa && sa.toVerticalAlign();
     message.info('垂直对齐');
 }
 function toSpacebetween(flexFLow = AlignType.HORIZONAL) {
-    let sa = gls?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
+    let sa = gls.value?.features.find(f => f instanceof SelectArea || f instanceof Group) as SelectArea;
     // sa && sa.toSpaceAroud();
     sa && sa.toSpaceBetween(sa.children, flexFLow);
     message.info('均匀分布');
@@ -722,42 +720,42 @@ function toSpacebetween(flexFLow = AlignType.HORIZONAL) {
 
 function modifyStrokeStyle(color: string) {
     globalStrokeColor.value = color;
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         focuseNode.strokeStyle = color;
     }
 }
 
 function modifyFillStyle(color: string) {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         focuseNode.fillStyle = focuseNode.hoverStyle = focuseNode.focusStyle = color;
     }
 }
 
 function modifyBorderStyle(arr: number[]) {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         focuseNode.lineDashArr = arr;
     }
 }
 
 function modifyLineWidth(width: number) {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         focuseNode.lineWidth = width;
     }
 }
 
 function modifyRadius(radius: number) {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode && focuseNode instanceof Rect) {
         focuseNode.radius = radius;
     }
 }
 
 function modifyOpacity(opacity: number) {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         console.log(opacity, "opacity");
 
@@ -766,7 +764,7 @@ function modifyOpacity(opacity: number) {
 }
 
 function setTranformChild() {
-    let focuseNode = gls?.getFocusNode();
+    let focuseNode = gls.value?.getFocusNode();
     if (focuseNode) {
         focuseNode.cbTransformChild = !focuseNode.cbTransformChild;
         console.log(focuseNode.cbTransformChild, "focuseNode.cbTransformChild");
@@ -775,9 +773,9 @@ function setTranformChild() {
 }
 
 function copyImageToClipboard() {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
-        gls.copyImageToClipboard(focuseNode).then(blob => {
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
+        gls.value.copyImageToClipboard(focuseNode).then(blob => {
             let reader = new FileReader();
             reader.readAsDataURL(blob);
             reader.onload = (res) => {
@@ -789,9 +787,9 @@ function copyImageToClipboard() {
 }
 
 function copySvgToClipboard() {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
-        gls.copySvgToClipboard(focuseNode).then(res => {
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
+        gls.value.copySvgToClipboard(focuseNode).then(res => {
             window.open('', '_blank')?.document.write(res);
         })
     }
@@ -799,34 +797,34 @@ function copySvgToClipboard() {
 }
 
 function revert(direction: AlignType) {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
         focuseNode.revert(direction)
     }
     message.info('镜像翻转');
 }
 
 function copyStyle() {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
-        copyStyles.value = gls.recordFeature(focuseNode, true);
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
+        copyStyles.value = gls.value.recordFeature(focuseNode, true);
     }
     message.info('复制样式');
 }
 
 function modifyStyle() {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
-        copyStyles.value = gls.modifyFeature(focuseNode, copyStyles.value);
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
+        copyStyles.value = gls.value.modifyFeature(focuseNode, copyStyles.value);
     }
     message.info('粘贴样式');
 }
 
 function toOffset(offset = 0) {
-    let focuseNode = gls?.getFocusNode();
-    if (focuseNode && gls) {
-        if(focuseNode instanceof Line) {
-            focuseNode.tipOffset.y+=offset;
+    let focuseNode = gls.value?.getFocusNode();
+    if (focuseNode && gls.value) {
+        if (focuseNode instanceof Line) {
+            focuseNode.tipOffset.y += offset;
         }
     }
 }
@@ -1004,7 +1002,7 @@ canvas {
         }
 
         &.active {
-            background-color: #5DB5F9;
+            background-color: rgba(174, 214, 241, .9);
         }
 
         &.gengduo {

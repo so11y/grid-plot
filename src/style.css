@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff2?t=1709550386149') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff?t=1709550386149') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.ttf?t=1709550386149') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.svg?t=1709550386149#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_s772da6wczb.woff2?t=1711291167555') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_s772da6wczb.woff?t=1711291167555') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_s772da6wczb.ttf?t=1711291167555') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_s772da6wczb.svg?t=1711291167555#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-rubber:before {
+  content: "\ea15";
 }
 
 .gls-copy:before {
@@ -241,6 +245,7 @@
 .gls-wenzi:before {
   content: "\e616";
 }
+
 
 
 ul, li, body {

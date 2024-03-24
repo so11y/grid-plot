@@ -8,7 +8,7 @@ class AdsorbPnt extends Rect {
 
     cbAdsorption: boolean = true;  // 是否吸附
     cbCrossLine: boolean = true;
-    crossLineStrokeStyle: string;
+    crossLineStrokeStyle = "#2471A3";
 
     constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
@@ -22,7 +22,6 @@ class AdsorbPnt extends Rect {
         this.cbCrossLine = cbCrossLine;
         this.cbCapture = false;
         this.cbSelect = false;
-        this.crossLineStrokeStyle = "#2471A3";
         this.gls.addFeature(this, false)
         document.addEventListener("mousemove", this.setPos.bind(this));
     }

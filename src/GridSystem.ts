@@ -16,6 +16,7 @@ import Circle from "./features/basic-shape/Circle";
 import SelectArea from "./features/function-shape/SelectArea";
 import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
+import EraserPnt from "./features/function-shape/EraserPnt";
 
 class GridSystem {
 
@@ -23,6 +24,7 @@ class GridSystem {
     static Stack: Stack | null;
     static Bbox: Bbox | null;
     static Shortcuts: Shortcuts | null;
+    static Eraser: EraserPnt | null;
 
     className = 'GridSystem';
     scale: number = 10;
@@ -47,7 +49,6 @@ class GridSystem {
     timer2: number = 0;
     backgroundColor: string = '#fff'
 
-    hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
 
@@ -184,6 +185,10 @@ class GridSystem {
         GridSystem.Shortcuts.addEvent("esc", () => {
             const sa = this.features.find(f => f instanceof SelectArea) as SelectArea;
             this.removeFeature(sa)
+        })
+        GridSystem.Shortcuts.addEvent("del", () => {
+            const focusNode = this.getFocusNode();
+            this.removeFeature(focusNode)
         })
         // GridSystem.Shortcuts.addEvent("left", () => {
         //     const feature = this.getFocusNode();
@@ -360,8 +365,8 @@ class GridSystem {
         const { x: centerX, y: centerY } = feature.getCenterPos();
 
         // 吸附的约束，灵敏度
-        const min = gridSize * .2;
-        const max = gridSize * .8;
+        let min = gridSize * .2;
+        let max = gridSize * .8;
 
         function getDeviation(num: number): number {   // 附近可吸附的位置
             const gridSize = CoordinateSystem.GRID_SIZE;
@@ -441,7 +446,7 @@ class GridSystem {
             min = gridSize * .1;
             max = gridSize * .9;
             // 元素间对其
-            for (const index = 0; index < this.features.length; index++) {
+            for (let index = 0; index < this.features.length; index++) {
                 const f = this.features[index];
                 if (f === feature) {
                     continue
@@ -597,7 +602,7 @@ class GridSystem {
             }
             feature.destroy();
             feature.ondelete();
-            this.features = this.features.filter(f => f != feature);
+            this.features = this.features.filter(f => feature && (f.id != feature.id));
             feature = null;
             isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 删除元素记录
         }
@@ -607,7 +612,7 @@ class GridSystem {
         this.features.push(feature);
         if (!feature.zIndex) {
             const features = this.features.filter(f => !isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
-            if(!feature.zIndex) feature.zIndex = features.length;
+            if (!feature.zIndex) feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
@@ -1104,7 +1109,7 @@ class GridSystem {
 
 
     // ---------------------开启或关闭历史记录, bbox, 区域选择
-    enableStack(enabled: boolean = true) {
+    enableStack(enabled: boolean = true) {  // 开启或关闭历史记录 
         if (!enabled) {
             GridSystem.Stack?.destory();
             GridSystem.Stack = null;
@@ -1117,7 +1122,7 @@ class GridSystem {
             }
         }
     }
-    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
+    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
         const bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
         if (f && !f.isFixedSize && f.cbTransform) {
@@ -1125,12 +1130,22 @@ class GridSystem {
             return nbbox;
         }
     }
-    enableSelectArea(bool = true) {
+    enableSelectArea(bool = true) {   // 区域选择
         let sa = this.features.find(f => f instanceof SelectArea);
         this.removeFeature(sa, false);
         if (bool) {
             sa = new SelectArea();
             return sa;
+        }
+    }
+
+    enableEraserPnt() {  // 橡皮擦
+        if (GridSystem.Eraser) {
+            this.removeFeature(GridSystem.Eraser);
+            GridSystem.Eraser = null;
+        } else {
+            GridSystem.Eraser = EraserPnt.getInstance();
+            this.addFeature(GridSystem.Eraser, false)
         }
     }
 
