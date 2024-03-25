@@ -24,8 +24,8 @@ export default class Bbox extends Rect {
     constructor(target: IBasicFeature | SelectArea) {   // 相对坐标
         // const angle = target.angle;
         // target.rotate(-angle)
-        const center = target.getCenterPos();
-        const [minX, maxX, minY, maxY] = target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
+        const center = Feature.getCenterPos(target.pointArr);
+        const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(target.pointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
         this.className = 'Bbox';
         this.isFixedPos = target.isFixedPos;
@@ -95,8 +95,8 @@ export default class Bbox extends Rect {
         bCtrlP.name = CtrlType.ANGLE_CTRL;
         bCtrlP.adsorbTypes = []
         bCtrlP.translateEvents.push(() => {
-            const bboxPos = this.getCenterPos(); // bbox的中心点
-            const bctrlPos = bCtrlP.getCenterPos(); // 旋转控制点的中心点
+            const bboxPos = Feature.getCenterPos(this.pointArr); // bbox的中心点
+            const bctrlPos = Feature.getCenterPos(bCtrlP.pointArr); // 旋转控制点的中心点
             const vct1: IVctor = [0, -100];
             const vct2 = createVctor(bboxPos, bctrlPos);
             let angle = getRotateAng(vct1, vct2);
@@ -148,7 +148,7 @@ export default class Bbox extends Rect {
         bCtrlP2.name = CtrlType.WIDTH_CTRL;
         bCtrlP2.translateEvents.push(() => {
             const pointArr = this.pointArr;
-            const ctrlPos = bCtrlP2.getCenterPos();  // 当前控制点的中心点
+            const ctrlPos = Feature.getCenterPos(bCtrlP2.pointArr);  // 当前控制点的中心点
             const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[1], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
             const pnt2 = getPntInVct(pointArr[2], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
@@ -185,7 +185,7 @@ export default class Bbox extends Rect {
         bCtrlP3.name = CtrlType.WIDTH_CTRL;
         bCtrlP3.translateEvents.push(() => {
             const pointArr = this.pointArr;
-            const ctrlPos = bCtrlP3.getCenterPos();  // 当前控制点的中心点
+            const ctrlPos = Feature.getCenterPos(bCtrlP3.pointArr);  // 当前控制点的中心点
             const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[0], this.vctX, lenX)  // 关联点长度同步移动
             const pnt2 = getPntInVct(pointArr[3], this.vctX, lenX)  // 关联点长度同步移动
@@ -206,7 +206,7 @@ export default class Bbox extends Rect {
                             setTranform(f);
                         })
                     }
-                    feature.getRectWrapExtent()
+                    Feature.getRectWrapExtent(feature.pointArr)
                 }
                 setTranform(this.target);
             }
@@ -223,7 +223,7 @@ export default class Bbox extends Rect {
         bCtrlP4.name = CtrlType.HEIGHT_CTRL;
         bCtrlP4.translateEvents.push(() => {
             const pointArr = this.pointArr;
-            const ctrlPos = bCtrlP4.getCenterPos();  // 当前控制点的中心点
+            const ctrlPos = Feature.getCenterPos(bCtrlP4.pointArr);  // 当前控制点的中心点
             const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[2], this.vctY, -lenY)  // 关联点长度同步移动
             const pnt2 = getPntInVct(pointArr[3], this.vctY, -lenY)  // 关联点长度同步移动
@@ -260,7 +260,7 @@ export default class Bbox extends Rect {
         bCtrlP5.name = CtrlType.HEIGHT_CTRL;
         bCtrlP5.translateEvents.push(() => {
             const pointArr = this.pointArr;
-            const ctrlPos = bCtrlP5.getCenterPos();  // 当前控制点的中心点
+            const ctrlPos = Feature.getCenterPos(bCtrlP5);  // 当前控制点的中心点
             const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
             const pnt2 = getPntInVct(pointArr[1], this.vctY, lenY)  // 关联点长度同步移动
@@ -332,7 +332,7 @@ export default class Bbox extends Rect {
     onSizeChange() {
         const bbox = this.parent as Bbox;
         const pointArr = bbox.pointArr;
-        const ctrlPos = this.getCenterPos();  // 当前控制点的中心点
+        const ctrlPos = Feature.getCenterPos(this.pointArr);  // 当前控制点的中心点
         switch (this.index) {
             case 0:  // 左上角
                 {
@@ -520,14 +520,6 @@ export default class Bbox extends Rect {
     getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
         return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
-
-    // // 子元素 宽高发生变化时, 旋转有问题
-    // updateSize(){
-    //     const [minX, maxX, minY, maxY] = this.target.getRectWrapExtent();  // [leftTop, rightTop, rightBottom, leftBottom]
-    //     const center = this.target.getCenterPos();
-    //     this.setSize(maxX - minX, maxY - minY)
-    //     this.setPos(center.x, center.y)
-    // }
 
     destroy() {
         // super.destroy();

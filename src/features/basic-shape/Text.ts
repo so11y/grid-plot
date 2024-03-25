@@ -236,56 +236,6 @@ class Text extends Rect {
         };
     }
 
-
-    // createInputDom = (pos: IPoint) => {
-    //     Text.inputDom = document.createElement("textarea") as HTMLTextAreaElement;
-    //     const [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints();
-    //     const { x, y } = this.gls.getPixelPos(leftTop);
-    //     const { x: x1, y: y1 } = this.gls.getPixelPos(rightTop);
-    //     const fontSize = this.gls.getRatioSize(this.fontSize)
-    //     Text.inputDom.style.position = "fixed";
-    //     Text.inputDom.style.opacity = '1';
-    //     Text.inputDom.style.left = `${x - 500}px`;
-    //     Text.inputDom.style.top = `${y}px`;
-    //     Text.inputDom.style.width = `${x1 - x}px`;
-    //     Text.inputDom.rows = this.textArr.length;
-    //     Text.inputDom.style.padding = `${0}px`;
-    //     Text.inputDom.style.border = `none`;
-    //     Text.inputDom.style.resize = `none`;
-    //     Text.inputDom.style.transform = `rotate(${this.angle}deg)`;
-    //     Text.inputDom.style.transformOrigin = `center center`;
-    //     Text.inputDom.style.outline = `none`;
-    //     // Text.inputDom.style.opacity = `0`;
-    //     // Text.inputDom.style.background = `transparent`;
-    //     Text.inputDom.style.background = `#fff`;
-    //     Text.inputDom.style.fontFamily = `${this.fontFamily}`;
-    //     Text.inputDom.style.fontWeight = `${this.fontWeight}`;
-    //     Text.inputDom.style.fontSize = `${fontSize}px`;
-    //     Text.inputDom.value = this.textInfo.txt;
-    //     document.body.appendChild(Text.inputDom);
-    //     setTimeout(() => {
-    //         if (Text.inputDom) {
-    //             setCursorPosition(Text.inputDom, this.cursorIndex)
-    //             Text.inputDom.focus();
-    //             Text.inputDom.oninput = () => {
-    //                 if (Text.inputDom) {
-    //                     this.textInfo.txt = Text.inputDom.value;
-    //                     this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
-    //                     this.cursorIndex = getCursorPosition(Text.inputDom).end;
-    //                 }
-    //             }
-    //             Text.inputDom.onkeydown = () => {
-    //                 setTimeout(() => {
-    //                     if (Text.inputDom) {
-    //                         this.textArr = this.getFormatStr(x1 - x, this.gls.getPixelLen(this.fontSize));
-    //                         this.cursorIndex = getCursorPosition(Text.inputDom).end;
-    //                     }
-    //                 }, 100)
-    //             }
-    //         }
-    //     }, 100)
-    // }
-
     removeInputDom() {
         if (Text.inputDom) {
             document.body.removeChild(Text.inputDom);

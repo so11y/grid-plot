@@ -70,7 +70,7 @@ class Line extends Feature {
                 path.moveTo(p.x, p.y)
             } else {
                 // if (this.curveCtrlPnt[i]) {
-                //     const center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
+                //     const center = this.gls.getPixelPos(Feature.getCenterPos(this.curveCtrlPnt[i].pointArr));
                 //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
                 // } else {
                 path.lineTo(p.x, p.y)
@@ -99,12 +99,12 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, this.getTipPnt(pointArr), lineWidth);
+        this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
         ctx.restore()
         return path;
     }
 
-    getTipPnt(pointArr: IPixelPos[]): [IPoint, IPoint] {
+    getTwoPntByTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
         if (pointArr.length < 2) throw new Error("参数长度必须大于1");
         return [pointArr[0], pointArr[pointArr.length - 1]]
     }

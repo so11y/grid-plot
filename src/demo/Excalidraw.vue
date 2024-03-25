@@ -56,8 +56,12 @@
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap', { 'active': activeI === 8 }]" @click="onSelectTool(7)" title="更多工具">
                     <i class="iconfont gls-gengduogongju"></i>
-                    <ul class="list-wrap hover-tab">
-                        <li>123</li>
+                    <ul class="list-wrap hover-tab" style="width: 150px;">
+                        <li @click.stop="onSelectTool(10)">
+                            <a-row type="flex" align="middle">
+                                <i class="iconfont gls-fit-size" style="margin-right: 4px;"></i> <span>内容适应宽高</span>
+                            </a-row>
+                        </li>
                     </ul>
                 </div>
             </a-row>
@@ -513,6 +517,9 @@ function onSelectTool(index = 0, param?: any) {
         case 9: // 橡皮擦
             gls.value?.enableEraserPnt();
             break;
+        case 10: // 内容适应宽高
+            gls.value?.toFitView();
+            break;
         default:
             break;
     }
@@ -600,70 +607,71 @@ function reset(clear = false) {
     gls.value.loadFont(FontFamily.SHISHANG)
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
-    let rect = new Rect(100, 100, 100, 100)
-    rect.radius = 2;
-    rect.rotate(60)
-    gls.value.addFeature(rect, false)
 
-    const text = new Text(`当内容
-    特别多的时候，canvas不会自动
-    换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    text.fitSize = true;
-    text.radius = 2
-    // text.rotate(30)
-    gls.value.addFeature(text, false);
-    // rect.addFeature(text);
+    // let rect = new Rect(100, 100, 100, 100)
+    // rect.radius = 2;
+    // rect.rotate(60)
+    // gls.value.addFeature(rect, false)
 
-    let rect2 = new Rect(150, 150, 50, 50)
-    rect2.fillStyle = "transparent"
-    gls.value.addFeature(rect2, false)
+    // const text = new Text(`当内容
+    // 特别多的时候，canvas不会自动
+    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    // text.fitSize = true;
+    // text.radius = 2
+    // // text.rotate(30)
+    // gls.value.addFeature(text, false);
+    // // rect.addFeature(text);
 
-    let circle = new Circle(280, 180, 30, 30)
-    gls.value.addFeature(circle, false)
+    // let rect2 = new Rect(150, 150, 50, 50)
+    // rect2.fillStyle = "transparent"
+    // gls.value.addFeature(rect2, false)
 
-    var line = new Line([
-        { x: 210, y: 60 },
-        { x: 300, y: 90 },
-    ])
-    line.tipInfo.txt = "测试文本"
-    line.tipInfo.fontSize = 21
-    // line.enableCtrlPnts();
-    gls.value.addFeature(line, false)
+    // let circle = new Circle(280, 180, 30, 30)
+    // gls.value.addFeature(circle, false)
+
+    // var line = new Line([
+    //     { x: 210, y: 60 },
+    //     { x: 300, y: 90 },
+    // ])
+    // line.tipInfo.txt = "测试文本"
+    // line.tipInfo.fontSize = 21
+    // // line.enableCtrlPnts();
+    // gls.value.addFeature(line, false)
 
 
-    let img = new Img("/img2.png", 400, 100);
-    gls.value.addFeature(img, false)
+    // let img = new Img("/img2.png", 400, 100);
+    // gls.value.addFeature(img, false)
 
-    // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    group.translate(-10, 100)
-    group.cbTransformChild = false;
-    gls.value.addFeature(group, false)
-    // rect.onMousemove = () => {
-    //     console.log(222);
-    // }
-    // group.onMousemove = () => {
-    //     console.log(11);
-    // }
-    group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
+    // // 合并为组
+    // let group = new Group([rect, rect2, circle]);
+    // group.translate(-10, 100)
+    // group.cbTransformChild = false;
+    // gls.value.addFeature(group, false)
+    // // rect.onMousemove = () => {
+    // //     console.log(222);
+    // // }
+    // // group.onMousemove = () => {
+    // //     console.log(11);
+    // // }
+    // group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
-    // // 网格坐标
-    // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
-    // let width = getUnitSize();
-    // let rect4 = new Rect(gpos.x, gpos.y, width, width);
-    // rect4.fillStyle = "transparent"
-    // gls.value.addFeature(rect4, false);
+    // // // 网格坐标
+    // // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
+    // // let width = getUnitSize();
+    // // let rect4 = new Rect(gpos.x, gpos.y, width, width);
+    // // rect4.fillStyle = "transparent"
+    // // gls.value.addFeature(rect4, false);
 
-    // document.addEventListener("mousedown", (e:any)=>{
-    //     if(gls.value){
-    //         let ppos = getMousePos(gls.value.domElement, e);
-    //         let rpos = gls.value.getRelativePos(ppos);
-    //         let gpos = gls.value.getGridPosByRelativePos(rpos);
-    //         let nrpos = gls.value.getRelativePosByGridPos(gpos)
+    // // document.addEventListener("mousedown", (e:any)=>{
+    // //     if(gls.value){
+    // //         let ppos = getMousePos(gls.value.domElement, e);
+    // //         let rpos = gls.value.getRelativePos(ppos);
+    // //         let gpos = gls.value.getGridPosByRelativePos(rpos);
+    // //         let nrpos = gls.value.getRelativePosByGridPos(gpos)
 
-    //         rect4.setPos(nrpos.x, nrpos.y)
-    //     }
-    // })
+    // //         rect4.setPos(nrpos.x, nrpos.y)
+    // //     }
+    // // })
 
     let width = getUnitSize();
     let rect5 = new Rect(0, 0, width, width);
@@ -1044,13 +1052,20 @@ canvas {
         }
 
         .hover-tab {
+            width: 200px;
             background-color: #fff;
             border-radius: 5px;
+            font-size: 14px;
             // border: 1px solid #d9d9d9;
             box-shadow: 0px 0px 1px 0px rgba(0, 0, 0, .17), 0px 0px 3px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
             display: none;
             margin-top: 20px;
             padding: 10px;
+            text-align: left;
+            line-height: 14px;
+            li {
+                padding: 5px;
+            }
         }
     }
 

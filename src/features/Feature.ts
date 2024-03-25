@@ -10,6 +10,38 @@ class Feature {
 
     static Gls: GridSystem;
     static TargetRender: GridSystem | MiniMap | null = null;  // 当前渲染所处环境， GridSystem, MiniMap
+    static getRectWrapExtent(pointArr: IPoint[]): number[] {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        for (const point of pointArr) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+        }
+        return [minX, maxX, minY, maxY];
+    }
+    static getRectWrapPoints(pointArr: IPoint[]): IPoint[] { // [leftTop, rightTop, rightBottom, leftBottom]
+        const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(pointArr);
+        if (minX != null && minY != null && maxX != null && maxY != null) {
+            return [
+                { x: minX, y: minY },
+                { x: maxX, y: minY },
+                { x: maxX, y: maxY },
+                { x: minX, y: maxY },
+            ]
+        }
+        return []
+    }
+    static getCenterPos(pointArr: IPoint[]): IPoint {
+        const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(pointArr);
+        return {
+            x: (minX + maxX) / 2,
+            y: (minY + maxY) / 2,
+        }
+    }
 
     pointArr: IRelativePos[] = [];
     fillStyle: string = 'transparent';
@@ -113,7 +145,7 @@ class Feature {
         this.id = getUuid();
     }
 
-    rotate(angle: number = this.angle, O: IPoint = this.getCenterPos(), cbRotate = true) {
+    rotate(angle: number = this.angle, O: IPoint = Feature.getCenterPos(this.pointArr), cbRotate = true) {
         this.pointArr = this.getPointArr(this.pointArr, angle, O)
         this.angle += angle;
         cbRotate && this.children.forEach(cf => {  // 子元素递归旋转
@@ -194,47 +226,6 @@ class Feature {
         }
     }
 
-    getRectWrapExtent(pointArr: IPoint[] = this.pointArr): number[] {
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        for (const point of pointArr) {
-            minX = Math.min(minX, point.x);
-            maxX = Math.max(maxX, point.x);
-            minY = Math.min(minY, point.y);
-            maxY = Math.max(maxY, point.y);
-        }
-
-        // this.size.width = Math.abs(maxX - minX);
-        // this.size.height = Math.abs(maxY - minY);
-        return [minX, maxX, minY, maxY];
-    }
-
-    // [leftTop, rightTop, rightBottom, leftBottom]
-    getRectWrapPoints(pointArr: IPoint[] = this.pointArr): IPoint[] {
-        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
-        if (minX != null && minY != null && maxX != null && maxY != null) {
-            return [
-                { x: minX, y: minY },
-                { x: maxX, y: minY },
-                { x: maxX, y: maxY },
-                { x: minX, y: maxY },
-            ]
-        }
-        return []
-    }
-
-    getCenterPos(pointArr: IPoint[] = this.pointArr): IPoint {
-        const [minX, maxX, minY, maxY] = this.getRectWrapExtent(pointArr);
-        return {
-            x: (minX + maxX) / 2,
-            y: (minY + maxY) / 2,
-        }
-    }
-
     addPoint(point: IPoint, isLimitDistance = this.pntDistanceLimit > 0) {
         if (isLimitDistance) {
             const prevPnt = this.pointArr[this.pointArr.length - 1];
@@ -302,7 +293,7 @@ class Feature {
 
     // 水平翻转, 垂直翻转
     revert(direction: AlignType, center?: IPoint, isParent = true) {
-        if (!center) center = this.getCenterPos();  // 获取包围盒中心点
+        if (!center) center = Feature.getCenterPos(this.pointArr);  // 获取包围盒中心点
         this.children.forEach(cf => {  // 遍历子元素翻转,如果他有子元素的话
             cf.revert(direction, center, false)
         })
@@ -443,7 +434,7 @@ class Feature {
 
     // 获取包围盒矩形的Size
     getPixelSize() {
-        const [leftTop, rightTop, rightBottom] = this.getRectWrapPoints();
+        const [leftTop, rightTop, rightBottom] = Feature.getRectWrapPoints(this.pointArr);
         return {
             x: getLenOfTwoPnts(leftTop, rightTop),
             y: getLenOfTwoPnts(leftTop, rightBottom),
@@ -452,8 +443,8 @@ class Feature {
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
-            const [leftX, rightX, topY, bottomY] = this.getRectWrapExtent(pointArr);
-            const { x: centerX, y: centerY } = this.getCenterPos(pointArr);
+            const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
+            const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {
                 ctx.save();
                 ctx.beginPath()
@@ -494,7 +485,7 @@ class Feature {
 
     // 将元素移动到画中间
     toCenter(feature: Feature) {
-        const { x, y } = this.gls.getPixelPos(feature.getCenterPos());
+        const { x, y } = this.gls.getPixelPos(Feature.getCenterPos(feature.pointArr));
         const { x: distX, y: distY } = this.gls.getCenterDist({ x, y })
         gsap.to(this.gls.pageSlicePos, {
             duration: 0.25,

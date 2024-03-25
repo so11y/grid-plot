@@ -9,11 +9,11 @@ let startIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.BROKEN;
+    linkStyle: LinkStyle = LinkStyle.CURVE;
     targets: [Feature, Feature];
 
     constructor(startFeature: Feature, endFeature: Feature) {
-        super([startFeature.getCenterPos(), endFeature.getCenterPos()]);
+        super([Feature.getCenterPos(startFeature.pointArr), Feature.getCenterPos(endFeature.pointArr)]);
         this.targets = [startFeature, endFeature];
         this.className = "Link"
         this.cbSelect = false;
@@ -22,8 +22,8 @@ export default class Link extends Line {
         this.tipInfo.fontFamily = FontFamily.SHISHANG;
         this.strokeStyle = "rgba(220, 233, 126, 1)";
 
-        this.targets[0].translateEvents.push(() => { this.pointArr[0] = this.targets[0].getCenterPos() })
-        this.targets[1].translateEvents.push(() => { this.pointArr[1] = this.targets[1].getCenterPos() })
+        this.targets[0].translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(this.targets[0].pointArr) })
+        this.targets[1].translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(this.targets[1].pointArr) })
         this.gls.addFeature(this, false)
     }
 
@@ -45,7 +45,7 @@ export default class Link extends Line {
         return path;
     }
 
-    getTipPnt(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
+    getTwoPntByTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
         if (pointArr.length < 2) throw new Error("数组长度必须大于1");
         switch (this.linkStyle) {
             case LinkStyle.BROKEN:

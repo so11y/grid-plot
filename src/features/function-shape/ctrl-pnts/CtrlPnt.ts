@@ -26,7 +26,7 @@ class CtrlPnt extends Rect {
     }
 
     onUpdateParentPos() {  // 控制点拖拽时修改主元素对应的点位置
-        const pos = this.getCenterPos();
+        const pos = Feature.getCenterPos(this.pointArr);
         if (this.parent) {
             this.parent.pointArr[this.index] = {
                 x: pos.x,

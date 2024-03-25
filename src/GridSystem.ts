@@ -113,7 +113,7 @@ class GridSystem {
             if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
             const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
-                const [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
+                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
                 if (Math.abs(maxX - minX) < 30 && Math.abs(maxY - minY) < 30) {
                     return
                 }
@@ -361,8 +361,8 @@ class GridSystem {
         var gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         const orientations = [];
-        const [leftX, rightX, topY, bottomY] = feature.getRectWrapExtent();
-        const { x: centerX, y: centerY } = feature.getCenterPos();
+        const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(feature.pointArr);
+        const { x: centerX, y: centerY } = Feature.getCenterPos(feature.pointArr);
 
         // 吸附的约束，灵敏度
         let min = gridSize * .2;
@@ -451,7 +451,7 @@ class GridSystem {
                 if (f === feature) {
                     continue
                 }
-                const [left, right, top, bottom] = f.getRectWrapExtent();
+                const [left, right, top, bottom] = Feature.getRectWrapExtent(f.pointArr);
                 // const { left, right, top, bottom } = this.getEdgePoints(f);
                 if (offsetX == 0) {
                     const hxs = [left, right, f.position.x]
@@ -1202,7 +1202,7 @@ class GridSystem {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
                 const pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
-                const [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
                 const lineWidth = this.getRatioSize(feature.lineWidth);
                 canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
                 canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
@@ -1259,7 +1259,7 @@ class GridSystem {
         return new Promise((resolve, reject) => {
             if (feature) {
                 const pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
-                const [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
                 const width = Math.abs(rightTop.x - leftTop.x) + padding;
                 const height = Math.abs(leftTop.y - leftBottom.y) + padding;
                 const lineWidth = this.getRatioSize(feature.lineWidth);
@@ -1329,6 +1329,31 @@ class GridSystem {
         if (width) this.ctx.canvas.width = width;
         if (height) this.ctx.canvas.height = height;
     }
+    /**
+  * 居中,并缩放至所有元素都在canvas范围内
+  * @param padding 上下或左右的最小边距
+  */
+    toFitView(features: Feature[] = this.features, padding: number = 20) {
+        const getFeaturesRange = (features: Feature[]): IPixelPos[] => {
+            let featuresPointArr: IRelativePos[] = []
+            features.map(f => featuresPointArr.push(...f.pointArr));
+            return Feature.getRectWrapPoints(featuresPointArr.map(p => this.getPixelPos(p)));  // [leftTop, rightTop, rightBottom, leftBottom]
+        }
+        // 先缩放
+        let rectPnts = getFeaturesRange(features);   // 所有元素的范围大小
+        let totalHeight = rectPnts[2].y - rectPnts[0].y;
+        let totalWidth = rectPnts[1].x - rectPnts[3].x;
+        if (totalWidth > totalHeight) {
+            this.scale = this.ctx.canvas.width / ((totalWidth + padding) / this.scale);   // 这个跟miniMap算法一样
+        } else {
+            this.scale = this.ctx.canvas.height / ((totalHeight + padding) / this.scale);
+        }
+        // 后居中
+        let rectPnts2 = getFeaturesRange(features);
+        let { x: distX, y: distY } = this.getCenterDist({ x: (rectPnts2[1].x + rectPnts2[3].x) / 2, y: (rectPnts2[0].y + rectPnts2[2].y) / 2 });
+        this.pageSlicePos.x = this.pageSlicePos.x + distX
+        this.pageSlicePos.y = this.pageSlicePos.y + distY  // 以所有元素的中心点对齐
+    }
 
     // ------------------------网格坐标相关方法--------------------------
     // 根据相对坐标获取网格坐标
@@ -1394,7 +1419,7 @@ class GridSystem {
             const anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
                 const lAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
                     return leftCenter;
                 });
@@ -1404,7 +1429,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
                 const rAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
                     return rightCenter;
                 });
@@ -1414,7 +1439,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
                 const tAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
                     return rightCenter;
                 });
@@ -1424,7 +1449,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
                 const bAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
                     return rightCenter;
                 });
