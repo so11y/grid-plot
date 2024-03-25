@@ -1,13 +1,14 @@
 
-import { IBBox, IPoint, IVctor, Size, Vector } from "./Interface";
+import { CoordinateSystem } from "./Constants";
+import { IPoint, IVctor, ISize, IVctor } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
- * @param dom 
+ * @param domElement 
  * @param e 
  * @returns 
  */
-function getMousePos(dom: HTMLCanvasElement, e: any | IPoint): IPoint {
+function getMousePos(domElement: HTMLCanvasElement, e: any | IPoint): IPoint {
     let downX: number;
     let downY: number;
     if (e.x && e.y) {
@@ -18,7 +19,7 @@ function getMousePos(dom: HTMLCanvasElement, e: any | IPoint): IPoint {
         downY = e.clientY;
     }
 
-    let { left, top } = dom.getBoundingClientRect();
+    let { left, top } = domElement.getBoundingClientRect();
 
     let xDist = downX - left;
     let yDist = downY - top;
@@ -69,27 +70,14 @@ function crossMul(point1: IPoint, point2: IPoint) {
     return point1.x * point2.y - point1.y * point2.x;
 }
 
-// 获取向量的长度
-function getVectorLength(vector: IPoint) {
-    return Math.sqrt(vector.x * vector.x + vector.y * vector.y)
-}
-
-// 获取线段的中点
-function getVectorCenter(point1: IPoint, point2: IPoint) {
-    return {
-        x: (point1.x + point2.x) / 2,
-        y: (point1.y + point2.y) / 2
-    }
-}
-
 //  求两个向量之间的夹角
-function get2vectorAngle(vector1: IPoint, vector2: IPoint) {
-    var angle = Math.atan2(vector2.y, vector2.x) - Math.atan2(vector1.y, vector1.x);
+function getAngleOfTwoVct(vector1: IVctor, vector2: IVctor) {
+    var angle = Math.atan2(vector2[1], vector2[0]) - Math.atan2(vector1[1], vector1[0]);
     // if (angle < 0) angle += 2 * Math.PI;
     return angle;
 }
 
-function getCenterPoint(point1: IPoint, point2: IPoint): IPoint {
+function getCenterOfTwoPnts(point1: IPoint, point2: IPoint): IPoint {
     return {
         x: (point2.x + point1.x) / 2,
         y: (point2.y + point1.y) / 2
@@ -145,21 +133,20 @@ function randomNum(minNum: number, maxNum: number) {
     }
 }
 
-function createVctor(start: IPoint, end: IPoint): Vector {
+function createVctor(start: IPoint, end: IPoint): IVctor {
     let x = end.x - start.x;
     let y = end.y - start.y;
     return [x, y];
 };
-
-function getVctLen([x = 0, y = 0]) {
-    return Math.sqrt(x * x + y * y);
+function getVctLen(vct: IVctor) {
+    return Math.sqrt(vct[0] * vct[0] + vct[1] * vct[1]);
 };
 
 /**
 * 根据点在向量上的比例计算点坐标, [xO, yO]为起点，[xVct, yVct]为向量，k 为该点在向量方向上的长度
 * 获取
 */
-function getPntInVct(O: IPoint, [xVct, yVct]: Vector, k = 0): IPoint {
+function getPntInVct(O: IPoint, [xVct, yVct]: IVctor, k = 0): IPoint {
     let lenVct = getVctLen([xVct, yVct]);  // 获取向量长度
     let stdVct;
     if (lenVct === 0) {
@@ -227,7 +214,7 @@ function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
 };
 
 
-function getRotateVct(vct: IVctor, angle = 0): Vector {
+function getRotateVct(vct: IVctor, angle = 0): IVctor {
     let rad = angle * Math.PI / 180;
     let x1 = Math.cos(rad) * vct[0] - Math.sin(rad) * vct[1];
     let y1 = Math.sin(rad) * vct[0] + Math.cos(rad) * vct[1];
@@ -290,7 +277,7 @@ function toBase64(img: HTMLImageElement) {
  * endAngle必须大于startAngle, ~[-360, 360]
  * @param xiaoshu bool, 角度是否为整数, true则添加最后一个点
  */
-function getPntsInEllipse(center: Vector, majorRadius: number, minorRadius: number, startAngle: number, endAngle: number, rotateAngle: number, xiaoshu?: boolean) {
+function getPntsInEllipse(center: IVctor, majorRadius: number, minorRadius: number, startAngle: number, endAngle: number, rotateAngle: number, xiaoshu?: boolean) {
     let x = null,
         y = null,
         points = [],
@@ -325,7 +312,7 @@ function getPntsInEllipse(center: Vector, majorRadius: number, minorRadius: numb
 };
 
 // 判断点是否在多边形内
-function isPointInPolygon(point: IPoint, polygon: IPoint[]) {
+function isPntInPolygon(point: IPoint, polygon: IPoint[]) {
     var j = polygon.length - 1;
     var isInside = false;
 
@@ -343,7 +330,7 @@ function isPointInPolygon(point: IPoint, polygon: IPoint[]) {
     return isInside;
 }
 
-function getRectPoint(pos: IPoint, size: Size) {
+function getRectPoint(pos: IPoint, size: ISize) {
     return [
         { x: pos.x - size.width / 2, y: pos.y - size.height / 2 },
         { x: pos.x + size.width / 2, y: pos.y - size.height / 2 },
@@ -390,17 +377,12 @@ function beautifyHTML(html: string, indentSize = 2) {
     return formatted;
 }
 
-// 判断某个数在两个数范围内
-function isBetween(num: number, min: number, max: number) {
-    return num >= Math.min(min, max) && num <= Math.max(min, max);
-}
-
 // ----------------------------判断型方法-------------------------------
 // 判断是否时基础元素
 function isBasicFeature(f?: any) {
     if (!f) return false;
     // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-    return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    return f.className == 'Img' || f.className == 'Line' || f.className == 'Link' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any) {
@@ -408,38 +390,50 @@ function isCtrlFeature(f?: any) {
     return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
 }
 
+function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
+    var deltaX = point2.x - point1.x;
+    var deltaY = point2.y - point1.y;
+    return Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+}
+
+function getUnitSize() {
+    return CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE
+}
+
 export {
     getMousePos,
+    getUnitSize,
     getUuid,
-    calculateBezierPointForCubic,
-    getVectorLength,
-    getVectorCenter,
-    get2vectorAngle,
-    getVector,
     crossMul,
-    getCenterPoint,
+    randomNum,
     hex2Rgba,
     rgb2Hex,
-    randomNum,
+
+    calculateBezierPointForCubic,
+    getVector,
+    getVctLen,
     getRotateVct,
     getLenOfPntToLine,
     getLenOfTwoPnts,
     getMidOfTwoPnts,
+    getAngleOfTwoPnts,
+    getAngleOfTwoVct,
+    getCenterOfTwoPnts,
     getRotateAng,
     getPntInVct,
-    getVctLen,
     createVctor,
     getRotatePnt,
     getPntsOf3Bezier,
-    toBase64,
-    isPointInPolygon,
     getRectPoint,
     getPntsInEllipse,
-    swapElements,
-    isBase64,
+
+    toBase64,
     getSizeInBytes,
     beautifyHTML,
-    isBetween,
+    swapElements,
+
+    isBase64,
+    isPntInPolygon,
     isBasicFeature,
     isCtrlFeature,
 }

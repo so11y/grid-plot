@@ -1,10 +1,10 @@
 import GridSystem from "./GridSystem";
-import { BasicFeature, Props } from "./Interface";
+import { IBasicFeature, IProps } from "./Interface";
 import { isBasicFeature } from "./utils";
 
 class Stack {
 
-    statusList: Props[][] = [];  // gls中所有的元素放到stackList中
+    statusList: IProps[][] = [];  // gls中所有的元素放到stackList中
     pointer: number = -1;  // 指针,下标
     gls: GridSystem;
     isLocal = true;
@@ -15,15 +15,15 @@ class Stack {
     }
 
     record() {
-        const featurePropsArr: Props[] = [];
+        const featurePropsArr: IProps[] = [];
         while (this.pointer != this.statusList.length - 1) {
             //如果push前指针不指向末尾, 即被undo.restore过, 那么就先删除pointer之后的记录
             this.statusList.pop();
         }
-        const features = this.gls.features.filter(f => isBasicFeature(f)) as BasicFeature[]
+        const features = this.gls.features.filter(f => isBasicFeature(f)) as IBasicFeature[]
         features.forEach(f => {
             const fProps = this.gls.recordFeature(f);
-            featurePropsArr.push(fProps as Props)
+            featurePropsArr.push(fProps as IProps)
         })
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
@@ -45,7 +45,7 @@ class Stack {
                     const id = ps.id;
                     const feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.modifyFeature(feature as BasicFeature, ps);
+                        this.gls.modifyFeature(feature as IBasicFeature, ps);
                     }
                 } else {  // 说明之前没有这个元素，撤销需要删除该元素
                     this.gls.removeFeature(cs.id, false);
@@ -84,7 +84,7 @@ class Stack {
                     const id = ns.id;
                     const feature = this.gls.features.find(f => id === f.id);
                     if (feature) {
-                        this.gls.modifyFeature(feature as BasicFeature, ns);
+                        this.gls.modifyFeature(feature as IBasicFeature, ns);
                     }
                 } else {  // 说明之前没有这个元素，恢复需要重新创建这些元素
                     this.gls.createFeature(ns)

@@ -8,7 +8,7 @@ class AdsorbPnt extends Rect {
 
     cbAdsorption: boolean = true;  // 是否吸附
     cbCrossLine: boolean = true;
-    crossLineStrokeStyle: string;
+    crossLineStrokeStyle = "#2471A3";
 
     constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
@@ -22,13 +22,12 @@ class AdsorbPnt extends Rect {
         this.cbCrossLine = cbCrossLine;
         this.cbCapture = false;
         this.cbSelect = false;
-        this.crossLineStrokeStyle = "#2471A3";
         this.gls.addFeature(this, false)
         document.addEventListener("mousemove", this.setPos.bind(this));
     }
 
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius?: number): Path2D {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius?: number): Path2D {
         const path = super.draw(ctx, pointArr, lineWidth, radius);
         // const center = this.getCenterPos(pointArr);
         // if (this.cbCrossLine) {
@@ -49,7 +48,7 @@ class AdsorbPnt extends Rect {
 
     setPos(e: any) {
         const gls = this.gls;
-        const { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.dom, e));
+        const { x: rx, y: ry } = gls.getRelativePos(getMousePos(gls.domElement, e));
         this.position = {
             x: rx,
             y: ry

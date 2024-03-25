@@ -24,7 +24,7 @@ class MiniMap extends GridSystem {
         canvasDom.height = height;
         canvasDom.style.position = "fixed";
         canvasDom.style.border = "1px solid #ccc"
-        canvasDom.style.backgroundColor = "#fff"
+        canvasDom.style.background = "#fff"
         document.body.appendChild(canvasDom);
         super(canvasDom, false);
         this.gls = gls;
@@ -39,13 +39,13 @@ class MiniMap extends GridSystem {
     }
 
     setMyCanvas(canvasDom: HTMLCanvasElement) {
-        const { x, y, width, height } = this.gls.dom.getBoundingClientRect();
+        const { x, y, width, height } = this.gls.domElement.getBoundingClientRect();
         canvasDom.style.left = `${x + width - canvasDom.width}px`
         canvasDom.style.top = `${y + height - canvasDom.height}px`
     }
 
     initEventListener() {
-        this.dom.addEventListener("mousedown", (e) => {
+        this.domElement.addEventListener("mousedown", (e) => {
             this.dragViewRect(e)
         })
     }
@@ -60,7 +60,7 @@ class MiniMap extends GridSystem {
     }
 
     dragViewRect = (e: any) => {
-        const { x, y } = getMousePos(this.dom, e)
+        const { x, y } = getMousePos(this.domElement, e)
         const that = this;
         const glsTotalWidth = this.gls.extent[1] + this.gls.ctx.canvas.width + this.gls.extent[3];
         const glsTotalHeight = this.gls.extent[0] + this.gls.ctx.canvas.height + this.gls.extent[2];
@@ -70,8 +70,8 @@ class MiniMap extends GridSystem {
             const vx = this.viewRect.x;
             const vy = this.viewRect.y;
             function mousemove(e: any) {
-                that.dom.style.cursor = "move"
-                const { x: x1, y: y1 } = getMousePos(that.dom, e);
+                that.domElement.style.cursor = "move"
+                const { x: x1, y: y1 } = getMousePos(that.domElement, e);
                 const dx = vx + (x1 - x);
                 const dy = vy + (y1 - y);
                 that.viewRect.x = dx;
@@ -86,7 +86,7 @@ class MiniMap extends GridSystem {
                 that.gls.pageSlicePos.y = that.gls.extent[0] - (that.viewRect.y / that.ctx.canvas.height * glsTotalHeight - that.gls.firstPageSlicePos.y);
             }
             function mouseup(e: any) {
-                that.dom.style.cursor = "default"
+                that.domElement.style.cursor = "default"
                 that.isDraging = false;
                 document.removeEventListener("mousemove", mousemove)
                 document.removeEventListener("mouseup", mouseup)
@@ -94,7 +94,7 @@ class MiniMap extends GridSystem {
             document.addEventListener("mousemove", mousemove)
             document.addEventListener("mouseup", mouseup)
         } else {
-            that.dom.style.cursor = "default";
+            that.domElement.style.cursor = "default";
         }
     }
 
@@ -134,9 +134,9 @@ class MiniMap extends GridSystem {
     }
 
     destory() {
-        document.body.removeChild(this.dom)
+        document.body.removeChild(this.domElement)
         document.removeEventListener("draw", this.draw)
-        this.dom.removeEventListener("mousedown", this.dragViewRect)
+        this.domElement.removeEventListener("mousedown", this.dragViewRect)
     }
 }
 

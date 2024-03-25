@@ -3,9 +3,9 @@ import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/AdsorbPnt";
-import { BasicFeature, IPoint, PixelPos, Props, RelativePos } from "./Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMidOfTwoPnts, getMousePos, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getMidOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -16,6 +16,7 @@ import Circle from "./features/basic-shape/Circle";
 import SelectArea from "./features/function-shape/SelectArea";
 import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
+import EraserPnt from "./features/function-shape/EraserPnt";
 
 class GridSystem {
 
@@ -23,6 +24,7 @@ class GridSystem {
     static Stack: Stack | null;
     static Bbox: Bbox | null;
     static Shortcuts: Shortcuts | null;
+    static Eraser: EraserPnt | null;
 
     className = 'GridSystem';
     scale: number = 10;
@@ -41,18 +43,17 @@ class GridSystem {
         y: 0
     }
 
-    dom: HTMLCanvasElement;
+    domElement: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
     timer2: number = 0;
-    backgroundColor: string = '#fff'
+    background: string = 'rgba(0,0,0,1)'
 
-    hoverNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
 
     dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
-    dragingSensitivity: number = 1.5;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
+    dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
     friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
@@ -79,8 +80,8 @@ class GridSystem {
     constructor(canvasDom: HTMLCanvasElement, isMain: boolean = true) {
         // 当前 canvas 的 0 0 坐标，我们设置 canvas 左上角顶点为 0 0，向右👉和向下👇是 X Y 轴正方向，0，0 为 pageSlicePos 初始值
         isMain && (GridSystem.Gls = this, Feature.Gls = this);
-        this.dom = canvasDom;
-        this.ctx = this.dom.getContext('2d') || new CanvasRenderingContext2D();
+        this.domElement = canvasDom;
+        this.ctx = this.domElement.getContext('2d') || new CanvasRenderingContext2D();
         this.initEventListener();
     }
 
@@ -88,7 +89,7 @@ class GridSystem {
         // console.log("clear");
         // console.time();
 
-        this.ctx.fillStyle = this.backgroundColor;
+        this.ctx.fillStyle = this.background;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
         fn && fn()
@@ -112,7 +113,7 @@ class GridSystem {
             if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
             const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
             if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
-                const [minX, maxX, minY, maxY] = f.getRectWrapExtent(pointArr);
+                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
                 if (Math.abs(maxX - minX) < 30 && Math.abs(maxY - minY) < 30) {
                     return
                 }
@@ -143,13 +144,13 @@ class GridSystem {
     }
 
     initEventListener() {
-        this.dom.addEventListener("mousemove", this.mouseMove);
-        this.dom.addEventListener("mousedown", this.mouseDown);
-        this.dom.addEventListener("mousewheel", this.mouseWheel);
-        this.dom.addEventListener("contextmenu", (e) => { // 禁用右键上下文
+        this.domElement.addEventListener("mousemove", this.mouseMove);
+        this.domElement.addEventListener("mousedown", this.mouseDown);
+        this.domElement.addEventListener("mousewheel", this.mouseWheel);
+        this.domElement.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.dom.ondrop = this.dropToFeature.bind(this);
+        this.domElement.ondrop = this.dropToFeature.bind(this);
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -185,6 +186,10 @@ class GridSystem {
             const sa = this.features.find(f => f instanceof SelectArea) as SelectArea;
             this.removeFeature(sa)
         })
+        GridSystem.Shortcuts.addEvent("del", () => {
+            const focusNode = this.getFocusNode();
+            this.removeFeature(focusNode)
+        })
         // GridSystem.Shortcuts.addEvent("left", () => {
         //     const feature = this.getFocusNode();
         //     if (feature instanceof Text) {
@@ -216,7 +221,7 @@ class GridSystem {
 
     private mouseMove = (e: any) => {
         this.onmousemove && this.onmousemove(e);
-        const pos = getMousePos(this.dom, e);
+        const pos = getMousePos(this.domElement, e);
         this.mousePos.x = pos.x;
         this.mousePos.y = pos.y;
         document.dispatchEvent(new CustomEvent(Events.MOUSE_MOVE, { detail: e }));
@@ -231,11 +236,11 @@ class GridSystem {
 
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
-        const { x: downX, y: downY } = getMousePos(this.dom, ev);
+        const { x: downX, y: downY } = getMousePos(this.domElement, ev);
         const { x: px, y: py } = this.pageSlicePos;
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
         let moveFlag = false;
-        var mousemove = (e: any) => { };
+        let mousemove = (e: any) => { };
         if (this.cbSelectFeature) {
             if (ev.buttons != 1) {
                 this.focusNode = focusNode;
@@ -244,7 +249,7 @@ class GridSystem {
                 if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
                     if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
-                        const bbox = this.enableBbox(focusNode as BasicFeature | SelectArea);
+                        const bbox = this.enableBbox(focusNode as IBasicFeature | SelectArea);
                         bbox && (focusNode = bbox);
                     }
                 };
@@ -258,7 +263,7 @@ class GridSystem {
                 mousemove = (e: any) => {
                     if (focusNode) {
                         // console.log(focusNode, "focusNode");
-                        const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                        const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
                         let { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
                         if (lastMove.x && lastMove.y) {
                             focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
@@ -282,7 +287,7 @@ class GridSystem {
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
                 mousemove = (e: any) => {
-                    const { x: moveX, y: moveY } = getMousePos(this.dom, e);
+                    const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
                     this.ondrag && this.ondrag(e);
                     this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
                     this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
@@ -295,7 +300,7 @@ class GridSystem {
                 }
             }
         }
-        var mouseup = (e: any) => {
+        const mouseup = (e: any) => {
             this.cbSelectFeature = true;
             this.onmouseup && this.onmouseup(e);
             document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
@@ -353,15 +358,15 @@ class GridSystem {
     private getAdsorbOffsetDist(feature: Feature, options = {
         gridCompute: false, featureCompute: false, onlyCenter: false
     }) {
-        var gridSize = CoordinateSystem.GRID_SIZE;
+        const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         const orientations = [];
-        const [leftX, rightX, topY, bottomY] = feature.getRectWrapExtent();
-        const { x: centerX, y: centerY } = feature.getCenterPos();
+        const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(feature.pointArr);
+        const { x: centerX, y: centerY } = Feature.getCenterPos(feature.pointArr);
 
         // 吸附的约束，灵敏度
-        const min = gridSize * .2;
-        const max = gridSize * .8;
+        let min = gridSize * .2;
+        let max = gridSize * .8;
 
         function getDeviation(num: number): number {   // 附近可吸附的位置
             const gridSize = CoordinateSystem.GRID_SIZE;
@@ -372,7 +377,7 @@ class GridSystem {
             //  ------------- 水平对齐
             if (!options.onlyCenter) {
                 // 以元素左边为基准
-                var offsetLeftX = getDeviation(leftX);
+                const offsetLeftX = getDeviation(leftX);
                 if (offsetX == 0 && (offsetLeftX > 0 && offsetLeftX < min) || (offsetLeftX < 0 && offsetLeftX > -min)) {
                     offsetX = -leftX % gridSize;
                     orientations.push(Orientation.LEFT)
@@ -382,7 +387,7 @@ class GridSystem {
                     orientations.push(Orientation.LEFT)
                 }
                 // 以元素右边为基准
-                var offsetRightX = getDeviation(rightX);
+                const offsetRightX = getDeviation(rightX);
                 if (offsetX == 0 && (offsetRightX > 0 && offsetRightX < min) || (offsetRightX < 0 && offsetRightX > -min)) {
                     offsetX = -rightX % gridSize;
                     orientations.push(Orientation.RIGHT)
@@ -393,7 +398,7 @@ class GridSystem {
                 }
             }
             // 以中心为基准
-            var offsetCenterX = getDeviation(centerX);
+            const offsetCenterX = getDeviation(centerX);
             if (offsetX == 0 && (offsetCenterX > 0 && offsetCenterX < min) || (offsetCenterX < 0 && offsetCenterX > -min)) {
                 offsetX = -centerX % gridSize;
                 orientations.push(Orientation.CENTER_X)
@@ -406,7 +411,7 @@ class GridSystem {
             // //  ------------- 垂直对齐
             // 以元素上边为基准
             if (!options.onlyCenter) {
-                var offsetTopY = getDeviation(topY);
+                const offsetTopY = getDeviation(topY);
                 if (offsetY == 0 && (offsetTopY > 0 && offsetTopY < min) || (offsetTopY < 0 && offsetTopY > -min)) {
                     offsetY = -topY % gridSize;
                     orientations.push(Orientation.TOP)
@@ -416,7 +421,7 @@ class GridSystem {
                     orientations.push(Orientation.TOP)
                 }
                 // 以元素下边为基准
-                var offsetBottomY = getDeviation(bottomY);
+                const offsetBottomY = getDeviation(bottomY);
                 if (offsetY == 0 && (offsetBottomY > 0 && offsetBottomY < min) || (offsetBottomY < 0 && offsetBottomY > -min)) {
                     offsetY = -bottomY % gridSize;
                     orientations.push(Orientation.BOTTOM)
@@ -427,7 +432,7 @@ class GridSystem {
                 }
             }
 
-            var offsetCenterY = getDeviation(centerY);
+            const offsetCenterY = getDeviation(centerY);
             if (offsetY == 0 && (offsetCenterY > 0 && offsetCenterY < min) || (offsetCenterY < 0 && offsetCenterY > -min)) {
                 offsetY = -centerY % gridSize;
                 orientations.push(Orientation.CENTER_Y)
@@ -441,12 +446,12 @@ class GridSystem {
             min = gridSize * .1;
             max = gridSize * .9;
             // 元素间对其
-            for (const index = 0; index < this.features.length; index++) {
+            for (let index = 0; index < this.features.length; index++) {
                 const f = this.features[index];
                 if (f === feature) {
                     continue
                 }
-                const [left, right, top, bottom] = f.getRectWrapExtent();
+                const [left, right, top, bottom] = Feature.getRectWrapExtent(f.pointArr);
                 // const { left, right, top, bottom } = this.getEdgePoints(f);
                 if (offsetX == 0) {
                     const hxs = [left, right, f.position.x]
@@ -527,7 +532,7 @@ class GridSystem {
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         this.onzoom && this.onzoom(e);
         e.preventDefault();
-        const { x, y } = getMousePos(this.dom, e);
+        const { x, y } = getMousePos(this.domElement, e);
         if (e.wheelDelta > 0) {
             const nextScale = scale || this.scale + CoordinateSystem.SCALE_ABILITY
             if (nextScale > CoordinateSystem.MAX_SCALESIZE) {
@@ -550,8 +555,8 @@ class GridSystem {
 
     // 以鼠标中心点位置去放大
     private back2center(x: number, y: number, lastGirdSize: number) {
-        var gridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 当前单位大小
-        var different = gridSize - lastGirdSize;   // 当前单位大小与上一次单位大小之差
+        const gridSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 当前单位大小
+        const different = gridSize - lastGirdSize;   // 当前单位大小与上一次单位大小之差
         this.pageSlicePos.x -= ((x - this.pageSlicePos.x) / lastGirdSize) * different;
         this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastGirdSize) * different;
     }
@@ -597,7 +602,7 @@ class GridSystem {
             }
             feature.destroy();
             feature.ondelete();
-            this.features = this.features.filter(f => f != feature);
+            this.features = this.features.filter(f => feature && (f.id != feature.id));
             feature = null;
             isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 删除元素记录
         }
@@ -607,7 +612,7 @@ class GridSystem {
         this.features.push(feature);
         if (!feature.zIndex) {
             const features = this.features.filter(f => !isCtrlFeature(f));  // 不是ctrlNode的元素重编 zIndex
-            if(!feature.zIndex) feature.zIndex = features.length;
+            if (!feature.zIndex) feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
@@ -615,39 +620,39 @@ class GridSystem {
     getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
-                return this.focusNode.children[0] as BasicFeature;
+                return this.focusNode.children[0] as IBasicFeature;
             }
             if (isCtrlFeature(this.focusNode)) {
                 if (this.focusNode.parent instanceof Bbox) {   // bbox的ctrlNode
-                    return this.focusNode.parent.children[0] as BasicFeature;
+                    return this.focusNode.parent.children[0] as IBasicFeature;
                 } else {  // 比如线段的ctrlNode
-                    return this.focusNode.parent as BasicFeature;
+                    return this.focusNode.parent as IBasicFeature;
                 }
             }
-            return this.focusNode as BasicFeature;
+            return this.focusNode as IBasicFeature;
         }
         return;
     }
 
     // --------------------------调整元素上下层级相关--------------------------------
-    toMinusIndex(feature: BasicFeature) {
+    toMinusIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         swapElements<Feature>(this.features, index, index - 1);
         this.resortIndex();
     }
-    toPlusIndex(feature: BasicFeature) {
+    toPlusIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         swapElements<Feature>(this.features, index, index + 1);
         this.resortIndex();
     }
-    toMinIndex(feature: BasicFeature) {
+    toMinIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         this.features.splice(index, 1);
         this.features.unshift(feature);
         this.resortIndex();
     }
     // 将元素置顶，在画布最上层显示
-    toMaxIndex(feature: BasicFeature) {
+    toMaxIndex(feature: IBasicFeature) {
         const index = this.features.findIndex(f => f === feature);
         this.features.splice(index, 1);
         this.features.push(feature);
@@ -661,7 +666,7 @@ class GridSystem {
 
     // ------------------ 获取像素，或相对坐标，宽度等-------------------------
     // 获取像素位置`坐标
-    getPixelPos(point: RelativePos, isFixedPos?: boolean): PixelPos {
+    getPixelPos(point: IRelativePos, isFixedPos?: boolean): IPixelPos {
         if (isFixedPos) {
             return point
         } else {
@@ -678,7 +683,7 @@ class GridSystem {
         return this.pageSlicePos.y + (num / CoordinateSystem.GRID_SIZE) * this.scale
     }
     // 获取相对位置坐标
-    getRelativePos(point: PixelPos, isFixedPos?: boolean): RelativePos {
+    getRelativePos(point: IPixelPos, isFixedPos?: boolean): IRelativePos {
         if (isFixedPos) {
             return point
         } else {
@@ -716,7 +721,7 @@ class GridSystem {
         this.addFeature(rect, false);
         const adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
         this.cbSelectFeature = false;
-        var clear = (remove = true) => {
+        const clear = (remove = true) => {
             this.cbSelectFeature = true;
             remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
@@ -724,7 +729,7 @@ class GridSystem {
             document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var clickDraw = (e: any) => {
+        const clickDraw = (e: any) => {
             if (e.detail.button === 0) {
                 rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y);
                 clear(false);
@@ -733,7 +738,7 @@ class GridSystem {
                 throw "请用左键绘制!"
             }
         }
-        var moveDraw = () => {
+        const moveDraw = () => {
             rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
         }
         document.addEventListener(Events.MOUSE_DOWN, clickDraw);
@@ -743,7 +748,7 @@ class GridSystem {
     continuousClickToFeature(line: Line, fn?: Function) { // 鼠标点一下添加一个点去画折线
         this.cbSelectFeature = false;
         const adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
-        var clear = (remove = true) => {
+        const clear = (remove = true) => {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
@@ -752,10 +757,10 @@ class GridSystem {
             document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var moveDraw = (e: any) => {
+        const moveDraw = (e: any) => {
             line.pointArr[line.pointArr.length - 1] = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
         }
-        var clickDraw = (e: any) => {
+        const clickDraw = (e: any) => {
             if (e.detail.button === 0) {
                 line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 if (line.pointArr.length == 1) {
@@ -780,7 +785,7 @@ class GridSystem {
         const adsorbPnt = new AdsorbPnt(8, false);
         let lastLineWidth = 0
         let lastTime = 0
-        var clear = (remove = true) => {
+        const clear = (remove = true) => {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
@@ -789,7 +794,7 @@ class GridSystem {
             document.removeEventListener(Events.MOUSE_UP, overDraw);
             !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
-        var moveDraw = () => {
+        const moveDraw = () => {
             const { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
             line.addPoint({ x, y });
             if (line.pointArr.length > 1) {
@@ -830,7 +835,7 @@ class GridSystem {
             clear(false);
             fn && fn();
         }
-        var clickDraw = (e: any) => {  // 
+        const clickDraw = (e: any) => {  // 
             if (e.detail.button === 0) {
                 const { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
                 line.addPoint({ x, y });
@@ -846,7 +851,7 @@ class GridSystem {
         return clear;
     }
 
-    async clipboardToFeature(pos = getMousePos(this.dom, this.mousePos)) { // 读取剪贴板内容生成文字或图片
+    async clipboardToFeature(pos = getMousePos(this.domElement, this.mousePos)) { // 读取剪贴板内容生成文字或图片
         try {
             const clipboardData = await navigator.clipboard.read();
             pos = this.getRelativePos(pos)
@@ -890,10 +895,10 @@ class GridSystem {
     }
     dropToFeature(e: any) { // 拖放去添加元素
         //取得拖进来的文件
-        var data = e.dataTransfer;
+        const data = e.dataTransfer;
         const files = data.files;  // file继承与blob
         if (files && (files[0].type === 'image/png' || files[0].type === 'image/jpeg' || files[0].type === 'video/mp4')) {
-            const pos = this.getRelativePos(getMousePos(this.dom, { x: e.clientX, y: e.clientY }))
+            const pos = this.getRelativePos(getMousePos(this.domElement, { x: e.clientX, y: e.clientY }))
             const reader = new FileReader();
             reader.readAsDataURL(files[0]);  // base64
             reader.onload = () => {
@@ -907,9 +912,9 @@ class GridSystem {
     }
 
     // -------------------创建feature, 修改feature属性, 读取feature属性---------------------------
-    createFeature(props: Props, newProps?: Partial<Props>) {
+    createFeature(props: IProps, newProps?: Partial<IProps>) {
         newProps && (props = Object.assign({}, props, newProps));
-        let feature: BasicFeature | undefined;
+        let feature: IBasicFeature | undefined;
         if (this.features.find(f => f.id === props.id)) return;
         switch (props.className) {
             case 'Img':
@@ -928,7 +933,7 @@ class GridSystem {
                 break;
             case 'Text':
                 if (props.position && props.size) {
-                    feature = new Text(props.text, props.position.x, props.position.y, props.size.width, props.size.height)
+                    feature = new Text(props.textInfo ? props.textInfo.txt : '占位符', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
@@ -973,7 +978,7 @@ class GridSystem {
                 if (props.children) {
                     props.children.forEach(cfProp => {
                         const cf = this.features.find(f => f.id === cfProp.id);
-                        feature && feature.addFeature(cf as BasicFeature || this.createFeature(cfProp), false)
+                        feature && feature.addFeature(cf as IBasicFeature || this.createFeature(cfProp), false)
                     })
                     if (feature instanceof Group) {  // gourp添加子元素需要resize
                         feature.toResize(feature.children);
@@ -985,7 +990,7 @@ class GridSystem {
         }
         return feature;
     }
-    modifyFeature(feature: BasicFeature, props: Props) {
+    modifyFeature(feature: IBasicFeature, props: IProps) {
         props.id != undefined && (feature.id = props.id);
         props.className != undefined && (feature.className = props.className)
         if (props.pointArr) {
@@ -1019,8 +1024,8 @@ class GridSystem {
         props.isStroke != undefined && (feature.isStroke = props.isStroke)
         props.isShowAdsorbLine != undefined && (feature.isShowAdsorbLine = props.isShowAdsorbLine)
         props.isOnlyCenterAdsorb != undefined && (feature.isOnlyCenterAdsorb = props.isOnlyCenterAdsorb)
-        props.isOnlyHorizonalDrag != undefined && (feature.isOnlyHorizonalDrag = props.isOnlyHorizonalDrag)
-        props.isOnlyVerticalDrag != undefined && (feature.isOnlyVerticalDrag = props.isOnlyVerticalDrag)
+        props.isOnlyHorizonalMove != undefined && (feature.isOnlyHorizonalMove = props.isOnlyHorizonalMove)
+        props.isOnlyVerticalMove != undefined && (feature.isOnlyVerticalMove = props.isOnlyVerticalMove)
 
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
@@ -1033,11 +1038,7 @@ class GridSystem {
 
         if (feature instanceof Text) {
             props.fitSize != undefined && (feature.fitSize = props.fitSize);
-            props.fontWeight != undefined && (feature.fontWeight = props.fontWeight);
-            props.color != undefined && (feature.color = props.color);
-            props.fontFamily != undefined && (feature.fontFamily = props.fontFamily);
-            props.text != undefined && (feature.text = props.text);
-            props.lineHeight != undefined && (feature.lineHeight = props.lineHeight);
+            props.textInfo != undefined && (feature.textInfo = props.textInfo);
         }
 
         if (feature instanceof Line) {
@@ -1047,7 +1048,7 @@ class GridSystem {
 
         return feature;
     }
-    recordFeature(f: BasicFeature, onlyStyle = false): Partial<Props> {  // 复制或读取元素属性
+    recordFeature(f: IBasicFeature, onlyStyle = false): Partial<IProps> {  // 复制或读取元素属性
         const styleProps = {
             fillStyle: f.fillStyle,
             focusStyle: f.focusStyle,
@@ -1061,13 +1062,10 @@ class GridSystem {
             isStroke: f.isStroke,  // 是否渲染边框
             radius: f instanceof Rect ? f.radius : 0,
             fitSize: f instanceof Text ? f.fitSize : false,
-            fontWeight: f instanceof Text ? f.fontWeight : 0,
-            color: f instanceof Text ? f.color : '',
-            fontFamily: f instanceof Text ? f.fontFamily : undefined,
-            lineHeight: f instanceof Text ? f.lineHeight : 0,
+            textInfo: f instanceof Text ? f.textInfo : {},
         }
         if (onlyStyle) {
-            return styleProps
+            return styleProps as Partial<IProps>
         } else {
             return {
                 id: f.id,
@@ -1083,17 +1081,16 @@ class GridSystem {
                 isOverflowHidden: f.isOverflowHidden,  // 子元素超出是否隐藏
                 isShowAdsorbLine: f.isShowAdsorbLine,  // 是否显示吸附辅助线
                 isOnlyCenterAdsorb: f.isOnlyCenterAdsorb,  // 是否只以中心对其
-                isOnlyHorizonalDrag: f.isOnlyHorizonalDrag,  // 是否只能 水平 方向拖拽
-                isOnlyVerticalDrag: f.isOnlyVerticalDrag,  // 是否只能 垂直 方向拖拽
+                isOnlyHorizonalMove: f.isOnlyHorizonalMove,  // 是否只能 水平 方向拖拽
+                isOnlyVerticalMove: f.isOnlyVerticalMove,  // 是否只能 垂直 方向拖拽
 
-                pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IPoint[],
+                pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IRelativePos[],
 
                 isFixedSize: f instanceof Rect ? f.isFixedSize : false,
                 src: f instanceof Img ? f.src : '',
-                text: f instanceof Text ? f.text : '',
                 isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
                 lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
-                children: f.children.map(cf => this.recordFeature(cf as BasicFeature)) as Props[],
+                children: f.children.map(cf => this.recordFeature(cf as IBasicFeature)) as IProps[],
                 ...styleProps
                 // parent: f.parent ? f.parent.id: '',
                 // startFeatureId: f instanceof Link ? f.startFeatureId : '',
@@ -1104,7 +1101,7 @@ class GridSystem {
 
 
     // ---------------------开启或关闭历史记录, bbox, 区域选择
-    enableStack(enabled: boolean = true) {
+    enableStack(enabled: boolean = true) {  // 开启或关闭历史记录 
         if (!enabled) {
             GridSystem.Stack?.destory();
             GridSystem.Stack = null;
@@ -1117,7 +1114,7 @@ class GridSystem {
             }
         }
     }
-    enableBbox(f: BasicFeature | SelectArea | null | undefined = null) {
+    enableBbox(f: IBasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
         const bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
         if (f && !f.isFixedSize && f.cbTransform) {
@@ -1125,7 +1122,7 @@ class GridSystem {
             return nbbox;
         }
     }
-    enableSelectArea(bool = true) {
+    enableSelectArea(bool = true) {   // 区域选择
         let sa = this.features.find(f => f instanceof SelectArea);
         this.removeFeature(sa, false);
         if (bool) {
@@ -1134,14 +1131,24 @@ class GridSystem {
         }
     }
 
+    enableEraserPnt() {  // 橡皮擦
+        if (GridSystem.Eraser) {
+            this.removeFeature(GridSystem.Eraser);
+            GridSystem.Eraser = null;
+        } else {
+            GridSystem.Eraser = EraserPnt.getInstance();
+            this.addFeature(GridSystem.Eraser, false)
+        }
+    }
+
     // -------------------保存画布状态,读取画布状态,加载状态---------------------------
-    save(featurePropsArr?: Props[]) {
+    save(featurePropsArr?: IProps[]) {
         if (!featurePropsArr) {
             featurePropsArr = [];
             this.features.forEach(f => {
                 if (isBasicFeature(f)) {
-                    const fProps = this.recordFeature(f as BasicFeature);
-                    featurePropsArr && featurePropsArr.push(fProps as Props)
+                    const fProps = this.recordFeature(f as IBasicFeature);
+                    featurePropsArr && featurePropsArr.push(fProps as IProps)
                 }
             })
         }
@@ -1149,10 +1156,10 @@ class GridSystem {
         localStorage.setItem("features", str);
         return str
     }
-    loadData(featurePropsArr?: Props[]) {
+    loadData(featurePropsArr?: IProps[]) {
         if (!featurePropsArr) {
             try {
-                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as Props[];
+                featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as IProps[];
             } catch (error) {
                 featurePropsArr = []
             }
@@ -1173,9 +1180,9 @@ class GridSystem {
     }
 
     // ----------------------剪切板相关---------------------------
-    copyImageToClipboard(feature = this.getFocusNode(), padding = 0): Promise<Blob> { // 复制元素为png到剪贴板
+    copyImageToClipboard(feature = this.getFocusNode(), padding = 10): Promise<Blob> { // 复制元素为png到剪贴板
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离
-        var drawChildren = (ctx: CanvasRenderingContext2D, features: BasicFeature[], offset: IPoint) => {
+        const drawChildren = (ctx: CanvasRenderingContext2D, features: IBasicFeature[], offset: IPoint) => {
             features.forEach(cf => {
                 if (isBasicFeature(cf)) {
                     const pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
@@ -1192,23 +1199,23 @@ class GridSystem {
         }
         return new Promise((resolve, reject) => {
             if (feature) {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                const offscreenCanvas = document.createElement('canvas');
+                const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
                 const pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
-                const [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
                 const lineWidth = this.getRatioSize(feature.lineWidth);
-                canvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
-                canvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
+                offscreenCanvas.width = Math.abs(rightTop.x - leftTop.x) + padding;
+                offscreenCanvas.height = Math.abs(leftTop.y - leftBottom.y) + padding;
                 // 将多边形移动到Canvas的左上角 
                 pointArr.forEach(point => {
                     point.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                     point.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
-                ctx.fillStyle = this.backgroundColor
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = this.background
+                ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
                 feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
-                const url = canvas.toDataURL("image/png");   // canvas 转 图片
+                const url = offscreenCanvas.toDataURL("image/png");   // canvas 转 图片
                 fetch(url).then(data => {
                     data.blob().then(blob => { // 图片转blob
                         const data = [new ClipboardItem({
@@ -1225,10 +1232,10 @@ class GridSystem {
             }
         })
     }
-    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, backgroundColor = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
+    copySvgToClipboard(feature = this.getFocusNode(), padding = 10, background = "transparent"): Promise<string> {// 复制元素为svg到剪贴板
         let svgstr = '';
         // 绘制子元素,子元素偏移的距离等于父元素偏移的距离  递归,道理跟刚才一样
-        var addChildrenSvg = (features: BasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
+        const addChildrenSvg = (features: IBasicFeature[], offset: IPoint, width = 0, height = 0, padding = 0) => {
             features.forEach(cf => {
                 if (isBasicFeature(cf)) {
                     const pointArr = cf.pointArr.map(p => this.getPixelPos(p, cf.isFixedPos))
@@ -1252,7 +1259,7 @@ class GridSystem {
         return new Promise((resolve, reject) => {
             if (feature) {
                 const pointArr = feature.pointArr.map(p => this.getPixelPos(p, feature.isFixedPos))
-                const [leftTop, rightTop, rightBottom, leftBottom] = feature.getRectWrapPoints(pointArr);
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
                 const width = Math.abs(rightTop.x - leftTop.x) + padding;
                 const height = Math.abs(leftTop.y - leftBottom.y) + padding;
                 const lineWidth = this.getRatioSize(feature.lineWidth);
@@ -1269,11 +1276,11 @@ class GridSystem {
                 }
                 addChildrenSvg(feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const svgStr = beautifyHTML(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-                    <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>
+                    <rect x="0" y="0" width="${width}" height="${height}" fill="${background}"/>
                         ${svgstr}
                     </svg>`)
                 // 使用剪切板API进行复制
-                var blob = new Blob([svgStr], { type: 'text/plain' });
+                const blob = new Blob([svgStr], { type: 'text/plain' });
                 const data = [new ClipboardItem({
                     [blob.type]: blob
                 })];
@@ -1306,13 +1313,13 @@ class GridSystem {
         this.back2center(point.x, point.y, lastGirdSize)
     }
     getCenterPos() { // 获取中心点
-        const centerP = { x: this.dom.width / 2, y: this.dom.height / 2 };
+        const centerP = { x: this.domElement.width / 2, y: this.domElement.height / 2 };
         const canvasR = this.getRelativePos(centerP)
         return [centerP, canvasR]
     }
     // 求点与canvas中心的距离
     getCenterDist(point: IPoint) {
-        const canvasCenter = { x: this.dom.width / 2, y: this.dom.height / 2 }
+        const canvasCenter = { x: this.domElement.width / 2, y: this.domElement.height / 2 }
         return {
             x: canvasCenter.x - point.x,
             y: canvasCenter.y - point.y
@@ -1322,40 +1329,81 @@ class GridSystem {
         if (width) this.ctx.canvas.width = width;
         if (height) this.ctx.canvas.height = height;
     }
+    getFeaturesRange(features: Feature[]): IPixelPos[] {
+        const featuresPointArr: IRelativePos[] = []
+        features.map(f => featuresPointArr.push(...f.pointArr));
+        return Feature.getRectWrapPoints(featuresPointArr.map(p => this.getPixelPos(p)));  // [leftTop, rightTop, rightBottom, leftBottom]
+    }
+    /**
+  * 居中,并缩放至所有元素都在canvas范围内
+  * @param padding 上下或左右的边距
+  */
+    toFitView(features: Feature[] = this.features, padding: number = 20, domElement = this.ctx.canvas) {
+        // 先缩放
+        features = this.features.filter(f => isBasicFeature(f))
+        const [leftTop, rightTop, rightBottom, leftBottom] = this.getFeaturesRange(features);   // 所有元素的范围大小
+        const totalHeight = Math.abs(leftBottom.y - leftTop.y);
+        const totalWidth = Math.abs(rightTop.x - leftTop.x);
+        if (totalWidth > totalHeight) {
+            this.scale = domElement.width / ((totalWidth + padding) / this.scale);   // 像素宽度/scale是相对宽度, 画布宽度/相对宽度得到缩放比例 这个跟miniMap算法一样
+        } else {
+            this.scale = domElement.height / ((totalHeight + padding) / this.scale);
+        }
+        setTimeout(() => {
+            // 后居中
+            const [leftTop1, rightTop1, rightBottom1, leftBottom1] = this.getFeaturesRange(features);
+            const { x: distX, y: distY } = this.getCenterDist({ x: (rightTop1.x + leftBottom1.x) / 2, y: (leftTop1.y + rightBottom1.y) / 2 });
+            this.pageSlicePos.x = this.pageSlicePos.x + distX
+            this.pageSlicePos.y = this.pageSlicePos.y + distY  // 以所有元素的中心点对齐
+        }, 100)
+    }
+
+    toImage(isFitView = false, padding = 20, zoom = 50) {
+        if (isFitView) {
+            const features = this.features.filter(f => isBasicFeature(f))
+            const scale = this.scale;
+            this.scale = zoom;  // 放大倍数,数值越大图片越清晰,同时文件也越大
+            const [leftTop, rightTop, rightBottom, leftBottom] = this.getFeaturesRange(this.features);   // 所有元素的范围大小
+            const totalWidth = Math.abs(rightTop.x - leftBottom.x);
+            const totalHeight = Math.abs(rightBottom.y - leftTop.y);
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = totalWidth + padding;
+            offscreenCanvas.height = totalHeight + padding;
+            const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+            ctx.fillStyle = this.background
+            ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            features.forEach(feature => {
+                const pointArr = feature.pointArr.map(p => this.getPixelPos(p))
+                const lineWidth = this.getRatioSize(feature.lineWidth);
+                // 将多边形移动到Canvas的左上角 
+                pointArr.forEach(p => {
+                    p.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    p.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
+                });
+                feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+            })
+            this.scale = scale;
+            return offscreenCanvas.toDataURL("image/png");
+        } else {
+            return this.domElement.toDataURL("image/png");
+        }
+    }
 
     // ------------------------网格坐标相关方法--------------------------
-    // // 判断某个网格内有没有元素
-    // hasFeatureIngridPos(pool: Feature[], gx: number, gy: number): Feature | undefined {
-    //     const target: Feature | undefined;
-    //     for (const index = 0; index < pool.length; index++) {
-    //         const block = pool[index];
-    //         if (block.gridPos.x == gx && block.gridPos.y == gy) {
-    //             target = block;
-    //             break;
-    //         }
-    //     }
-    //     return target;
-    // }
     // 根据相对坐标获取网格坐标
-    getGridPosByRelativePos(x: number, y: number): IPoint {
-        const gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
-        const gx = x / gridSize;
-        const gy = y / gridSize;
+    getGridPosByRelativePos(point: IPoint): IPoint {
+        const gridSize = getUnitSize();  // 实际网格单元大小
+        const gx = point.x > 0 ? Math.ceil(point.x / gridSize) : Math.floor(point.x / gridSize);
+        const gy = point.y > 0 ? Math.ceil(point.y / gridSize) : Math.floor(point.y / gridSize);
         return { x: gx, y: gy }
     }
-    // // 根据鼠标,像素坐标获取网格坐标
-    // getGridPosByPixelPos(x: number, y: number): IPoint {
-    //     const gridSize = CoordinateSystem.GRID_SIZE * this.scale;  // 实际网格单元大小
-    //     const gx = x > this.pageSlicePos.x ? Math.ceil((x - this.pageSlicePos.x) / gridSize) : Math.floor((x - this.pageSlicePos.x) / gridSize);
-    //     const gy = y > this.pageSlicePos.y ? Math.ceil((y - this.pageSlicePos.y) / gridSize) : Math.floor((y - this.pageSlicePos.y) / gridSize);
-    //     return { x: gx, y: gy }
-    // }
     // 根据网格坐标获取相对坐标
-    getRelativePosByGridPos(x: number, y: number): IPoint {
-        const gridSize = CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE;  // 实际网格单元大小
+    getRelativePosByGridPos(point: IPoint): IPoint {
+        if (point.x === 0 || point.y === 0) throw "坐标不合法,x或y不能为0"
+        const gridSize = getUnitSize();  // 实际网格单元大小
         return {
-            x: x > 0 ? gridSize * (x - 1) : gridSize * x,
-            y: y > 0 ? gridSize * (y - 1) : gridSize * y,
+            x: point.x > 0 ? gridSize * (point.x - 1) + gridSize / 2 : gridSize * point.x + gridSize / 2,
+            y: point.y > 0 ? gridSize * (point.y - 1) + gridSize / 2 : gridSize * point.y + gridSize / 2,
         }
     }
 
@@ -1366,7 +1414,7 @@ class GridSystem {
  * @returns 
  */
     getAdsorbPos(pnt: IPoint) {
-        var gridSize = CoordinateSystem.GRID_SIZE;
+        const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         // 相对像素
         // 吸附的约束，灵敏度
@@ -1374,7 +1422,7 @@ class GridSystem {
         const max = gridSize * .6;
 
         //  ------------- 水平对齐
-        var diffX = getDeviation(pnt.x);
+        const diffX = getDeviation(pnt.x);
         if (offsetX == 0 && (diffX > 0 && diffX < min) || (diffX < 0 && diffX > -min)) {
             offsetX = -pnt.x % (gridSize * gridSize);
         }
@@ -1382,7 +1430,7 @@ class GridSystem {
             offsetX = (gridSize * gridSize) * (diffX > 0 ? 1 : -1) - pnt.x % (gridSize * gridSize);
         }
         //  ------------- 垂直对齐
-        var diffY = getDeviation(pnt.y);
+        const diffY = getDeviation(pnt.y);
         if (offsetY == 0 && (diffY > 0 && diffY < min) || (diffY < 0 && diffY > -min)) {
             offsetY = -pnt.y % (gridSize * gridSize);
         }
@@ -1393,19 +1441,19 @@ class GridSystem {
         return { x: offsetX, y: offsetY };
 
         function getDeviation(num: number): number {
-            var gridSize = CoordinateSystem.GRID_SIZE;
+            const gridSize = CoordinateSystem.GRID_SIZE;
             return (num / gridSize) % gridSize;
         }
     }
 
     // -----------------锚点的操作----------------------
     initAnchorPnts() {
-        const features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as BasicFeature[];
+        const features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as IBasicFeature[];
         features.forEach(f => {
             const anchorPnts = f.getAnchorPnts();
             if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
                 const lAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
                     return leftCenter;
                 });
@@ -1415,7 +1463,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
                 const rAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
                     return rightCenter;
                 });
@@ -1425,7 +1473,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
                 const tAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
                     return rightCenter;
                 });
@@ -1435,7 +1483,7 @@ class GridSystem {
             }
             if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
                 const bAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints();
+                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
                     const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
                     return rightCenter;
                 });

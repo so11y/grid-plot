@@ -1,49 +1,50 @@
 
 import { AlignType } from "@/Constants";
-import { BasicFeature, IPoint } from "@/Interface";
-import { getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, isBasicFeature } from "@/utils";
+import { IBasicFeature, IPoint, IRelativePos } from "@/Interface";
+import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
 export default class Group extends Feature {
 
-    constructor(features: BasicFeature[]) {   // 相对坐标
+    constructor(features: IBasicFeature[]) {   // 相对坐标
         super([]);
         features.forEach(f => this.add(f))
         this.className = 'Group';
         // this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
         this.isClosePath = true;
-        this.fillStyle = "rgba(250, 242, 180, .5)"
-        this.hoverStyle = "rgba(250, 242, 180, .8)"
+        this.fillStyle = "rgba(250, 242, 180, .1)"
+        this.hoverStyle = "rgba(250, 242, 180, .2)"
+        this.focusStyle = "rgba(250, 242, 180, .3)"
         this.lineDashArr = [8, 12]
         this.lineWidth = .1;
         this.zIndex = -1;
         this.cbTransformChild = false;
     }
 
-    add(feature: BasicFeature) {
+    add(feature: IBasicFeature) {
         if (!isBasicFeature(feature)) return;
         if (feature.isFixedPos || feature.isFixedSize) return;  // 非基础元素不添加
         this.addFeature(feature, { cbSelect: false });
         this.toResize(this.children);
     }
-    remove(feature: BasicFeature) {
+    remove(feature: IBasicFeature) {
         this.removeChild(feature);
         this.toResize(this.children);
     }
-    toResize(features: BasicFeature[]) {  // 重新创建后重设大小
-        const allPointArr: IPoint[] = [];
+    toResize(features: IBasicFeature[]) {  // 重新创建后重设大小
+        const allPointArr: IRelativePos[] = [];
         features.map(f => allPointArr.push(...f.pointArr));
-        this.pointArr = this.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
+        this.pointArr = Feature.getRectWrapPoints(allPointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
     }
 
     toTopAlign(features: Feature[] = this.children) { // 顶部对齐
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-            const [minX, maxX, minY, maxY] = f.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
+            const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
             const len = getLenOfPntToLine({ x: 0, y: minY }, pointArr[0], pointArr[1]);
             const dx = len * Math.sin(-angle * Math.PI / 180);
             const dy = len * Math.cos(-angle * Math.PI / 180);
@@ -52,28 +53,28 @@ export default class Group extends Feature {
     }
     toLeftAlign(features: Feature[] = this.children) { // 左对齐
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
         features.forEach((f, i) => {
-            const fPointArr = this.getPointArr(JSON.parse(JSON.stringify(f.pointArr)), -angle, center); // 获取旋转之前的点
-            const [minX, maxX, minY, maxY] = f.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
+            const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
+            const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
             const len = getLenOfPntToLine({ x: minX, y: 0 }, pointArr[0], pointArr[3]);
             const dx = len * Math.cos(angle * Math.PI / 180);
             const dy = len * Math.sin(angle * Math.PI / 180);
-            if (i == 0) {
-                console.log(minX, "minX");
-                this.gls.test = this.gls.getPixelPos({ x: minX, y: 0 })
-            }
+            // if (i == 0) {
+            //     console.log(fPointArr[0], "minX");
+            //     this.gls.test = this.gls.getPixelPos({ x: minX, y: 0 })
+            // }
             f.translate(-dx, -dy)
         })
     }
     toBottomAlign(features: Feature[] = this.children) {
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-            const [minX, maxX, minY, maxY] = f.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
+            const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
             const len = getLenOfPntToLine({ x: 0, y: maxY }, pointArr[2], pointArr[3]);
             const dx = len * Math.sin(-angle * Math.PI / 180);
             const dy = len * Math.cos(-angle * Math.PI / 180);
@@ -82,11 +83,11 @@ export default class Group extends Feature {
     }
     toRightAlign(features: Feature[] = this.children) {
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-            const [minX, maxX, minY, maxY] = f.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
+            const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
             const len = getLenOfPntToLine({ x: maxX, y: 0 }, pointArr[1], pointArr[2]);
             const dx = len * Math.cos(angle * Math.PI / 180);
             const dy = len * Math.sin(angle * Math.PI / 180);
@@ -95,10 +96,10 @@ export default class Group extends Feature {
     }
     toVerticalAlign(features: Feature[] = this.children) {
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-            const fCenter = f.getCenterPos(fPointArr)
+            const fCenter = Feature.getCenterPos(fPointArr)
             const len = center.x - fCenter.x;
             const dx = len * Math.cos(angle * Math.PI / 180);
             const dy = len * Math.sin(angle * Math.PI / 180);
@@ -107,10 +108,10 @@ export default class Group extends Feature {
     }
     toHorizonalAlign(features: Feature[] = this.children) {
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-            const fCenter = f.getCenterPos(fPointArr)
+            const fCenter = Feature.getCenterPos(fPointArr)
             const len = center.y - fCenter.y;
             const dx = len * Math.sin(-angle * Math.PI / 180);
             const dy = len * Math.cos(-angle * Math.PI / 180);
@@ -121,10 +122,10 @@ export default class Group extends Feature {
     // 均匀分布子元素, 两边没有空隙
     toSpaceBetween(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
 
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
-        const [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints(pointArr);
+        const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
         const wrapWidth = getLenOfTwoPnts(leftTop, rightTop);
         const wrapHeight = getLenOfTwoPnts(leftTop, leftBottom);
 
@@ -135,12 +136,12 @@ export default class Group extends Feature {
                         let childTotalWidth = 0;   // 子元素宽度总和
                         features.forEach((f, i) => {
                             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-                            const [leftTop, rightTop] = f.getRectWrapPoints(fPointArr);
+                            const [leftTop, rightTop] = Feature.getRectWrapPoints(fPointArr);
                             childTotalWidth += getLenOfTwoPnts(leftTop, rightTop); // 计算所有子元素的宽度之和
                         })
                         const spaceLen = (wrapWidth - childTotalWidth) / (features.length - 1)   // 每一段可分配空间
                         if (spaceLen < 0) return
-                        features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
+                        features.sort((a, b) => Feature.getRectWrapExtent(a.pointArr)[1] - Feature.getRectWrapExtent(b.pointArr)[0])
                         this.toLeftAlign(features);   // 先左对齐让子元素处于同一起点
                         let lastLen = 0  // 之前所有的子元素宽度+之前所有分配的空间长度
 
@@ -148,7 +149,7 @@ export default class Group extends Feature {
                             const prevFeature = features[i - 1];  // 上一个元素
                             if (prevFeature) {
                                 const fPointArr = prevFeature.getPointArr(prevFeature.pointArr, -angle, center); // 获取旋转之前的点
-                                const [leftTop, rightTop] = f.getRectWrapPoints(fPointArr);
+                                const [leftTop, rightTop] = Feature.getRectWrapPoints(fPointArr);
                                 lastLen += getLenOfTwoPnts(leftTop, rightTop) + spaceLen;
                             }
                             const dx = lastLen * Math.cos(angle * Math.PI / 180);
@@ -162,12 +163,12 @@ export default class Group extends Feature {
                         let childTotalHeight = 0;
                         features.forEach((f, i) => {
                             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-                            const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints(fPointArr);
+                            const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(fPointArr);
                             childTotalHeight += getLenOfTwoPnts(leftTop, leftBottom); // 计算所有子元素的宽度之和
                         })
                         const spaceLen = (wrapHeight - childTotalHeight) / (features.length - 1)   // 每一段可分配空间
                         if (spaceLen < 0) return
-                        features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
+                        features.sort((a, b) => Feature.getRectWrapExtent(a.pointArr)[3] - Feature.getRectWrapExtent(b.pointArr)[2])
                         this.toTopAlign(features);
                         let lastLen = 0  // 之前所有的子元素宽度+之前所有分配的空间长度
 
@@ -175,7 +176,7 @@ export default class Group extends Feature {
                             const prevFeature = features[i - 1];  // 上一个元素
                             if (prevFeature) {
                                 const fPointArr = prevFeature.getPointArr(prevFeature.pointArr, -angle, center); // 获取旋转之前的点
-                                const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints(fPointArr);
+                                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(fPointArr);
                                 lastLen += getLenOfTwoPnts(leftTop, leftBottom) + spaceLen;
                             }
                             const dx = lastLen * Math.sin(-angle * Math.PI / 180);
@@ -193,9 +194,9 @@ export default class Group extends Feature {
     toSpaceAroud(features: Feature[] = this.children, flexFLow = AlignType.HORIZONAL) {
         if (features.length <= 1) return
         const angle = this.angle;
-        const center = this.getCenterPos();
+        const center = Feature.getCenterPos(this.pointArr);
         const pointArr = this.getPointArr(this.pointArr, -angle, center);  // 获取旋转之前的点
-        const [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints(pointArr);
+        const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
         const wrapWidth = getLenOfTwoPnts(leftTop, rightTop);
         const wrapHeight = getLenOfTwoPnts(leftTop, leftBottom);
 
@@ -205,12 +206,12 @@ export default class Group extends Feature {
                     let childTotalWidth = 0;
                     features.forEach((f, i) => {
                         const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-                        const [leftTop, rightTop] = f.getRectWrapPoints(fPointArr);
+                        const [leftTop, rightTop] = Feature.getRectWrapPoints(fPointArr);
                         childTotalWidth += getLenOfTwoPnts(leftTop, rightTop); // 计算所有子元素的宽度之和
                     })
                     const spaceLen = (wrapWidth - childTotalWidth) / (features.length + 1)   // 每一段可分配空间
                     if (spaceLen < 0) return
-                    features.sort((a, b) => a.getRectWrapExtent()[1] - b.getRectWrapExtent()[0])
+                    features.sort((a, b) => Feature.getRectWrapExtent(a.pointArr)[1] - Feature.getRectWrapExtent(b.pointArr)[0])
                     this.toLeftAlign(features);
                     let lastLen = spaceLen  // 之前所有的子元素宽度+之前所有分配的空间长度
 
@@ -218,7 +219,7 @@ export default class Group extends Feature {
                         const prevFeature = features[i - 1];  // 上一个元素
                         if (prevFeature) {
                             const fPointArr = prevFeature.getPointArr(prevFeature.pointArr, -angle, center); // 获取旋转之前的点
-                            const [leftTop, rightTop] = f.getRectWrapPoints(fPointArr);
+                            const [leftTop, rightTop] = Feature.getRectWrapPoints(fPointArr);
                             lastLen += getLenOfTwoPnts(leftTop, rightTop) + spaceLen;
                         }
                         const dx = lastLen * Math.cos(angle * Math.PI / 180);
@@ -232,12 +233,12 @@ export default class Group extends Feature {
                     let childTotalHeight = 0;
                     features.forEach((f, i) => {
                         const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
-                        const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints(fPointArr);
+                        const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(fPointArr);
                         childTotalHeight += getLenOfTwoPnts(leftTop, leftBottom); // 计算所有子元素的宽度之和
                     })
                     const spaceLen = (wrapHeight - childTotalHeight) / (features.length + 1)   // 每一段可分配空间
                     if (spaceLen < 0) return
-                    features.sort((a, b) => a.getRectWrapExtent()[3] - b.getRectWrapExtent()[2])
+                    features.sort((a, b) => Feature.getRectWrapExtent(a.pointArr)[3] - Feature.getRectWrapExtent(b.pointArr)[2])
                     this.toTopAlign(features);
                     let lastLen = spaceLen  // 之前所有的子元素宽度+之前所有分配的空间长度
 
@@ -245,7 +246,7 @@ export default class Group extends Feature {
                         const prevFeature = features[i - 1];  // 上一个元素
                         if (prevFeature) {
                             const fPointArr = prevFeature.getPointArr(prevFeature.pointArr, -angle, center); // 获取旋转之前的点
-                            const [leftTop, rightTop, rightBottom, leftBottom] = f.getRectWrapPoints(fPointArr);
+                            const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(fPointArr);
                             lastLen += getLenOfTwoPnts(leftTop, leftBottom) + spaceLen;
                         }
                         const dx = lastLen * Math.sin(-angle * Math.PI / 180);
@@ -260,7 +261,7 @@ export default class Group extends Feature {
     }
 
     getSize(pointArr = this.pointArr) {
-        const [leftTop, rightTop, rightBottom, leftBottom] = this.getRectWrapPoints(pointArr);
+        const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(pointArr);
         return {
             width: getLenOfTwoPnts(leftTop, rightTop),
             height: getLenOfTwoPnts(leftTop, leftBottom),

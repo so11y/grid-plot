@@ -1,6 +1,8 @@
 import Feature from "../Feature";
-import { IPoint } from "../../Interface";
+import { IPoint, IPixelPos, IRelativePos, ITxt } from "../../Interface";
 import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
+import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
+import { FontFamily } from "@/Constants";
 
 class Line extends Feature {
 
@@ -15,14 +17,23 @@ class Line extends Feature {
     lineWidthArr: number[] = [];
     curveCtrlPnt: CtrlPnt[] = [];
 
-    constructor(pointArr: IPoint[] = []) {
+    tipInfo: ITxt = {
+        txt: '',
+        fontSize: 2,
+        color: "rgba(174, 253, 181)",
+        offset: { x: 0, y: 0 },
+        fontFamily: FontFamily.HEITI,
+        bolder: false,
+    };
+
+    constructor(pointArr: IRelativePos[] = []) {
         super(pointArr);
         this.className = "Line";
         this.isClosePath = false;
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r: number) {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
@@ -59,10 +70,10 @@ class Line extends Feature {
                 path.moveTo(p.x, p.y)
             } else {
                 // if (this.curveCtrlPnt[i]) {
-                //     const center = this.gls.getPixelPos(this.curveCtrlPnt[i].getCenterPos());
+                //     const center = this.gls.getPixelPos(Feature.getCenterPos(this.curveCtrlPnt[i].pointArr));
                 //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
                 // } else {
-                    path.lineTo(p.x, p.y)
+                path.lineTo(p.x, p.y)
                 // }
             }
         })
@@ -88,8 +99,35 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
+        if(this.tipInfo.txt && pointArr.length > 1){
+            this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        }
         ctx.restore()
         return path;
+    }
+
+    getTwoPntByTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
+        return [pointArr[0], pointArr[pointArr.length - 1]]
+    }
+
+    drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
+        if (pointArr.length == 2 && this.tipInfo.txt) {  // 只接受起点和终点, 文本
+            const startP = pointArr[0];
+            const endP = pointArr[1];
+            const center = getMidOfTwoPnts(startP, endP);
+            let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
+            if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
+                angle += 180  // 镜像翻转,文字始终朝上
+            }
+            ctx.save()
+            ctx.font = `${this.gls.getRatioSize(this.tipInfo.fontSize)}px ${this.tipInfo.fontFamily}`;
+            const { width } = ctx.measureText(this.tipInfo.txt);  // 文本的宽度
+            ctx.fillStyle = this.tipInfo.color;
+            this.setAngle(ctx, center, angle);
+            ctx.fillText(this.tipInfo.txt, center.x - width / 2 + this.tipInfo.offset.x, center.y - lineWidth + this.tipInfo.offset.y);
+            ctx.fill();
+            ctx.restore()
+        }
     }
 
     enableCtrlPnts(bool = true) {
@@ -97,14 +135,8 @@ class Line extends Feature {
         if (bool) {
             this.pointArr.forEach((p, i) => {
                 new CtrlPnt(this, i);
-                // if (i > 0) {
-                    // const centerPos = getMidOfTwoPnts(p, this.pointArr[i - 1])
-                    // const ccp = new CtrlPnt(this, i);
-                    // this.addFeature(ccp, true)  // 这里是为了方便同时移动
-                    // this.curveCtrlPnt[i] = ccp;
-                // }
             })
-        }else {
+        } else {
             this.clearCtrlPos();
         }
         console.log(this.children, this.curveCtrlPnt);
@@ -122,7 +154,7 @@ class Line extends Feature {
         return ctrlPnts;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {
         let path = ''
         if (this.isFreeStyle) {
             pointArr.forEach((p, i) => {

@@ -1,9 +1,9 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4435019 */
-  src: url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff2?t=1709550386149') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.woff?t=1709550386149') format('woff'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.ttf?t=1709550386149') format('truetype'),
-       url('//at.alicdn.com/t/c/font_4435019_ocj2vx535d.svg?t=1709550386149#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/c/font_4435019_7ww5hr4merd.woff2?t=1711365830914') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4435019_7ww5hr4merd.woff?t=1711365830914') format('woff'),
+       url('//at.alicdn.com/t/c/font_4435019_7ww5hr4merd.ttf?t=1711365830914') format('truetype'),
+       url('//at.alicdn.com/t/c/font_4435019_7ww5hr4merd.svg?t=1711365830914#iconfont') format('svg');
 }
 
 .iconfont {
@@ -12,6 +12,14 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.gls-fit-size:before {
+  content: "\e7cf";
+}
+
+.gls-rubber:before {
+  content: "\ea15";
 }
 
 .gls-copy:before {
@@ -241,6 +249,7 @@
 .gls-wenzi:before {
   content: "\e616";
 }
+
 
 
 ul, li, body {

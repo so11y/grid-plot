@@ -1,4 +1,4 @@
-import { IPoint } from "../../Interface";
+import { IPoint, IPixelPos } from "../../Interface";
 import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
 
@@ -17,7 +17,7 @@ class Rect extends Feature {
         this.isClosePath = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, r = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r = 0) {
         // if (radius == 0) {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点
@@ -57,7 +57,6 @@ class Rect extends Feature {
             // path.roundRect(leftTop.x, leftTop.y, width, height, r);
             path = this.drawRoundedRect(leftTop.x, leftTop.y, width, height, r);
         }
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         ctx.save()
         this.isClosePath && path.closePath()
         ctx.lineCap = this.lineCap;
@@ -75,10 +74,10 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
+        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
         this.setAngle(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         ctx.restore();
         return path;
@@ -109,19 +108,6 @@ class Rect extends Feature {
         this.size.width = width;
         this.size.height = height;
         this.pointArr = getRectPoint(this.position, this.size);
-    }
-
-    // 以左上角去旋转内容， 文字或者图片
-    setAngle = (ctx: CanvasRenderingContext2D, leftTop: IPoint) => {
-        if (this.angle && this.angle != 0) {
-            const boxInfo = {
-                x: leftTop.x,
-                y: leftTop.y,
-            }
-            ctx.translate(boxInfo.x, boxInfo.y)
-            ctx.rotate(this.angle * Math.PI / 180)
-            ctx.translate(-boxInfo.x, -boxInfo.y)
-        }
     }
 
     // 获取矩形的宽度，包括旋转，不是包围盒
@@ -155,7 +141,7 @@ class Rect extends Feature {
         return width / height;
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
         const { width, height, leftTop } = this.getSize(pointArr);
         return `
         <g transform="rotate(${this.angle} ${leftTop.x} ${leftTop.y})" style="stroke-width:${lineWidth};stroke:${this.strokeStyle};fill:${this.fillStyle};">

@@ -1,4 +1,3 @@
-import GridSystem from './GridSystem';
 import { IPoint } from './Interface';
 
 interface NearNode {
@@ -121,13 +120,13 @@ class AutoSearchPath {
     getCoordList(): IPoint[] {
         let nearNodeArr = this.getNearNodes(this.originPos);
         let minFNode = null;   // 离目标最近的点
-        let obstacle = GridSystem.Gls.features.filter(f => f.isObstacle);  // 障碍物s
+        // let obstacle = GridSystem.Gls.features.filter(f => f.isObstacle);  // 障碍物s
         for (let index = 0; index < nearNodeArr.length; index++) {
             const node = nearNodeArr[index];
-            let lastCoordNode = this.coordList[this.coordList.length - 2] || { x: 0, y: 0 };
-            if (GridSystem.Gls.hasFeatureIngridPos(obstacle, node.x, node.y) || (node.x == lastCoordNode.x && node.y == lastCoordNode.y)) {
-                continue;
-            }
+            // let lastCoordNode = this.coordList[this.coordList.length - 2] || { x: 0, y: 0 };
+            // if (GridSystem.Gls.hasFeatureIngridPos(obstacle, node.x, node.y) || (node.x == lastCoordNode.x && node.y == lastCoordNode.y)) {
+            //     continue;
+            // }
             if (!minFNode) {
                 minFNode = node;
             } else if (node.f <= minFNode.f) {

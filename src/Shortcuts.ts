@@ -67,7 +67,7 @@ export default class Shortcuts {
     static isShiftKey = false;
     static isCtrlKey = false;
     static isAltKey = false;
-    
+
     typeArr: MyEvent[] = [];
 
     constructor() {
@@ -99,7 +99,7 @@ export default class Shortcuts {
         })
     }
 
-    handleUpEvents(){
+    handleUpEvents() {
         Shortcuts.isCtrlKey = false;
         Shortcuts.isShiftKey = false;
     }

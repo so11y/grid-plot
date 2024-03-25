@@ -1,5 +1,5 @@
 import { AlignType, CoordinateSystem } from "@/Constants";
-import { IPoint } from "../../Interface";
+import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 
 class Img extends Rect {
@@ -47,13 +47,13 @@ class Img extends Rect {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPoint[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
         const path = super.draw(ctx, pointArr, lineWidth, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
-            // ctx.clip(path);   // 会导致后面元素旋转无效
             this.setAngle(ctx, leftTop);
+            ctx.clip(path);   // 放在旋转后面
             ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);
             ctx.restore();
@@ -62,12 +62,12 @@ class Img extends Rect {
     }
 
     revert(direction: AlignType, center?: IPoint, isParent = true) {
-        var offscreenCanvas = document.createElement('canvas');
+        const offscreenCanvas = document.createElement('canvas');
         if (this.domElement) {
             offscreenCanvas.width = this.domElement.width;
             offscreenCanvas.height = this.domElement.height;
             // 获取离屏Canvas的2D渲染上下文  
-            var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+            const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
             // 镜像反转
             switch (direction) {
                 case AlignType.HORIZONAL:
@@ -91,7 +91,7 @@ class Img extends Rect {
         }
     }
 
-    getSvg(pointArr: IPoint[] = [], lineWidth: number = 1, radius = 0) {
+    getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
         const { width, height, leftTop } = this.getSize(pointArr);
         const svgStr = super.getSvg(pointArr, lineWidth, radius);
         return svgStr + `
