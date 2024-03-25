@@ -382,7 +382,7 @@ function beautifyHTML(html: string, indentSize = 2) {
 function isBasicFeature(f?: any) {
     if (!f) return false;
     // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
-    return f.className == 'Img' || f.className == 'Line' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    return f.className == 'Img' || f.className == 'Line' || f.className == 'Link' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any) {

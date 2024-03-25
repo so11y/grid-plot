@@ -82,14 +82,14 @@ class Text extends Rect {
     }
 
     getFormatStr(boxWidth: number, fontSize: number) {
-        var offscreenCanvas = document.createElement('canvas');
+        const offscreenCanvas = document.createElement('canvas');
         // 获取离屏Canvas的2D渲染上下文  
-        var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+        const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
         ctx.font = `${this.textInfo.bolder ? 'bolder' : ''} ${fontSize}px ${this.textInfo.fontFamily}`;
 
-        var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
-        var lastSubstrIndex = 0; //每次开始截取的字符串的索引
-        var contentWidth = 0;
+        let contentHeight = 0; //绘制字体距离canvas顶部初始的高度
+        let lastSubstrIndex = 0; //每次开始截取的字符串的索引
+        let contentWidth = 0;
         const padding = this.gls.getRatioSize(this.padding);
         // startY += padding;
         const lineHeight = this.gls.getRatioSize(this.textInfo.lineHeight);
@@ -162,9 +162,9 @@ class Text extends Rect {
     // 自适应换行
     toFormateStr(ctx: CanvasRenderingContext2D, fontSize: number, boxWidth: number, startX: number, startY: number) {
         ctx.font = `${this.textInfo.bolder ? 'bolder' : ''} ${fontSize}px ${this.textInfo.fontFamily}`;
-        var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
-        var lastSubstrIndex = 0; //每次开始截取的字符串的索引
-        var contentWidth = 0;
+        let contentHeight = 0; //绘制字体距离canvas顶部初始的高度
+        let lastSubstrIndex = 0; //每次开始截取的字符串的索引
+        let contentWidth = 0;
         const padding = this.gls.getRatioSize(this.padding);
         startY += padding;
         const lineHeight = this.gls.getRatioSize(this.textInfo.lineHeight);
@@ -244,9 +244,9 @@ class Text extends Rect {
     }
 
     getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1, radius = 0) {
-        var offscreenCanvas = document.createElement('canvas');
+        const offscreenCanvas = document.createElement('canvas');
         // 获取离屏Canvas的2D渲染上下文  
-        var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+        const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
 
         const padding = this.gls.getRatioSize(this.padding);
         const lineHeight = this.gls.getRatioSize(this.textInfo.lineHeight);
@@ -255,10 +255,10 @@ class Text extends Rect {
         const svgStr = super.getSvg(pointArr, lineWidth, radius);
         const fontSize = this.gls.getRatioSize(this.textInfo.fontSize)
 
-        var textArr = ''
-        var contentHeight = 0; //绘制字体距离canvas顶部初始的高度
-        var lastSubstrIndex = 0; //每次开始截取的字符串的索引
-        var contentWidth = 0;
+        let textArr = ''
+        let contentHeight = 0; //绘制字体距离canvas顶部初始的高度
+        let lastSubstrIndex = 0; //每次开始截取的字符串的索引
+        let contentWidth = 0;
 
         ctx.font = `${this.textInfo.bolder ? 'bolder' : ''} ${fontSize}px ${this.textInfo.fontFamily}`;
 

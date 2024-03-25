@@ -19,7 +19,7 @@ class Line extends Feature {
 
     tipInfo: ITxt = {
         txt: '',
-        fontSize: 18,
+        fontSize: 2,
         color: "rgba(174, 253, 181)",
         offset: { x: 0, y: 0 },
         fontFamily: FontFamily.HEITI,
@@ -119,7 +119,7 @@ class Line extends Feature {
                 angle += 180  // 镜像翻转,文字始终朝上
             }
             ctx.save()
-            ctx.font = `${this.tipInfo.fontSize}px ${this.tipInfo.fontFamily}`;
+            ctx.font = `${this.gls.getRatioSize(this.tipInfo.fontSize)}px ${this.tipInfo.fontFamily}`;
             const { width } = ctx.measureText(this.tipInfo.txt);  // 文本的宽度
             ctx.fillStyle = this.tipInfo.color;
             this.setAngle(ctx, center, angle);

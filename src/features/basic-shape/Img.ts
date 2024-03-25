@@ -62,12 +62,12 @@ class Img extends Rect {
     }
 
     revert(direction: AlignType, center?: IPoint, isParent = true) {
-        var offscreenCanvas = document.createElement('canvas');
+        const offscreenCanvas = document.createElement('canvas');
         if (this.domElement) {
             offscreenCanvas.width = this.domElement.width;
             offscreenCanvas.height = this.domElement.height;
             // 获取离屏Canvas的2D渲染上下文  
-            var ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
+            const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
             // 镜像反转
             switch (direction) {
                 case AlignType.HORIZONAL:

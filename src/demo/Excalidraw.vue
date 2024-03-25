@@ -74,7 +74,7 @@
                 <ul class="list-wrap">
                     <li @click="onImportFile"><i class="iconfont gls-xiazai" /> 打开 </li>
                     <li @click="onSaveFile"><i class="iconfont gls-xiazai" /> 保存到...</li>
-                    <li @click="onShowPreview"><i class="iconfont gls-daochutupian" /> 导出图片...</li>
+                    <li @click="onShowPreview()"><i class="iconfont gls-daochutupian" /> 导出图片...</li>
                     <li @click="isShowHelp = true"><i class="iconfont gls-bangzhu" /> 帮助</li>
                     <li @click="reset(true)"><i class="iconfont gls-shanchu" /> 重置画布</li>
                     <!-- <li @click="darkTheme"><i class="iconfont gls-shanchu" /> 深色模式</li> -->
@@ -315,10 +315,12 @@
         <canvas id="myCanvas" width="1580" height="880" ref="cvs"></canvas>
         <a-modal v-model:open="isShowSaveImage" title="保存为图片" width="80vw">
             <a-row type="flex" justify="center">
-                <img alt="" id="preview-img" width="80%">
+                <a-spin v-if="exportImgLoading" />
+                <img alt="" id="preview-img" width="80%" v-show="!exportImgLoading">
             </a-row>
             <template #footer>
-                <a-button key="submit" type="primary" @click="onSaveImg">下载图片</a-button>
+                <a-button key="submit" type="primary" @click="onShowPreview()">切换模式</a-button>
+                <a-button key="submit" type="primary" @click="onSaveImg()">下载图片</a-button>
                 <a-button key="back" @click="isShowSaveImage = false">关 闭</a-button>
             </template>
         </a-modal>
@@ -406,6 +408,8 @@ import { getUnitSize, getMousePos } from "../utils"
 const cvs = ref(null);
 const activeI = ref(-1);
 const isShowSide = ref(false);
+const exportImgLoading = ref(true);
+const exportImgMode = ref(true);
 const props = ref<Partial<Feature & Rect & Line>>({
     opacity: 1,
     lineWidth: .2,
@@ -548,13 +552,16 @@ function onSaveImg() {
 
 function onShowPreview() {
     isShowSaveImage.value = true;
+    exportImgLoading.value = true;
     setTimeout(() => {
         if (gls.value) {
-            var base64 = gls.value.domElement.toDataURL("image/png");
+            var base64 = gls.value.toImage(exportImgMode.value);
             let img = document.getElementById("preview-img") as HTMLImageElement;
             img.src = base64;
             previewImg.value = base64;
+            exportImgLoading.value = false;
         }
+        exportImgMode.value = !exportImgMode.value
     }, 1000);
 }
 
@@ -608,51 +615,50 @@ function reset(clear = false) {
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
 
-    // let rect = new Rect(100, 100, 100, 100)
-    // rect.radius = 2;
-    // rect.rotate(60)
-    // gls.value.addFeature(rect, false)
+    let rect = new Rect(100, 100, 100, 100)
+    rect.radius = 2;
+    rect.rotate(60)
+    gls.value.addFeature(rect, false)
 
-    // const text = new Text(`当内容
-    // 特别多的时候，canvas不会自动
-    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    // text.fitSize = true;
-    // text.radius = 2
-    // // text.rotate(30)
-    // gls.value.addFeature(text, false);
-    // // rect.addFeature(text);
+    const text = new Text(`当内容
+    特别多的时候，canvas不会自动
+    换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    text.fitSize = true;
+    text.radius = 2
+    // text.rotate(30)
+    gls.value.addFeature(text, false);
+    // rect.addFeature(text);
 
-    // let rect2 = new Rect(150, 150, 50, 50)
-    // rect2.fillStyle = "transparent"
-    // gls.value.addFeature(rect2, false)
+    let rect2 = new Rect(150, 150, 50, 50)
+    rect2.fillStyle = "transparent"
+    gls.value.addFeature(rect2, false)
 
-    // let circle = new Circle(280, 180, 30, 30)
-    // gls.value.addFeature(circle, false)
+    let circle = new Circle(280, 180, 30, 30)
+    gls.value.addFeature(circle, false)
 
-    // var line = new Line([
-    //     { x: 210, y: 60 },
-    //     { x: 300, y: 90 },
-    // ])
-    // line.tipInfo.txt = "测试文本"
-    // line.tipInfo.fontSize = 21
-    // // line.enableCtrlPnts();
-    // gls.value.addFeature(line, false)
+    var line = new Line([
+        { x: 210, y: 60 },
+        { x: 300, y: 90 },
+    ])
+    line.tipInfo.txt = "测试文本"
+    // line.enableCtrlPnts();
+    gls.value.addFeature(line, false)
 
 
-    // let img = new Img("/img2.png", 400, 100);
-    // gls.value.addFeature(img, false)
+    let img = new Img("/img2.png", -1400, 100);
+    gls.value.addFeature(img, false)
 
-    // // 合并为组
-    // let group = new Group([rect, rect2, circle]);
-    // group.translate(-10, 100)
-    // group.cbTransformChild = false;
-    // gls.value.addFeature(group, false)
-    // // rect.onMousemove = () => {
-    // //     console.log(222);
-    // // }
-    // // group.onMousemove = () => {
-    // //     console.log(11);
-    // // }
+    // 合并为组
+    let group = new Group([rect, rect2, circle]);
+    group.translate(-10, 100)
+    group.cbTransformChild = false;
+    gls.value.addFeature(group, false)
+    // rect.onMousemove = () => {
+    //     console.log(222);
+    // }
+    // group.onMousemove = () => {
+    //     console.log(11);
+    // }
     // group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
 
     // // // 网格坐标
@@ -1063,6 +1069,7 @@ canvas {
             padding: 10px;
             text-align: left;
             line-height: 14px;
+
             li {
                 padding: 5px;
             }

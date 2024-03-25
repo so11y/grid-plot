@@ -157,7 +157,7 @@ export default class Bbox extends Rect {
             pointArr[3].x = pnt2.x;
             pointArr[3].y = pnt2.y;
             if (this.lastLenX) {
-                var setTranform = (feature: Feature) => {
+                const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
                         p.x = newPntX.x;
@@ -194,7 +194,7 @@ export default class Bbox extends Rect {
             pointArr[2].x = pnt2.x;
             pointArr[2].y = pnt2.y;
             if (this.lastLenX) {
-                var setTranform = (feature: Feature) => {
+                const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
                         p.x = newPntX.x;
@@ -232,7 +232,7 @@ export default class Bbox extends Rect {
             pointArr[0].x = pnt2.x;
             pointArr[0].y = pnt2.y;
             if (this.lastLenY) {
-                var setTranform = (feature: Feature) => {
+                const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
                         p.x = newPntX.x;
@@ -260,7 +260,7 @@ export default class Bbox extends Rect {
         bCtrlP5.name = CtrlType.HEIGHT_CTRL;
         bCtrlP5.translateEvents.push(() => {
             const pointArr = this.pointArr;
-            const ctrlPos = Feature.getCenterPos(bCtrlP5);  // 当前控制点的中心点
+            const ctrlPos = Feature.getCenterPos(bCtrlP5.pointArr);  // 当前控制点的中心点
             const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
             const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
             const pnt2 = getPntInVct(pointArr[1], this.vctY, lenY)  // 关联点长度同步移动
@@ -269,7 +269,7 @@ export default class Bbox extends Rect {
             pointArr[2].x = pnt2.x;
             pointArr[2].y = pnt2.y;
             if (this.lastLenY) {
-                var setTranform = (feature: Feature) => {
+                const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
                         const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
                         p.x = newPntX.x;

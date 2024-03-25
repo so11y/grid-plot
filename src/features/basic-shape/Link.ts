@@ -88,7 +88,7 @@ export default class Link extends Line {
             }
         })
         ctx.lineWidth = lineWidth * .9
-        var gradient = ctx.createLinearGradient(flowPnts[0].x, flowPnts[0].y, flowPnts[flowPnts.length - 1].x, flowPnts[flowPnts.length - 1].y)
+        const gradient = ctx.createLinearGradient(flowPnts[0].x, flowPnts[0].y, flowPnts[flowPnts.length - 1].x, flowPnts[flowPnts.length - 1].y)
         gradient.addColorStop(0, "rgb(0, 255, 127,0)")
         gradient.addColorStop(0.2, "rgb(0, 255, 127,0.01)")
         gradient.addColorStop(0.4, "rgb(0, 255, 127,0.04)")

@@ -23,7 +23,7 @@ class SelectArea extends Group {
             let startP = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
             this.pointArr[0] = startP;
             this.gls.addFeature(this, false);
-            var mouseMove = (ev: any) => {
+            const mouseMove = (ev: any) => {
                 switch (this.drawMode) {
                     case DrawAreaMode.RECT: {
                         let endP = this.gls.getRelativePos(getMousePos(this.gls.domElement, ev));
@@ -50,7 +50,7 @@ class SelectArea extends Group {
                         break;
                 }
             }
-            var mouseUp = () => {
+            const mouseUp = () => {
                 let featuresIn = this.getSelectFeature();
                 featuresIn.forEach(fi => {
                     this.addFeature(fi as IBasicFeature)

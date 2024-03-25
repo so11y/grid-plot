@@ -28,11 +28,11 @@ export default class GridLine {
         /*获取绘图工具*/
         // 设置网格大小
         const ctx = gls.ctx;
-        var gridSize = gls.getRatioSize(CoordinateSystem.GRID_SIZE);
+        const gridSize = gls.getRatioSize(CoordinateSystem.GRID_SIZE);
 
         // 获取Canvas的width、height
-        var CanvasWidth = ctx.canvas.width;
-        var CanvasHeight = ctx.canvas.height;
+        const CanvasWidth = ctx.canvas.width;
+        const CanvasHeight = ctx.canvas.height;
         // 在 pageSlicePos 的 x，y 点位画一个 10 * 10 的红色标记用来表示当前页面的 0 0 坐标
         // ctx.fillRect(gls.pageSlicePos.x - 5, gls.pageSlicePos.y - 5, 10, 10); // 效果图红色小方块
         // ctx.fillStyle = 'red';
@@ -53,7 +53,7 @@ export default class GridLine {
         ctx.lineWidth = this.lineWidth;
         switch (this.mode) {
             case 1:
-                var crossLen = gls.getPixelLen(this.crossLen)
+                const crossLen = gls.getPixelLen(this.crossLen)
                 for (let i = 0; i < xPageSliceTotal; i++) {
                     ctx.beginPath(); // 开启路径，设置不同的样式
                     for (let j = 0; j < yPageSliceTotal; j++) {
