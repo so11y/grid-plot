@@ -312,7 +312,7 @@
                 </ul>
             </div>
         </div>
-        <canvas id="myCanvas" width="1580" height="880" ref="cvs"></canvas>
+        <canvas id="myCanvas" width="1700" height="820" ref="cvs"></canvas>
         <a-modal v-model:open="isShowSaveImage" title="保存为图片" width="80vw">
             <a-row type="flex" justify="center">
                 <a-spin v-if="exportImgLoading" />

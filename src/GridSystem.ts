@@ -1340,28 +1340,30 @@ class GridSystem {
   */
     toFitView(features: Feature[] = this.features, padding: number = 20, domElement = this.ctx.canvas) {
         // 先缩放
-        const rectPnts = this.getFeaturesRange(features);   // 所有元素的范围大小
-        const totalHeight = rectPnts[2].y - rectPnts[0].y;
-        const totalWidth = rectPnts[1].x - rectPnts[3].x;
+        const [leftTop, rightTop, rightBottom, leftBottom] = this.getFeaturesRange(features);   // 所有元素的范围大小
+        const totalHeight = Math.abs(leftBottom.y - leftTop.y);
+        const totalWidth = Math.abs(rightTop.x - leftTop.x);
         if (totalWidth > totalHeight) {
-            this.scale = domElement.width / ((totalWidth + padding) / this.scale);   // 这个跟miniMap算法一样
+            this.scale = domElement.width / ((totalWidth + padding) / this.scale);   // 像素宽度/scale是相对宽度, 画布宽度/相对宽度得到缩放比例 这个跟miniMap算法一样
         } else {
             this.scale = domElement.height / ((totalHeight + padding) / this.scale);
         }
-        // 后居中
-        const rectPnts2 = this.getFeaturesRange(features);
-        const { x: distX, y: distY } = this.getCenterDist({ x: (rectPnts2[1].x + rectPnts2[3].x) / 2, y: (rectPnts2[0].y + rectPnts2[2].y) / 2 });
-        this.pageSlicePos.x = this.pageSlicePos.x + distX
-        this.pageSlicePos.y = this.pageSlicePos.y + distY  // 以所有元素的中心点对齐
+        setTimeout(() => {
+            // 后居中
+            const [leftTop1, rightTop1, rightBottom1, leftBottom1] = this.getFeaturesRange(features);
+            const { x: distX, y: distY } = this.getCenterDist({ x: (rightTop1.x + leftBottom1.x) / 2, y: (leftTop1.y + rightBottom1.y) / 2 });
+            this.pageSlicePos.x = this.pageSlicePos.x + distX
+            this.pageSlicePos.y = this.pageSlicePos.y + distY  // 以所有元素的中心点对齐
+        }, 100)
     }
 
     toImage(isFitView = false, padding = 20, zoom = 50) {
         if (isFitView) {
             const scale = this.scale;
             this.scale = zoom;  // 放大倍数,数值越大图片越清晰,同时文件也越大
-            const rectPnts = this.getFeaturesRange(this.features);   // 所有元素的范围大小
-            const totalWidth = rectPnts[1].x - rectPnts[3].x;
-            const totalHeight = rectPnts[2].y - rectPnts[0].y;
+            const [leftTop, rightTop, rightBottom, leftBottom] = this.getFeaturesRange(this.features);   // 所有元素的范围大小
+            const totalWidth = Math.abs(rightTop.x - leftBottom.x);
+            const totalHeight = Math.abs(rightBottom.y - leftTop.y);
             const offscreenCanvas = document.createElement('canvas');
             offscreenCanvas.width = totalWidth + padding;
             offscreenCanvas.height = totalHeight + padding;
@@ -1373,8 +1375,8 @@ class GridSystem {
                 const lineWidth = this.getRatioSize(feature.lineWidth);
                 // 将多边形移动到Canvas的左上角 
                 pointArr.forEach(p => {
-                    p.x -= rectPnts[0].x - padding / 2;  // 水平方向移动到左侧边界
-                    p.y -= rectPnts[0].y - padding / 2; // 垂直方向移动到顶部边界  
+                    p.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
+                    p.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
                 feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
             })
