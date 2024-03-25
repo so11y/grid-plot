@@ -1336,10 +1336,11 @@ class GridSystem {
     }
     /**
   * 居中,并缩放至所有元素都在canvas范围内
-  * @param padding 上下或左右的最小边距
+  * @param padding 上下或左右的边距
   */
     toFitView(features: Feature[] = this.features, padding: number = 20, domElement = this.ctx.canvas) {
         // 先缩放
+        features = this.features.filter(f => isBasicFeature(f))
         const rectPnts = this.getFeaturesRange(features);   // 所有元素的范围大小
         const totalHeight = rectPnts[2].y - rectPnts[0].y;
         const totalWidth = rectPnts[1].x - rectPnts[3].x;
@@ -1357,9 +1358,10 @@ class GridSystem {
 
     toImage(isFitView = false, padding = 20, zoom = 50) {
         if (isFitView) {
+            const features = this.features.filter(f => isBasicFeature(f))
             const scale = this.scale;
             this.scale = zoom;  // 放大倍数,数值越大图片越清晰,同时文件也越大
-            const rectPnts = this.getFeaturesRange(this.features);   // 所有元素的范围大小
+            const rectPnts = this.getFeaturesRange(features);   // 所有元素的范围大小
             const totalWidth = rectPnts[1].x - rectPnts[3].x;
             const totalHeight = rectPnts[2].y - rectPnts[0].y;
             const offscreenCanvas = document.createElement('canvas');
@@ -1368,7 +1370,7 @@ class GridSystem {
             const ctx = offscreenCanvas.getContext('2d') as CanvasRenderingContext2D;
             ctx.fillStyle = this.background
             ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-            this.features.filter(f => isBasicFeature(f)).forEach(feature => {
+            features.forEach(feature => {
                 const pointArr = feature.pointArr.map(p => this.getPixelPos(p))
                 const lineWidth = this.getRatioSize(feature.lineWidth);
                 // 将多边形移动到Canvas的左上角 
