@@ -99,13 +99,14 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        if(this.tipInfo.txt && pointArr.length > 1){
+            this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        }
         ctx.restore()
         return path;
     }
 
     getTwoPntByTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
-        if (pointArr.length < 2) throw new Error("参数长度必须大于1");
         return [pointArr[0], pointArr[pointArr.length - 1]]
     }
 
