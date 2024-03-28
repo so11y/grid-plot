@@ -223,6 +223,9 @@ class Feature {
                 this.isPointIn = isPointIn;
                 this.isPointIn && this.onmousemove && this.onmousemove();
             }
+            if(this.name === 'rect5'){
+                console.log(this.isPointIn);
+            }
         }
     }
 
@@ -327,30 +330,18 @@ class Feature {
 
     // --------------------元素鼠标事件相关----------------
     onmouseover(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmouseover(e)
-        })
         this.mouseoverEvents.forEach(f => { f(e) })
         this.onMouseover && this.onMouseover(e);
     }
     onmousemove(e?: any) {
-        // this.children.forEach(cf => {
-        //     cf.onmousemove(e)
-        // })
         this.mousemoveEvents.forEach(f => { f(e) })
         this.onMousemove && this.onMousemove(e);
     }
     onmousedown(e?: any) {
-        // this.children.forEach(cf => {
-        //     cf.onmousedown(e)
-        // })
         this.mousedownEvents.forEach(f => { f(e) })
         this.onMousedown && this.onMousedown(e);
     }
     onmouseup(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmouseup(e)
-        })
         this.mouseupEvents.forEach(f => { f(e) })
         this.onMouseup && this.onMouseup(e);
     }
@@ -405,17 +396,11 @@ class Feature {
         this.onDragend && this.onDragend(e);
     }
     ondrag(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondrag(e)
-        })
         this.dragEvents.forEach(f => { f(e) })
         this.onDrag && this.onDrag(e);
     }
     // --------------------元素操作相关----------------
     ondelete(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondelete(e)
-        })
         this.deleteEvents.forEach(f => { f(e) })
         this.onDelete && this.onDelete(e);
     }
@@ -430,16 +415,6 @@ class Feature {
             this.gls.removeFeature(cf, false);
         })
     };
-
-
-    // 获取包围盒矩形的Size
-    getPixelSize() {
-        const [leftTop, rightTop, rightBottom] = Feature.getRectWrapPoints(this.pointArr);
-        return {
-            x: getLenOfTwoPnts(leftTop, rightTop),
-            y: getLenOfTwoPnts(leftTop, rightBottom),
-        }
-    }
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {

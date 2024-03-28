@@ -1,7 +1,6 @@
 import Feature from "../Feature";
 import { getPntsInEllipse, } from "../../utils";
 
-
 function getCirclePointsWithPosAndAngle(x: number, y: number, width: number, height: number, angle = 0) {
     let O: [number, number] = [x, y];
     let points = getPntsInEllipse(O, width / 2, height / 2, 0, 360, angle);

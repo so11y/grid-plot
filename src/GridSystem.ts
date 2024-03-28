@@ -282,7 +282,7 @@ class GridSystem {
                         }
                         lastMove.x = mx;
                         lastMove.y = my;
-                        focusNode.ondrag && focusNode.ondrag();
+                        focusNode.ondrag && focusNode.ondrag(e);
                     }
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
@@ -307,8 +307,8 @@ class GridSystem {
             if (focusNode) {
                 focusNode.isFocused = false;
                 focusNode._orientations = null;
-                focusNode.onmouseup && focusNode.onmouseup();
-                focusNode.ondragend && focusNode.ondragend();
+                focusNode.onmouseup && focusNode.onmouseup(e);
+                focusNode.ondragend && focusNode.ondragend(e);
                 if (isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
                     GridSystem.Stack && GridSystem.Stack.record();
                 }
@@ -1306,7 +1306,7 @@ class GridSystem {
         // this.pageSlicePos.x += offsetX;
         // this.pageSlicePos.y += offsetY;
     }
-    zoomTo(scale: number, point?: IPoint) { // 缩放至 
+    zoomTo(scale: number, point?: IRelativePos) { // 缩放至 
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
         if (!point) point = this.getCenterPos()[0]
         this.scale = scale;
@@ -1318,7 +1318,7 @@ class GridSystem {
         return [centerP, canvasR]
     }
     // 求点与canvas中心的距离
-    getCenterDist(point: IPoint) {
+    getCenterDist(point: IPixelPos) {
         const canvasCenter = { x: this.domElement.width / 2, y: this.domElement.height / 2 }
         return {
             x: canvasCenter.x - point.x,
@@ -1358,6 +1358,13 @@ class GridSystem {
         }, 100)
     }
 
+    /**
+     *  整个画布导出为图片URL
+     * @param isFitView 
+     * @param padding 
+     * @param zoom 
+     * @returns 
+     */
     toImage(isFitView = false, padding = 20, zoom = 50) {
         if (isFitView) {
             const features = this.features.filter(f => isBasicFeature(f))

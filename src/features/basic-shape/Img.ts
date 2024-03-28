@@ -1,4 +1,4 @@
-import { AlignType, CoordinateSystem } from "@/Constants";
+import { AlignType } from "@/Constants";
 import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 

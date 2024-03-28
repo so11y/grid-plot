@@ -132,12 +132,13 @@ function randomNum(minNum: number, maxNum: number) {
             return 0;
     }
 }
-
+// 根据两个点坐标创建向量
 function createVctor(start: IPoint, end: IPoint): IVctor {
     let x = end.x - start.x;
     let y = end.y - start.y;
     return [x, y];
 };
+// 获取向量的长度
 function getVctLen(vct: IVctor) {
     return Math.sqrt(vct[0] * vct[0] + vct[1] * vct[1]);
 };
@@ -146,13 +147,13 @@ function getVctLen(vct: IVctor) {
 * 根据点在向量上的比例计算点坐标, [xO, yO]为起点，[xVct, yVct]为向量，k 为该点在向量方向上的长度
 * 获取
 */
-function getPntInVct(O: IPoint, [xVct, yVct]: IVctor, k = 0): IPoint {
-    let lenVct = getVctLen([xVct, yVct]);  // 获取向量长度
+function getPntInVct(O: IPoint, vct: IVctor, k = 0): IPoint {
+    let lenVct = getVctLen(vct);  // 获取向量长度
     let stdVct;
     if (lenVct === 0) {
         stdVct = [0, 0];
     } else {
-        stdVct = [xVct / lenVct, yVct / lenVct];   // 单位向量
+        stdVct = [vct[0] / lenVct, vct[1] / lenVct];   // 单位向量
     }
     // return [O.x + k * stdVct[0], O.y + k * stdVct[1]];
     return {
@@ -161,25 +162,25 @@ function getPntInVct(O: IPoint, [xVct, yVct]: IVctor, k = 0): IPoint {
     };
 };
 
-function getRotateAng([x1 = 0, y1 = 0], [x2 = 0, y2 = 0]) {
+function getRotateAng(vct:IVctor = [0, 0], vct2:IVctor = [0, 0]) {
     let EPSILON = 1.0e-8;
     let dist, dot, cross, degree, angle;
 
-    dist = Math.sqrt(x1 * x1 + y1 * y1);
-    x1 /= dist;
-    y1 /= dist;
-    dist = Math.sqrt(x2 * x2 + y2 * y2);
-    x2 /= dist;
-    y2 /= dist;
+    dist = Math.sqrt(vct[0] * vct[0] + vct[1] * vct[1]);
+    vct[0] /= dist;
+    vct[1] /= dist;
+    dist = Math.sqrt(vct2[0] * vct2[0] + vct2[1] * vct2[1]);
+    vct2[0] /= dist;
+    vct2[1] /= dist;
 
-    dot = x1 * x2 + y1 * y2;
+    dot = vct[0] * vct2[0] + vct[1] * vct2[1];
     if (Math.abs(dot - 1.0) <= EPSILON) {
         angle = 0;
     } else if (Math.abs(dot + 1.0) <= EPSILON) {
         angle = Math.PI;
     } else {
         angle = Math.acos(dot);
-        cross = x1 * y2 - x2 * y1;
+        cross = vct[0] * vct2[1] - vct2[0] * vct[1];
         if (cross < 0) {
             angle = 2 * Math.PI - angle;
         }
@@ -188,11 +189,11 @@ function getRotateAng([x1 = 0, y1 = 0], [x2 = 0, y2 = 0]) {
     return degree;
 };
 
-
+// 获取两个点的距离
 function getLenOfTwoPnts(p1: IPoint, p2: IPoint) {
     return Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2));
 };
-
+// 获取两个点的中点
 function getMidOfTwoPnts(p1: IPoint, p2: IPoint) {
     return {
         x: (p1.x + p2.x) / 2,
@@ -213,7 +214,7 @@ function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
     return len;
 };
 
-
+// 向量旋转angle角度得到新的向量
 function getRotateVct(vct: IVctor, angle = 0): IVctor {
     let rad = angle * Math.PI / 180;
     let x1 = Math.cos(rad) * vct[0] - Math.sin(rad) * vct[1];
@@ -258,19 +259,6 @@ function getPntIn3Bezier(p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint, t: numb
         y = p0.y * t_ * t_ * t_ + 3 * p1.y * t * t_ * t_ + 3 * p2.y * t * t * t_ + p3.y * t * t * t;
     return { x, y };
 };
-
-function toBase64(img: HTMLImageElement) {
-    var canvas = document.createElement('canvas') as HTMLCanvasElement;
-    // 设置画布大小与图片相同
-    canvas.width = img.width;
-    canvas.height = img.height;
-    // 获取2D上下文
-    var ctx = canvas.getContext('2d');
-    // 将图片绘制到画布上
-    ctx && ctx.drawImage(img, 0, 0);
-    // 通过toDataURL方法将画布内容转换为Base64字符串
-    return canvas.toDataURL('image/png', 1.0);
-}
 
 /**
  * 在一段椭圆弧上均匀取点，rotateAngle是椭圆绕中心点逆时针旋转的角度
@@ -427,7 +415,6 @@ export {
     getRectPoint,
     getPntsInEllipse,
 
-    toBase64,
     getSizeInBytes,
     beautifyHTML,
     swapElements,
