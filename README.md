@@ -12,150 +12,205 @@
 #### gls实例对象的API
 <br>
 
+**GridSystem 类**
+
 > 用于绘制画布以及画布内的元素
-
 ```
-   gls.draw()
+   gls.draw(bool, fn)  // 1. 是否循环渲染还是只渲染一次  2. 没渲染一次执行的回调函数
 ```
-
-> 限制拖拽范围,传入一个数组，数组有四个数值分别是上，右，下，左
+> 遍历计算元素的每个点坐标,调用他们的draw去绘制到画布上(重要)
+```
+   gls.drawFeatures(features, bool)  // 1. 要渲染的元素是哪些  2. 是否是子元素
+```
+> 初始化监听事件
+```
+   gls.initEventListener()
+```
+> 记录当前鼠标在画布上的坐标
+```
+   gls.mouseMove()
+```
+> 鼠标点击画布,判断是点击到元素还是画布,元素的话可以拖拽, 画布的话也是拖拽(重要)
+```
+   gls.mouseDown()
+```
+> 获取某个元素相邻的吸附点,作用于拖拽时的网格对齐或元素对齐
+```
+   gls.getAdsorbOffsetDist(feature, options)  // 1.目标元素 2. 配置项
+```
+> 鼠标滚轮,放大或所有画布上的元素
+```
+   gls.mouseWheel()
+```
+> 鼠标滚轮,已当前鼠标点作为中心去放大
+```
+   gls.back2center(x, y, lastGirdSize)  // 1,2 鼠标坐标点, 3 上一次网格的大小宽高
+```
+> 限制画布拖拽范围,传入一个数组，数组有四个数值分别是上，右，下，左
 ```
    gls.setPageSliceByExtent([0,0,0,0])
-```
-
-> 根据相对坐标获取像素坐标,传入一个数组，数组有两个数值分别是x,y。返回一个数组坐标
-关于相对坐标与绝对坐标解释：
-相对坐标是实例化后用于设置元素的位置，这个位置是相对于网格的原点的，是开发中所使用的
-绝对坐标是源代码内部渲染到画布上所用到的坐标，是相对于canvas左上角的，所以开发时基本不用关心（绝对坐标我也会表述成绝对坐标）
-```
-   gls.getPixelPos([0,0])
-```
-> 根据像素坐标获取相对坐标,传入一个数组，数组有两个数值分别是x,y。返回一个数组坐标
-```
-   gls.getRelativePos([0,0])
-```
-> 获取像素大小,传入一个数字。返回一个数字
-```
-   gls.getRatioSize(0)
-```
-> 获取相对大小,传入一个数字。返回一个数字
-```
-   gls.getOriginalSize(0)
-```
-> 获取像素坐标以及像素长度,传入一个对象，对象包含x,y,width,height。返回同样的对象
-```
-   gls.getPixelPosAndWH({x:0, y:0, width: 0, height: 0})
-```
-> 获取相对坐标以及相对长度,传入一个对象，对象包含x,y,width,height。返回同样的对象
-```
-   gls.getRelativePosAndWH({x:0, y:0, width: 0, height: 0})
 ```
 > 向画布中添加实例化后的元素MyText,Rect....传入一个元素
 ```
    let feature = new Feature(...)
-   gls.addFeature(feature)
+   gls.addFeature(feature, bool)  // 1. 要添加的元素 2. 是否记录到栈,撤销恢复用
 ```
 > 从画布中删除指定元素，传入一个元素
 ```
-   gls.removeFeature(feature)
+   gls.removeFeature(feature, bool) // 1. 要删除的元素 2. 是否记录到栈,撤销恢复用
 ```
-> 通过元素的id从画布中删除元素，传入一个元素的id
+> 获取当前焦点(被选中的)元素,返回basic-shape元素,过滤到比如BBox, CtrlPnt这些功能型元素
 ```
-   gls.removeFeatureById(id)
+   gls.getFocusNode()
+```
+> 鼠标滚轮,放大或所有画布上的元素
+```
+   gls.toMinusIndex(feature)  // 下移一层 
+   gls.toPlusIndex(feature) // 上移一层
+   gls.toMinIndex(feature) // 移动到到最底层
+   gls.toMaxIndex(feature)  // 移动到到最顶层
+   gls.resortIndex() // 元素重新排序
+```
+> 根据相对坐标获取像素坐标,传入一个数组，数组有两个数值分别是x,y。返回一个数组坐标
+关于相对坐标与绝对坐标解释：
+相对坐标是实例化后用于设置元素的位置，这个位置是相对于网格的原点的，是开发中所使用的
+绝对坐标是源代码内部渲染到画布上所用到的坐标，是相对于canvas左上角的，所以开发时基本不用关心（绝对坐标我也会表述成绝对坐标）
+ 根据相对坐标获取实际渲染到画布上的像素坐标
+```
+   gls.getPixelPos({x, y})    // 相对坐标
+```
+> 根据像素坐标获取相对坐标
+```
+   gls.getRelativePos({x, y})  // 像素坐标
+```
+> 获取像素大小
+```
+   gls.getRatioSize(size)   // 相对宽度,长度..
+```
+> 获取相对大小
+```
+   gls.getOriginalSize(size) // 像素宽度,长度..
+```
+> 获取长度
+```
+   gls.getPixelLen(size)  // 获取像素长度， 比如获取元素的宽高
+   gls.getRelativeLen(size)  // 获取相对长度， 比如获取元素的宽高
+```
+> 单击画布创建元素, 比如 方块,圆形,文字,图片
+```
+   gls.singleClickToFeature(feature, fn)  // 1. 元素 2. 绘制完的回调函数
+```
+> 连续点击画布从创建线性元素,比如Line
+```
+   gls.continuousClickToFeature(line, fn) // 1. 元素 2. 绘制完的回调函数
+```
+> 鼠标按下移动绘制线段,自由画笔
+```
+   gls.downMoveToFeature(line, fn) // 1. 元素 2. 绘制完的回调函数
+```
+> 读取剪贴板内容生成文字或图片
+```
+   gls.clipboardToFeature()
+```
+> 拖拽图片到画布去创建图片元素
+```
+   gls.dropToFeature()
+```
+> 根据传入的属性去创建一个元素
+```
+   gls.createFeature(props)  1. 元素用到的属性
+```
+> 修改元素的某些属性
+```
+   gls.modifyFeature(feature, props)  1. 目标元素, 2.要修改的属性
+```
+> 复制或读取元素属性
+```
+   gls.recordFeature(feature, bool) // 1. 目标元素 2. 是否只读取或复制 样式类的属性
+```
+> 开启或关闭历史记录
+```
+   gls.enableStack(bool)  // 1. 是否开启
+```
+> 开启或关闭包围盒控制点
+```
+   gls.enableBbox(bool) // 1. 是否开启
+```
+> 开启或关闭区域选择
+```
+   gls.enableSelectArea(bool) // 1. 是否开启
+```
+> 开启或关闭橡皮擦
+```
+   gls.enableEraserPnt(bool) // 1. 是否开启
+```
+> 保存画布状态
+```
+   gls.save()
+```
+> 读取画布状态
+```
+   gls.loadData() // 1. 是否开启
+```
+> 开启或关闭区域选择
+```
+   gls.enableSelectArea() // 1. 是否开启
 ```
 > 加载字体，建议在渲染（draw）之前使用,传入FontFamily对象
 ```
    gls.loadFont(fontFamily)
 ```
-> 获得点与canvas中心的距离,传入一个点坐标，返回一个x,y的距离值
+> 复制元素为图片到剪贴板
 ```
-   gls.getCenterDist(point)
+   gls.copyImageToClipboard(feature, padding) // 1. 目标元素 2. 内边距
 ```
-> 获得canvas中心点
+> 复制元素为svg到剪贴板
 ```
-   gls.getCenterOfTwoPnts()
+   gls.copySvgToClipboard(feature, padding)  // 1. 目标元素 2. 内边距
 ```
-> 将画布缩放至指定大小。第一个参数缩放等级， 第二个参数传一个数组坐标，以该点作为中心点缩放
+> 移动画布
 ```
-   gls.zoomTo(0)
+   gls.translate(x,y,duration) // 1,2 移动的距离 3.过渡时间
 ```
-> 移动画布使元素居中，传入一个元素
+> 缩放画布
 ```
-   gls.toCenter(feature)
+   gls.zoomTo(number, point) // 1. 缩放的大小 2. 以某个点去缩放
 ```
-> 将画布移动至指定坐标， 第一个参数坐标，第二个参数移动的过渡时间
+> 获取画布中心点
 ```
-   gls.movePageto([x,y], 0)
+   gls.getCenterPos() 
 ```
-> 判断某个网格坐标内有没有元素
+> 获取点到画布中心点的距离
 ```
-   gls.hasFeatureInGridCoord([x,y], 0)
+   gls.getCenterDist(point) // 1. 目标点
 ```
-> 根据鼠标（像素）坐标获取网格坐标
+> 设置画布大小
 ```
-   gls.getGridCoord(0,0)
+   gls.setSize(width, height) // 1. 宽度 2.高度
+```
+> 获取某些元素的矩形包围盒范围
+```
+   gls.getFeaturesRange(features) // 1. 目标元素们
+```
+> 居中,并缩放至所有元素都在canvas范围内
+```
+   gls.toFitView(features, padding) // 1. 目标元素们 2. 内边距
+```
+> 画布导出为图片
+```
+   gls.toImage(isFitView, padding, zoom) // 1. 是否自适应元素们的大小, 2. 内边距 3. 缩放比例(越大越清晰)  2,3只针对isFitView为ture时
+```
+> 根据相对坐标获取网格坐标
+```
+   gls.getGridPosByRelativePos(point) // 相对坐标点
 ```
 > 根据网格坐标获取相对坐标
 ```
-   gls.getPosByGridCoord(0,0)
+   gls.getRelativePosByGridPos(point) // 网格坐标点
 ```
-> 判断某个网格坐标内有没有元素
+> 获取某个点周围可吸附的点的距离
 ```
-   gls.hasFeatureInGridCoord([x,y], 0)
+   gls.getAdsorbPos(point) // 相对坐标点
 ```
-> 获取元素的坐标大小以及边界值信息，第一个参数传入feature元素, 第二个参数传布尔值, true表示获取像素坐标大小以及上下左右边界坐标， false则表示获取的是相对值
-```
-   gls.getEdgePoints(feature, false)
-```
-> 判断元素有没有在画布外面
-```
-   gls.hasOutScreen(feature)
-```
-> 开启或关闭历史记录
-```
-   gls.enableStack(true)
-```
-> 开启或关闭历史记录,用于编辑时的撤销恢复
-```
-   gls.enableStack(true)
-```
-> 撤销一步
-```
-   gls.undo()
-```
-> 恢复一步
-```
-   gls.restore()
-```
-> 根据canvas宽高跟新宽高属性
-```
-   gls.updateWH()
-```
-> 改变canvas画布大小
-```
-   gls.changeSize(0,0)
-```
-> 通过单击创建元素，传入一个你要创建元素
-```
-   gls.singleClickToFeature(feature)
-```
-> 通过连续点击创建元素，传入一个你要创建元素，一般用于创建多点线段
-```
-   gls.continuousClickToFeature(feature)
-```
-> 通过连续移动创建元素，传入一个你要创建元素，比如自由绘制线段（画笔）
-```
-   gls.downMoveToFeature(feature)
-```
-> 获取传入元素的所有点坐标，第一个参数设置返回值的格式
-```
-   gls.getAllVertices(boolean, features)
-```
-> 传入元素，找出这些元素组成的矩形上下左右最大值最小值，第二个参数设置返回值是像素坐标还是相对坐标
-```
-   gls.getFeaturesRange(features, boolean)
-```
-> 传入元素组成的矩形范围，让他们整体居中,并缩放至所有元素都在canvas范围内，第二个参数是pandding值，留出边缘的空隙距离
-```
-   gls.toFitView(features, 0)
-```
+
+**Feature 类**

@@ -1417,10 +1417,10 @@ class GridSystem {
     // ----------------------其他功能性API------------------------
     /**
  * 根据一个点获取他周围的吸附距离
- * @param pnt 
+ * @param point 
  * @returns 
  */
-    getAdsorbPos(pnt: IPoint) {
+    getAdsorbPos(point: IRelativePos) {
         const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         // 相对像素
@@ -1429,20 +1429,20 @@ class GridSystem {
         const max = gridSize * .6;
 
         //  ------------- 水平对齐
-        const diffX = getDeviation(pnt.x);
+        const diffX = getDeviation(point.x);
         if (offsetX == 0 && (diffX > 0 && diffX < min) || (diffX < 0 && diffX > -min)) {
-            offsetX = -pnt.x % (gridSize * gridSize);
+            offsetX = -point.x % (gridSize * gridSize);
         }
         if (offsetX == 0 && (diffX > max && diffX < gridSize) || (diffX > -gridSize && diffX < -max)) {
-            offsetX = (gridSize * gridSize) * (diffX > 0 ? 1 : -1) - pnt.x % (gridSize * gridSize);
+            offsetX = (gridSize * gridSize) * (diffX > 0 ? 1 : -1) - point.x % (gridSize * gridSize);
         }
         //  ------------- 垂直对齐
-        const diffY = getDeviation(pnt.y);
+        const diffY = getDeviation(point.y);
         if (offsetY == 0 && (diffY > 0 && diffY < min) || (diffY < 0 && diffY > -min)) {
-            offsetY = -pnt.y % (gridSize * gridSize);
+            offsetY = -point.y % (gridSize * gridSize);
         }
         if (offsetY == 0 && (diffY > max && diffY < gridSize) || (diffY > -gridSize && diffY < -max)) {
-            offsetY = (gridSize * gridSize) * (diffY > 0 ? 1 : -1) - pnt.y % (gridSize * gridSize);
+            offsetY = (gridSize * gridSize) * (diffY > 0 ? 1 : -1) - point.y % (gridSize * gridSize);
         }
 
         return { x: offsetX, y: offsetY };
