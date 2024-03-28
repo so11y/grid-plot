@@ -307,8 +307,8 @@ class GridSystem {
             if (focusNode) {
                 focusNode.isFocused = false;
                 focusNode._orientations = null;
-                focusNode.onmouseup && focusNode.onmouseup();
-                focusNode.ondragend && focusNode.ondragend();
+                focusNode.onmouseup && focusNode.onmouseup(e);
+                focusNode.ondragend && focusNode.ondragend(e);
                 if (isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea && moveFlag) { // 修改时候记录,没移动的不记录
                     GridSystem.Stack && GridSystem.Stack.record();
                 }

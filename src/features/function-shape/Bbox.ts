@@ -1,7 +1,7 @@
-import { CtrlType } from "@/Constants";
+import { CtrlType, LinkMark } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { IBasicFeature, IVctor } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct } from "../../utils";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isPntInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -456,8 +456,6 @@ export default class Bbox extends Rect {
                         this.setPos(pnt3.x, pnt3.y)
                     }
 
-
-
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
@@ -501,7 +499,7 @@ export default class Bbox extends Rect {
         });
         leftAp.mousedownEvents.push((e: any) => {
             const start = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-            link = new Link(start, start);
+            link = new Link(this.target, start);
             this.gls.addFeature(link, false);
         })
         leftAp.dragEvents.push((e: any) => {
@@ -509,9 +507,11 @@ export default class Bbox extends Rect {
             link.pointArr[1] = end;
         })
         leftAp.mouseupEvents.push((e: any) => {
-            console.log(this.gls.features.filter(f=>f.isPointIn));
-            // const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-            // link.pointArr[1] = end;
+            const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
+            const endFeature = this.gls.features.find(f => isPntInPolygon(upPos, f.pointArr));
+            if(endFeature){
+                link.modifyTarget(endFeature, LinkMark.END)
+            }
         })
     }
 
