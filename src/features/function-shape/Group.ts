@@ -4,6 +4,7 @@ import { IBasicFeature, IPoint, IRelativePos } from "@/Interface";
 import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
+// 多个子元素的包围集合
 export default class Group extends Feature {
 
     constructor(features: IBasicFeature[]) {   // 相对坐标

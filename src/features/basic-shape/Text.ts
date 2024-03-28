@@ -1,5 +1,3 @@
-// 绘制自定义文字
-
 import { FontFamily, CtrlType, AlignType } from "../../Constants";
 import { IPoint, IPixelPos, ITxt } from "../../Interface";
 import Rect from "./Rect";
@@ -288,10 +286,6 @@ class Text extends Rect {
         </g>
         `
     }
-
-    // revert(direction: AlignType, center?: IPoint, isParent?: boolean): void {
-
-    // }
 
     // 元素删除时需要做的事情
     destroy() {

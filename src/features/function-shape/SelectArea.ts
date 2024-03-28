@@ -3,6 +3,7 @@ import { DrawAreaMode, SelectMode } from "../../Constants";
 import { isPntInPolygon, getMousePos, isBasicFeature } from "../../utils";
 import Group from "./Group";
 
+// 鼠标选取某个范围选中N个元素
 class SelectArea extends Group {
 
     selectMode: SelectMode = SelectMode.ONE_P;  // 是否框中一个点就判定为选中，还是全部点进入才判定选中

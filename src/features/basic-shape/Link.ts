@@ -1,5 +1,5 @@
 import { FontFamily, LinkStyle } from "../../Constants";
-import { IPixelPos, IVctor } from "../../Interface";
+import { IPixelPos, IPoint, IRelativePos, IVctor } from "../../Interface";
 import { createVctor, getPntInVct, getPntsOf3Bezier } from "../../utils";
 import Feature from "../Feature";
 import Line from "./Line";
@@ -10,11 +10,22 @@ export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
     linkStyle: LinkStyle = LinkStyle.CURVE;
-    targets: [Feature, Feature];
+    startFeature: Feature | null = null;
+    endFeature: Feature | null = null;
 
-    constructor(startFeature: Feature, endFeature: Feature) {
-        super([Feature.getCenterPos(startFeature.pointArr), Feature.getCenterPos(endFeature.pointArr)]);
-        this.targets = [startFeature, endFeature];
+    constructor(startFeature: Feature | IRelativePos, endFeature: Feature | IRelativePos) {
+        let startPos: IRelativePos = { x: 0, y: 0 };
+        let endPos: IRelativePos = { x: 0, y: 0 };
+
+        if (startFeature instanceof Feature && endFeature instanceof Feature) {   // 是Feature元素则获取元素的中心点
+            startPos = Feature.getCenterPos(startFeature.pointArr);
+            endPos = Feature.getCenterPos(endFeature.pointArr);
+        }else {
+            startPos = startFeature as IRelativePos;
+            endPos = endFeature as IRelativePos;
+        }
+        super([startPos as IRelativePos, endPos as IRelativePos]);
+
         this.className = "Link"
         this.cbSelect = false;
         this.tipInfo.txt = '测试文字'
@@ -22,8 +33,12 @@ export default class Link extends Line {
         this.tipInfo.fontFamily = FontFamily.SHISHANG;
         this.strokeStyle = "rgba(220, 233, 126, 1)";
 
-        this.targets[0].translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(this.targets[0].pointArr) })
-        this.targets[1].translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(this.targets[1].pointArr) })
+        if (startFeature instanceof Feature && endFeature instanceof Feature) {
+            this.startFeature = startFeature;
+            this.endFeature = endFeature;
+            startFeature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
+            endFeature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
+        }
         this.gls.addFeature(this, false)
     }
 

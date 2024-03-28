@@ -463,8 +463,6 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击画布创建吧!")
             let line = new Line();
 
-            console.log(globalBorderStyle.value, "globalBorderStyle.value");
-
             line.lineDashArr = globalBorderStyle.value;
             line.tipInfo.txt = "测试111"
             cb = gls.value?.continuousClickToFeature(line)
@@ -615,44 +613,44 @@ function reset(clear = false) {
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
 
-    let rect = new Rect(100, 100, 100, 100)
-    rect.radius = 2;
-    rect.rotate(60)
-    gls.value.addFeature(rect, false)
+    // let rect = new Rect(100, 100, 100, 100)
+    // rect.radius = 2;
+    // rect.rotate(60)
+    // gls.value.addFeature(rect, false)
 
-    const text = new Text(`当内容
-    特别多的时候，canvas不会自动
-    换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    text.fitSize = true;
-    text.radius = 2
-    // text.rotate(30)
-    gls.value.addFeature(text, false);
-    // rect.addFeature(text);
+    // const text = new Text(`当内容
+    // 特别多的时候，canvas不会自动
+    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    // text.fitSize = true;
+    // text.radius = 2
+    // // text.rotate(30)
+    // gls.value.addFeature(text, false);
+    // // rect.addFeature(text);
 
-    let rect2 = new Rect(150, 150, 50, 50)
-    rect2.fillStyle = "transparent"
-    gls.value.addFeature(rect2, false)
+    // let rect2 = new Rect(150, 150, 50, 50)
+    // rect2.fillStyle = "transparent"
+    // gls.value.addFeature(rect2, false)
 
-    let circle = new Circle(280, 180, 30, 30)
-    gls.value.addFeature(circle, false)
+    // let circle = new Circle(280, 180, 30, 30)
+    // gls.value.addFeature(circle, false)
 
-    var line = new Line([
-        { x: 210, y: 60 },
-        { x: 300, y: 90 },
-    ])
-    line.tipInfo.txt = "测试文本"
-    // line.enableCtrlPnts();
-    gls.value.addFeature(line, false)
+    // var line = new Line([
+    //     { x: 210, y: 60 },
+    //     { x: 300, y: 90 },
+    // ])
+    // line.tipInfo.txt = "测试文本"
+    // // line.enableCtrlPnts();
+    // gls.value.addFeature(line, false)
 
 
-    let img = new Img("/img2.png", -1400, 100);
-    gls.value.addFeature(img, false)
+    // let img = new Img("/img2.png", -1400, 100);
+    // gls.value.addFeature(img, false)
 
-    // 合并为组
-    let group = new Group([rect, rect2, circle]);
-    group.translate(-10, 100)
-    group.cbTransformChild = false;
-    gls.value.addFeature(group, false)
+    // // 合并为组
+    // let group = new Group([rect, rect2, circle]);
+    // group.translate(-10, 100)
+    // group.cbTransformChild = false;
+    // gls.value.addFeature(group, false)
     // rect.onMousemove = () => {
     //     console.log(222);
     // }
@@ -680,16 +678,17 @@ function reset(clear = false) {
     // // })
 
     let width = getUnitSize();
-    let rect5 = new Rect(0, 0, width, width);
-    rect5.cbTransform = false;
+    let rect5 = new Rect(50, 50, width, width);
+    rect5.name = "rect5"
+    // rect5.cbTransform = false;
     gls.value.addFeature(rect5, false);
 
-    let rect6 = new Rect(120, 120, width, width);
-    rect6.cbTransform = false;
+    let rect6 = new Rect(220, 220, width, width);
+    // rect6.cbTransform = false;
     gls.value.addFeature(rect6, false);
 
-    let link = new Link(rect5, rect6);
-    gls.value.addFeature(link, false);
+    // let link = new Link(rect5, rect6);
+    // gls.value.addFeature(link, false);
 
     gls.value.enableStack();
 }

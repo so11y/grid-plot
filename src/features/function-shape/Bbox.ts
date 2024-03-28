@@ -1,13 +1,16 @@
 import { CtrlType } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { IBasicFeature, IVctor } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getPntInVct, getRotateAng, getRotateVct } from "../../utils";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct } from "../../utils";
+import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
+import AnchorPnt from "./AnchorPnt";
 import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
 import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
 
+// 形变(放大,缩小)元素用
 export default class Bbox extends Rect {
 
     static isAbsorbAngle = true; // 是否旋转角度的吸附
@@ -43,6 +46,7 @@ export default class Bbox extends Rect {
         this.initBCtrlPnt();
         this.setVct();
         this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
+        this.enableAnchorPnts(target);
         this.gls.addFeature(this, false);
     }
 
@@ -50,7 +54,7 @@ export default class Bbox extends Rect {
     setPointArrPer(target: Feature, width = 0, height = 0) {
         target.pntExtentPer.left = []
         target.pntExtentPer.right = []
-        target && target.pointArr.forEach(p => {
+        target.pointArr.forEach(p => {
             const lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
             const lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
 
@@ -68,6 +72,7 @@ export default class Bbox extends Rect {
         target.children.forEach(f => {
             this.setPointArrPer(f, width, height);
         })
+        console.log(target.pntExtentPer, "target.pntExtentPe");
     }
 
     // 初始化设置包围盒水平方向与垂直方向的向量
@@ -288,42 +293,6 @@ export default class Bbox extends Rect {
             this.ratio = this.getRatio();
         })
 
-        // if (this.target.className != 'SelectArea') {  // 区域选择不可以锚点
-        //     // 左边 锚点
-        //     const aCtrlP1 = new AnchorPnt(this, () => {
-        //         const pointArr = this.pointArr;
-        //         const leftCenter = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-        //         const newLeftCenter = getPntInVct(leftCenter, this.vctX, -10);
-        //         return newLeftCenter;
-        //     });
-        //     aCtrlP1.name = "leftAnchor";
-        //     aCtrlP1.mousedownEvents.push(() => {
-        //         this.gls.initAnchorPnts();
-        //         const anchorPnts = this.target.getAnchorPnts();
-        //         const link = new Link(anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt, aCtrlP1);
-        //         link.name = 'tempLink';
-        //     })
-        //     aCtrlP1.mouseupEvents.push(() => {
-        //         let touchedAnchor: AnchorPnt | undefined;
-        //         const anchorPnts = this.gls.features.filter(f => f instanceof AnchorPnt && f !== aCtrlP1) as AnchorPnt[]
-        //         const hasTouch = anchorPnts.some(a => {
-        //             const touched = aCtrlP1.pointArr.some(p => isPntInPolygon(p, a.pointArr))
-        //             if (touched) touchedAnchor = a;
-        //             return touched
-        //         })
-        //         const tempLink = this.gls.features.find(f => f.name === 'tempLink');
-        //         tempLink && this.gls.removeFeature(tempLink, false);
-        //         if (hasTouch && touchedAnchor) {
-        //             const anchorPnts = this.target.getAnchorPnts();
-        //             const startAnchor = anchorPnts.find(ap => ap.name == aCtrlP1.name) as AnchorPnt;
-        //             startAnchor.isBinding = true;
-        //             touchedAnchor.isBinding = true;
-        //             new Link(startAnchor, touchedAnchor);
-        //         }
-        //         this.gls.removeAnchorPnts();
-        //     })
-        // }
-
         this.getCtrlPnts().forEach(cp => cp.dragendEvents.push(() => {
             GridSystem.Stack && GridSystem.Stack.record()
         }))
@@ -519,6 +488,31 @@ export default class Bbox extends Rect {
 
     getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
         return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
+    }
+
+    enableAnchorPnts(target: IBasicFeature) {
+        let link: Link;
+        let leftAp = new AnchorPnt(this, () => {
+            const pointArr = this.pointArr;
+            const vct = createVctor(pointArr[0], pointArr[1]);   // 控制点1,2的向量
+            const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
+            const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
+            return rotateCtrlPnt;
+        });
+        leftAp.mousedownEvents.push((e: any) => {
+            const start = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
+            link = new Link(start, start);
+            this.gls.addFeature(link, false);
+        })
+        leftAp.dragEvents.push((e: any) => {
+            const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
+            link.pointArr[1] = end;
+        })
+        leftAp.mouseupEvents.push((e: any) => {
+            console.log(this.gls.features.filter(f=>f.isPointIn));
+            // const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
+            // link.pointArr[1] = end;
+        })
     }
 
     destroy() {

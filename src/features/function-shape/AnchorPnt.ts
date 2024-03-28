@@ -1,7 +1,7 @@
 import { IBasicFeature, IPoint } from "../../Interface";
 import Rect from "../basic-shape/Rect";
 
-// 自定义控制点元素
+// 连接线的锚点
 class AnchorPnt extends Rect {
 
     getPoint: () => IPoint;

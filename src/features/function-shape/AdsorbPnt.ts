@@ -3,7 +3,7 @@ import { IPoint } from "../../Interface";
 import { getMousePos } from "../../utils";
 import Rect from "../basic-shape/Rect";
 
-// 矩形点状元素
+// 吸附功能的点,方便选取用
 class AdsorbPnt extends Rect {
 
     cbAdsorption: boolean = true;  // 是否吸附
