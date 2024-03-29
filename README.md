@@ -1,16 +1,13 @@
 # 网格系统文档
 
-### 基本使用方法
-
-#### 实例化网格系统对象
+#### 最基本使用
 ```
     let canvas = document.querySelector("#myCanvas");
     let gls = new GridSystem(canvas);
+
+    let rect = new Rect(50, 50, 50, 50);
+    gls.addFeature(rect);
 ```
-> 源代码中用private修饰的方法表示私有，系统自用的，使用时可以忽略不看
-<br>
-#### gls实例对象的API
-<br>
 
 **GridSystem 类**
 
@@ -48,7 +45,7 @@
 ```
 > 限制画布拖拽范围,传入一个数组，数组有四个数值分别是上，右，下，左
 ```
-   gls.setPageSliceByExtent([0,0,0,0])
+   gls.setPageSlicePosByExtent([0,0,0,0])
 ```
 > 向画布中添加实例化后的元素MyText,Rect....传入一个元素
 ```
@@ -72,10 +69,11 @@
    gls.resortIndex() // 元素重新排序
 ```
 > 根据相对坐标获取像素坐标,传入一个数组，数组有两个数值分别是x,y。返回一个数组坐标
-关于相对坐标与绝对坐标解释：
-相对坐标是实例化后用于设置元素的位置，这个位置是相对于网格的原点的，是开发中所使用的
-绝对坐标是源代码内部渲染到画布上所用到的坐标，是相对于canvas左上角的，所以开发时基本不用关心（绝对坐标我也会表述成绝对坐标）
- 根据相对坐标获取实际渲染到画布上的像素坐标
+关于相对坐标与像素坐标解释：
+相对坐标是实例化后用于设置元素的位置，这个位置是相对于网格的原点的，是开发中所使用的;
+像素坐标是源代码内部渲染到画布上所用到的坐标，是相对于canvas左上角的，所以开发时基本不用关心（像素坐标我也会表述成像素坐标）
+
+> 根据相对坐标获取实际渲染到画布上的像素坐标
 ```
    gls.getPixelPos({x, y})    // 相对坐标
 ```
@@ -214,3 +212,51 @@
 ```
 
 **Feature 类**
+> Feature类的属性
+```
+   Feature.Gls  // GridSystem实例
+   Feature.TargetRender // 当前画布实例是哪一个  GridSystem实例 或 MiniMap实例
+
+   .pointArr;   // 组成元素的点的数组
+
+   .fillStyle, strokeStyle, hoverStyle, focusStyle, zIndex, lineWidth, lineCap, lineJoin, opacity, lineDashArr, lineDashOffset;   // 元素的样式属性
+   
+   .id  // id,元素的唯一标识
+   .name  // 元素的name, 元素名字
+   .className  // 元素的类名, 常量
+   .hidden  // 是否隐藏元素,跳过渲染
+   .position  // 元素包围盒的中心点, 一般Rect类型用
+   .size  // 元素包围盒的宽高
+   .scale  // 元素缩放, [暂未用到]
+   .angle  // 元素旋转的角度
+   .radius  // 元素的圆角大小, 一般Rect类型用
+
+   .parent  // 元素的父元素
+   .children  // 元素的子元素们
+   .gls  // GridSystem的实例
+   .adsorbTypes  // 移动时吸附规则  "grid", "feature"
+   .pntMinDistance  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
+   .pntExtentPerOfBBox  // 元素距离包围盒的上下左右边距的百分比
+
+   .isClosePath  // 元素是否闭合
+   .isPointIn  // 鼠标是否在元素上
+   .isFocused  // 元素是否是焦点元素
+   .isFixedPos  // 元素是否固定位置,不随画布拖动而移动
+   .isFixedSize  // 元素是否固定大小, 不随画布缩放而缩放
+   .isOutScreen  // 元素是否超出画布范围
+   .isOverflowHidden  // 子元素超出元素范围,是否隐藏(裁剪掉)
+   .isStroke  // 元素是否绘制边框
+   .isShowAdsorbLine  // 元素吸附时是否显示对齐线
+   .isOnlyCenterAdsorb  // 元素吸附是否只以包围盒的中心点对其
+   .isOnlyHorizonalMove  // 元素是否只能水平方向拖拽(移动)
+   .isHorizonalRevert  // 元素是否水平翻转了(用于确定元素左上角的点)
+   .isVerticalRevert  // 元素是否垂直翻转了(用于确定元素左上角的点)
+
+   .cbCapture  // 元素是否可被鼠标捕获
+   .cbSelect  // 元素是否可被选中
+   .cbMove  // 元素是否可被移动
+   .cbTransform  // 元素是否可被形变缩放
+   .cbTransformChild  // 元素的子元素是否可被形变缩放
+
+```
+> 获取某个点周围可吸附的点的距离

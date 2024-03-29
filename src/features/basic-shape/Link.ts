@@ -32,7 +32,6 @@ export default class Link extends Line {
         super([startPos as IRelativePos, endPos as IRelativePos]);
 
         this.className = "Link"
-        this.cbSelect = false;
         this.tipInfo.txt = '测试文字'
         this.tipInfo.offset.y = -10;
         this.tipInfo.fontFamily = FontFamily.SHISHANG;
@@ -49,7 +48,7 @@ export default class Link extends Line {
         this.gls.addFeature(this, false)
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
         let newPnts: IPixelPos[] = [];
         switch (this.linkStyle) {
             case LinkStyle.BROKEN:
@@ -63,7 +62,7 @@ export default class Link extends Line {
                 newPnts = pointArr;
                 break;
         }
-        const path = super.draw(ctx, newPnts, lineWidth, r);
+        const path = super.draw(ctx, newPnts, lineWidth, radius);
         return path;
     }
 

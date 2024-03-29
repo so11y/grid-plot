@@ -52,19 +52,19 @@ export default class Bbox extends Rect {
 
     // 获取父元素pointArr所有点距离包围盒上下百分比
     setPointArrPer(target: Feature, width = 0, height = 0) {
-        target.pntExtentPer.left = []
-        target.pntExtentPer.right = []
+        target.pntExtentPerOfBBox.left = []
+        target.pntExtentPerOfBBox.right = []
         target.pointArr.forEach(p => {
             const lenX = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[3]);
             const lenY = getLenOfPntToLine(p, this.pointArr[0], this.pointArr[1]);
 
             const lenX1 = getLenOfPntToLine(p, this.pointArr[1], this.pointArr[2]);
             const lenY1 = getLenOfPntToLine(p, this.pointArr[2], this.pointArr[3]);
-            target.pntExtentPer.left.push({
+            target.pntExtentPerOfBBox.left.push({
                 x: lenX / width,
                 y: lenY / height,
             })
-            target.pntExtentPer.right.push({
+            target.pntExtentPerOfBBox.right.push({
                 x: lenX1 / width,
                 y: lenY1 / height,
             })
@@ -72,7 +72,7 @@ export default class Bbox extends Rect {
         target.children.forEach(f => {
             this.setPointArrPer(f, width, height);
         })
-        console.log(target.pntExtentPer, "target.pntExtentPe");
+        console.log(target.pntExtentPerOfBBox, "target.pntExtentPe");
     }
 
     // 初始化设置包围盒水平方向与垂直方向的向量
@@ -164,7 +164,7 @@ export default class Bbox extends Rect {
             if (this.lastLenX) {
                 const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPer.right[i].x);
+                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * -feature.pntExtentPerOfBBox.right[i].x);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -201,7 +201,7 @@ export default class Bbox extends Rect {
             if (this.lastLenX) {
                 const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPer.left[i].x);
+                        const newPntX = getPntInVct(p, this.vctX, (lenX - this.lastLenX) * feature.pntExtentPerOfBBox.left[i].x);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -239,7 +239,7 @@ export default class Bbox extends Rect {
             if (this.lastLenY) {
                 const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPer.right[i].y);
+                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * -feature.pntExtentPerOfBBox.right[i].y);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -276,7 +276,7 @@ export default class Bbox extends Rect {
             if (this.lastLenY) {
                 const setTranform = (feature: Feature) => {
                     feature.pointArr.forEach((p, i) => {
-                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPer.left[i].y);
+                        const newPntX = getPntInVct(p, this.vctY, (lenY - this.lastLenY) * feature.pntExtentPerOfBBox.left[i].y);
                         p.x = newPntX.x;
                         p.y = newPntX.y;
                     })
@@ -327,10 +327,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                const newPntX = getPntInVct(p, getRotateVct(bbox.vctX, 180), (lenX - bbox.lastLenX) * feature.pntExtentPer.right[i].x);
+                                const newPntX = getPntInVct(p, getRotateVct(bbox.vctX, 180), (lenX - bbox.lastLenX) * feature.pntExtentPerOfBBox.right[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPerOfBBox.right[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -371,10 +371,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPerOfBBox.left[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPer.right[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * -feature.pntExtentPerOfBBox.right[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -415,10 +415,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPer.left[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * feature.pntExtentPerOfBBox.left[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPerOfBBox.left[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -459,10 +459,10 @@ export default class Bbox extends Rect {
                     if (bbox.lastLenX && bbox.lastLenY) {
                         function setTranform(feature: Feature) {
                             feature.pointArr.forEach((p, i) => {
-                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * -feature.pntExtentPer.right[i].x);
+                                const newPntX = getPntInVct(p, bbox.vctX, (lenX - bbox.lastLenX) * -feature.pntExtentPerOfBBox.right[i].x);
                                 p.x = newPntX.x;
                                 p.y = newPntX.y;
-                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPer.left[i].y);
+                                const newPntY = getPntInVct(p, bbox.vctY, (lenY - bbox.lastLenY) * feature.pntExtentPerOfBBox.left[i].y);
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
@@ -488,7 +488,7 @@ export default class Bbox extends Rect {
         return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
 
-    enableAnchorPnts(target: IBasicFeature) {
+    enableAnchorPnts() {
         let link: Link;
         let leftAp = new AnchorPnt(this, () => {
             const pointArr = this.pointArr;
@@ -508,7 +508,7 @@ export default class Bbox extends Rect {
         })
         leftAp.mouseupEvents.push((e: any) => {
             const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
-            const endFeature = this.gls.features.find(f => isPntInPolygon(upPos, f.pointArr));
+            const endFeature = this.gls.features.find(f => isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)));
             if(endFeature){
                 link.modifyTarget(endFeature, LinkMark.END)
             }

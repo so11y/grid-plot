@@ -17,6 +17,10 @@ import SelectArea from "./features/function-shape/SelectArea";
 import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
 import EraserPnt from "./features/function-shape/EraserPnt";
+import { Link } from "ant-design-vue/es/anchor";
+import BCtrlPnt from "./features/function-shape/ctrl-pnts/BCtrlPnt";
+import CtrlPnt from "./features/function-shape/ctrl-pnts/CtrlPnt";
+import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
 
 class GridSystem {
 
@@ -238,6 +242,7 @@ class GridSystem {
         this.onmousedown && this.onmousedown(ev);
         const { x: downX, y: downY } = getMousePos(this.domElement, ev);
         const { x: px, y: py } = this.pageSlicePos;
+        this.features.forEach(f => f.isFocused = false);
         let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
         let moveFlag = false;
         let mousemove = (e: any) => { };
@@ -267,7 +272,7 @@ class GridSystem {
                         let { x: mx, y: my } = this.getRelativePos({ x: moveX, y: moveY }, focusNode.isFixedPos)
                         if (lastMove.x && lastMove.y) {
                             focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
-                            if (this.cbAdsorption && focusNode.cbAdsorb) {  // 是否边缘吸附
+                            if (this.cbAdsorption) {  // 是否边缘吸附
                                 const { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
                                     gridCompute: focusNode.adsorbTypes.includes("grid"),
                                     featureCompute: focusNode.adsorbTypes.includes("feature"),
@@ -291,7 +296,7 @@ class GridSystem {
                     this.ondrag && this.ondrag(e);
                     this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
                     this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
-                    this.setPageSliceByExtent(this.extent);
+                    this.setPageSlicePosByExtent(this.extent);
 
                     velocity.x = moveX - lastMove.x; // 计算dx
                     velocity.y = moveY - lastMove.y; // 计算dy
@@ -305,7 +310,6 @@ class GridSystem {
             this.onmouseup && this.onmouseup(e);
             document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
             if (focusNode) {
-                focusNode.isFocused = false;
                 focusNode._orientations = null;
                 focusNode.onmouseup && focusNode.onmouseup(e);
                 focusNode.ondragend && focusNode.ondragend(e);
@@ -561,7 +565,7 @@ class GridSystem {
         this.pageSlicePos.y -= ((y - this.pageSlicePos.y) / lastGirdSize) * different;
     }
 
-    private setPageSliceByExtent(extent: number[] = []) { // 限制拖拽范围
+    setPageSlicePosByExtent(extent: number[] = []) { // 限制拖拽范围
         if (extent?.length > 0) {
             const topExtent = extent[0];
             const rightExtent = extent[1];
@@ -617,7 +621,7 @@ class GridSystem {
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt
+    getFocusNode() { // 获取焦点元素, 但不是 CtrlPnt, BCtrlPnt, AnchorPnt Bbox
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as IBasicFeature;
@@ -665,7 +669,7 @@ class GridSystem {
     }
 
     // ------------------ 获取像素，或相对坐标，宽度等-------------------------
-    // 获取像素位置`坐标
+    // 获取像素位置坐标
     getPixelPos(point: IRelativePos, isFixedPos?: boolean): IPixelPos {
         if (isFixedPos) {
             return point
@@ -675,12 +679,6 @@ class GridSystem {
                 y: this.pageSlicePos.y + (point.y / CoordinateSystem.GRID_SIZE) * this.scale,
             };
         }
-    }
-    getPxielX(num: number) {
-        return this.pageSlicePos.x + (num / CoordinateSystem.GRID_SIZE) * this.scale
-    }
-    getPxielY(num: number) {
-        return this.pageSlicePos.y + (num / CoordinateSystem.GRID_SIZE) * this.scale
     }
     // 获取相对位置坐标
     getRelativePos(point: IPixelPos, isFixedPos?: boolean): IRelativePos {
@@ -692,12 +690,6 @@ class GridSystem {
                 y: ((point.y - this.pageSlicePos.y) / this.scale) * CoordinateSystem.GRID_SIZE,
             };
         }
-    }
-    getRelativeX(num: number = 0) {
-        return ((num - this.pageSlicePos.x) / this.scale) * CoordinateSystem.GRID_SIZE
-    }
-    getRelativeY(num: number = 0) {
-        return ((num - this.pageSlicePos.y) / this.scale) * CoordinateSystem.GRID_SIZE
     }
     // 获取像素长度， 比如获取元素的宽高
     getPixelLen(len: number) {
@@ -713,10 +705,9 @@ class GridSystem {
         } else {
             return size * this.scale;
         }
-        // return size / this.scale;
     }
 
-    // ------------------ 鼠标点击方式去创建元素-----------------
+    // ------------------ 鼠标点击, 剪贴板, 拖拽方式去创建元素-----------------
     singleClickToFeature(rect: Rect | Circle, fn?: Function) {
         this.addFeature(rect, false);
         const adsorbPnt = new AdsorbPnt(8, this.cbAdsorption);
@@ -893,7 +884,7 @@ class GridSystem {
             return null;
         }
     }
-    dropToFeature(e: any) { // 拖放去添加元素
+    dropToFeature(e: any) { // 拖放去添加图片
         //取得拖进来的文件
         const data = e.dataTransfer;
         const files = data.files;  // file继承与blob
@@ -1114,11 +1105,12 @@ class GridSystem {
             }
         }
     }
-    enableBbox(f: IBasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
+    enableBbox(feature: IBasicFeature | SelectArea | null | undefined = null) {  // 包围盒控制点
         const bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
-        if (f && !f.isFixedSize && f.cbTransform) {
-            const nbbox = new Bbox(f);
+        if (feature) {
+            if (feature.className === 'Link' || feature.isFixedSize || !feature.cbTransform) return;
+            const nbbox = new Bbox(feature);
             return nbbox;
         }
     }
@@ -1156,7 +1148,7 @@ class GridSystem {
         localStorage.setItem("features", str);
         return str
     }
-    loadData(featurePropsArr?: IProps[]) {
+    loadData(featurePropsArr?: IProps[]) {  // 加载数据
         if (!featurePropsArr) {
             try {
                 featurePropsArr = JSON.parse(localStorage.getItem("features") || '') as IProps[];
@@ -1168,8 +1160,8 @@ class GridSystem {
             this.createFeature(fp)
         })
     }
-    // 加载字体
-    loadFont(fontFamily: FontFamily) {
+    
+    loadFont(fontFamily: FontFamily) { // 加载字体
         const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
         if (!document.fonts.has(fontface)) {
             fontface.load().then(function (loadFace) {
@@ -1317,19 +1309,18 @@ class GridSystem {
         const canvasR = this.getRelativePos(centerP)
         return [centerP, canvasR]
     }
-    // 求点与canvas中心的距离
-    getCenterDist(point: IPixelPos) {
+    getCenterDist(point: IPixelPos) { // 求点与canvas中心的距离
         const canvasCenter = { x: this.domElement.width / 2, y: this.domElement.height / 2 }
         return {
             x: canvasCenter.x - point.x,
             y: canvasCenter.y - point.y
         }
     }
-    setSize(width?: number | null, height?: number | null) {
+    setSize(width?: number | null, height?: number | null) {  // 设置画布大小
         if (width) this.ctx.canvas.width = width;
         if (height) this.ctx.canvas.height = height;
     }
-    getFeaturesRange(features: Feature[]): IPixelPos[] {
+    getFeaturesRange(features: Feature[]): IPixelPos[] {  // 获取多个元素的包围盒矩形的四个坐标点
         const featuresPointArr: IRelativePos[] = []
         features.map(f => featuresPointArr.push(...f.pointArr));
         return Feature.getRectWrapPoints(featuresPointArr.map(p => this.getPixelPos(p)));  // [leftTop, rightTop, rightBottom, leftBottom]
@@ -1452,58 +1443,6 @@ class GridSystem {
             return (num / gridSize) % gridSize;
         }
     }
-
-    // -----------------锚点的操作----------------------
-    initAnchorPnts() {
-        const features = this.features.filter(f => isBasicFeature(f) && !(f instanceof AnchorPnt)) as IBasicFeature[];
-        features.forEach(f => {
-            const anchorPnts = f.getAnchorPnts();
-            if (!anchorPnts.find(ap => ap.name == 'leftAnchor')) {
-                const lAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
-                    const leftCenter = getMidOfTwoPnts(leftTop, leftBottom);
-                    return leftCenter;
-                });
-                lAnchorPnt.name = 'leftAnchor';
-                lAnchorPnt.fillStyle = lAnchorPnt.focusStyle = lAnchorPnt.hoverStyle = "#C8D5DE"
-                lAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'rightAnchor')) {
-                const rAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
-                    const rightCenter = getMidOfTwoPnts(rightTop, rightBottom);
-                    return rightCenter;
-                });
-                rAnchorPnt.name = 'rightAnchor';
-                rAnchorPnt.fillStyle = rAnchorPnt.focusStyle = rAnchorPnt.hoverStyle = "#C8D5DE"
-                rAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'topAnchor')) {
-                const tAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
-                    const rightCenter = getMidOfTwoPnts(leftTop, rightTop);
-                    return rightCenter;
-                });
-                tAnchorPnt.name = 'tAnchorPnt';
-                tAnchorPnt.fillStyle = tAnchorPnt.focusStyle = tAnchorPnt.hoverStyle = "#C8D5DE"
-                tAnchorPnt.cbSelect = false;
-            }
-            if (!anchorPnts.find(ap => ap.name == 'bottomAnchor')) {
-                const bAnchorPnt = new AnchorPnt(f, () => {
-                    const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(f.pointArr);
-                    const rightCenter = getMidOfTwoPnts(rightBottom, leftBottom);
-                    return rightCenter;
-                });
-                bAnchorPnt.name = 'bottomAnchor';
-                bAnchorPnt.fillStyle = bAnchorPnt.focusStyle = bAnchorPnt.hoverStyle = "#C8D5DE"
-                bAnchorPnt.cbSelect = false;
-            }
-        })
-    }
-    removeAnchorPnts() {
-        this.features = this.features.filter(f => !(f instanceof AnchorPnt) || (f instanceof AnchorPnt && (f.isBinding || f.parent?.className === 'Bbox')));   // 画布中再删除一遍
-    }
-
 
     destroy() {
         cancelAnimationFrame(this.timer);
