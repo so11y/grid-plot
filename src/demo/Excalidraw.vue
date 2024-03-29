@@ -687,8 +687,14 @@ function reset(clear = false) {
     // rect6.cbTransform = false;
     gls.value.addFeature(rect6, false);
 
-    // let link = new Link(rect5, rect6);
-    // gls.value.addFeature(link, false);
+    let rect7 = new Rect(50, 50, width, width);
+    rect7.strokeStyle = "red"
+    // rect6.cbTransform = false;
+    gls.value.addFeature(rect7, false);
+    rect5.addChild(rect7, {})
+
+    let link = new Link(rect5, rect6);
+    gls.value.addFeature(link, false);
 
     gls.value.enableStack();
 }

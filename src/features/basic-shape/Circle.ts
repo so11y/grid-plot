@@ -17,7 +17,7 @@ class Circle extends Feature {
         this.position.y = y;
         this.size.width = width;
         this.size.height = height;
-        this.pntDistanceLimit = .1;
+        this.pntMinDistance = .1;
         this.className = "Circle"
     }
 

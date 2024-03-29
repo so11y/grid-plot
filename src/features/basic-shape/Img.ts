@@ -52,7 +52,7 @@ class Img extends Rect {
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
-            this.setAngle(ctx, leftTop);
+            this.rotateCtx(ctx, leftTop);
             ctx.clip(path);   // 放在旋转后面
             ctx.globalAlpha = this.opacity;
             ctx.drawImage(this.domElement, leftTop.x, leftTop.y, width, height);

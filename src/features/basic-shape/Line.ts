@@ -33,7 +33,7 @@ class Line extends Feature {
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, r: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius: number) {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
@@ -123,7 +123,7 @@ class Line extends Feature {
             ctx.font = `${this.gls.getRatioSize(this.tipInfo.fontSize)}px ${this.tipInfo.fontFamily}`;
             const { width } = ctx.measureText(this.tipInfo.txt);  // 文本的宽度
             ctx.fillStyle = this.tipInfo.color;
-            this.setAngle(ctx, center, angle);
+            this.rotateCtx(ctx, center, angle);
             ctx.fillText(this.tipInfo.txt, center.x - width / 2 + this.tipInfo.offset.x, center.y - lineWidth + this.tipInfo.offset.y);
             ctx.fill();
             ctx.restore()

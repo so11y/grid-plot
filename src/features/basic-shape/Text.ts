@@ -127,7 +127,7 @@ class Text extends Rect {
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();
-            this.setAngle(ctx, leftTop);
+            this.rotateCtx(ctx, leftTop);
             ctx.clip(path);   // 要放在旋转后面
             ctx.textBaseline = "top";
             ctx.fillStyle = this.textInfo.color;

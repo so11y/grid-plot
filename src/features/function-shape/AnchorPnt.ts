@@ -16,7 +16,6 @@ class AnchorPnt extends Rect {
         this.isFixedSize = true;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.isShowAdsorbLine = false;
         this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
         this.lineWidth = 0;
