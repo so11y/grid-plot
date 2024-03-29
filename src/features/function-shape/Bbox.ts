@@ -42,11 +42,11 @@ export default class Bbox extends Rect {
         this.lineDashArr = [8, 8]
         this.lineWidth = .06;
         this.ratio = this.getRatio();
-        this.addFeature(target);
+        this.addChild(target, {}, false);
         this.initBCtrlPnt();
         this.setVct();
         this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
-        this.enableAnchorPnts(target);
+        this.enableAnchorPnts();
         this.gls.addFeature(this, false);
     }
 

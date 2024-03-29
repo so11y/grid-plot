@@ -32,6 +32,7 @@ export default class Link extends Line {
         super([startPos as IRelativePos, endPos as IRelativePos]);
 
         this.className = "Link"
+        this.cbTranslate = false;
         this.tipInfo.txt = '测试文字'
         this.tipInfo.offset.y = -10;
         this.tipInfo.fontFamily = FontFamily.SHISHANG;

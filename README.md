@@ -254,7 +254,7 @@
 
    .cbCapture  // 元素是否可被鼠标捕获
    .cbSelect  // 元素是否可被选中
-   .cbMove  // 元素是否可被移动
+   .cbTranslate  // 元素是否可被移动
    .cbTransform  // 元素是否可被形变缩放
    .cbTransformChild  // 元素的子元素是否可被形变缩放
 

@@ -54,7 +54,7 @@ class SelectArea extends Group {
             const mouseUp = () => {
                 let featuresIn = this.getSelectFeature();
                 featuresIn.forEach(fi => {
-                    this.addFeature(fi as IBasicFeature)
+                    this.addChild(fi as IBasicFeature, {}, false)
                 })
                 this.gls.enableBbox(this)
                 this.callback(featuresIn);

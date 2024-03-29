@@ -110,7 +110,7 @@ class GridSystem {
 
     // --------------------以下是私有的方法----------------------------
     // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
+    private drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
         features.forEach(f => {
             const isBasic = isBasicFeature(f);
             if (f.hidden) return;
@@ -147,7 +147,7 @@ class GridSystem {
         })
     }
 
-    initEventListener() {
+    private initEventListener() {
         this.domElement.addEventListener("mousemove", this.mouseMove);
         this.domElement.addEventListener("mousedown", this.mouseDown);
         this.domElement.addEventListener("mousewheel", this.mouseWheel);
@@ -670,16 +670,17 @@ class GridSystem {
 
     // ------------------ 获取像素，或相对坐标，宽度等-------------------------
     // 获取像素位置坐标
-    getPixelPos(point: IRelativePos, isFixedPos?: boolean): IPixelPos {
+    getPixelPos(point: IRelativePos, isFixedPos = false, target = this.pageSlicePos): IPixelPos {
         if (isFixedPos) {
             return point
         } else {
             return {
-                x: this.pageSlicePos.x + (point.x / CoordinateSystem.GRID_SIZE) * this.scale,
-                y: this.pageSlicePos.y + (point.y / CoordinateSystem.GRID_SIZE) * this.scale,
+                x: target.x + (point.x / CoordinateSystem.GRID_SIZE) * this.scale,
+                y: target.y + (point.y / CoordinateSystem.GRID_SIZE) * this.scale,
             };
         }
     }
+
     // 获取相对位置坐标
     getRelativePos(point: IPixelPos, isFixedPos?: boolean): IRelativePos {
         if (isFixedPos) {

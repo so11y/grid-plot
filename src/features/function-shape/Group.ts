@@ -26,7 +26,7 @@ export default class Group extends Feature {
     add(feature: IBasicFeature) {
         if (!isBasicFeature(feature)) return;
         if (feature.isFixedPos || feature.isFixedSize) return;  // 非基础元素不添加
-        this.addFeature(feature, { cbSelect: false });
+        this.addChild(feature, { cbSelect: false }, false);
         this.toResize(this.children);
     }
     remove(feature: IBasicFeature) {

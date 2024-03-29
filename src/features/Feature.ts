@@ -98,7 +98,7 @@ class Feature {
     // 节点功能
     cbCapture: boolean = true;  // 元素是否可被鼠标捕获
     cbSelect: boolean = true;  // 元素是否可被选中
-    cbMove: boolean = true;  // 元素是否可被移动
+    cbTranslate: boolean = true;  // 元素是否可被移动
     cbTransform: boolean = true;  // 元素是否可被形变缩放
     cbTransformChild: boolean = true; // 元素的子元素是否可被形变缩放
 
@@ -163,7 +163,7 @@ class Feature {
      * @returns 
      */
     translate(offsetX: number = 0, offsetY: number = 0) {
-        if (!this.cbMove) return;
+        if (!this.cbTranslate) return;
         this.pointArr = this.pointArr.map(p => {
             return {
                 x: !this.isOnlyVerticalMove ? p.x += offsetX : p.x,
@@ -270,7 +270,12 @@ class Feature {
      * @param props 给子元素额外设置的属性
      * @returns 
      */
-    addFeature(feature: IBasicFeature, props?: Partial<IProps>) {
+     addChild(feature: IBasicFeature, props: Partial<IProps> = {}, translate = true) {
+        if (translate) {
+            const [leftTop] = Feature.getRectWrapPoints(this.pointArr);
+            feature.translate(leftTop.x, leftTop.y)
+            console.log(111);
+        }
         if (this.children.find(cf => cf === feature)) return;  // 非基础元素不添加 或者 已经存在
         this.children.push(feature);
         feature.parent = this;
