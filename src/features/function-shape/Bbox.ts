@@ -16,7 +16,7 @@ export default class Bbox extends Rect {
 
     static isAbsorbAngle = true; // 是否旋转角度的吸附
     static isKeepRatio = true; // 是否按宽高比例缩放
-    static ctrlPSize = 7; // 控制点大小
+    static ctrlPSize = 14; // 控制点大小
 
     ratio: number = 1;  // 宽高比, keepRatio用
     vctX: IVctor = [100, 0];

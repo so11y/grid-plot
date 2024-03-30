@@ -51,6 +51,7 @@ interface ITriangle {
     angle: number,
     color: string,
     lineWidth: number,
+    fill: string,
 }
 
 type IProps = Partial<Feature & Text & Img & Link & Group> & {

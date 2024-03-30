@@ -8,7 +8,7 @@ class AnchorPnt extends Pnt {
     isBinding = false;  // 是否与link绑定了
     parent: IBasicFeature;
 
-    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 5) {   // 相对坐标
+    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 10) {   // 相对坐标
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;

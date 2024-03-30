@@ -1,10 +1,11 @@
 import Rect from "@/features/basic-shape/Rect";
 import { IPixelPos } from "@/Interface";
 import { getLenOfTwoPnts } from "@/utils";
+import Feature from "../Feature";
 
 class Pnt extends Rect {
 
-    constructor(x: number = 0, y: number = 0, width: number = 7, height: number = 7) {
+    constructor(x: number = 0, y: number = 0, width: number = 18, height: number = 18) {
         super(x, y, width, height);
         this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#7AAAF8"
@@ -25,7 +26,8 @@ class Pnt extends Rect {
         }
         ctx.globalAlpha = this.opacity;
         ctx.strokeStyle = this.strokeStyle;
-        path.rect(pointArr[0].x, pointArr[0].y, getLenOfTwoPnts(pointArr[0], pointArr[1]), getLenOfTwoPnts(pointArr[0], pointArr[3]))
+        const center = Feature.getCenterPos(pointArr);
+        path.rect(center.x - this.size.width/2, center.y - this.size.height/2, this.size.width, this.size.height)   // pnt始终固定大小,不随画布缩放
         ctx.fill(path);
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);

@@ -270,7 +270,7 @@ class Feature {
      * @param props 给子元素额外设置的属性
      * @returns 
      */
-     addChild(feature: IBasicFeature, props: Partial<IProps> = {}, translate = true) {
+    addChild(feature: IBasicFeature, props: Partial<IProps> = {}, translate = true) {
         if (translate) {
             const [leftTop] = Feature.getRectWrapPoints(this.pointArr);
             feature.translate(leftTop.x, leftTop.y);   // 移动到父元素左上角
@@ -464,7 +464,7 @@ class Feature {
 
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
+        if (Feature.TargetRender && Feature.TargetRender.className === 'GridSystem' && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {

@@ -6,7 +6,7 @@ class CtrlPnt extends Pnt {
 
     index: number = 0;  // 关联的点是第几个
 
-    constructor(parent: Feature, i = 0, width: number = 7) {   // 相对坐标
+    constructor(parent: Feature, i = 0, width: number = 14) {   // 相对坐标
         const pos = parent.pointArr[i];
         super(pos.x, pos.y, width, width);
         this.className = "CtrlPnt";

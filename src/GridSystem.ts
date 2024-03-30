@@ -65,6 +65,7 @@ class GridSystem {
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
+    isShowAdsorbLine:boolean = false;
 
     // 提供的事件
     ondrag: Function = () => { };
