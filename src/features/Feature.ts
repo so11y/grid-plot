@@ -273,8 +273,7 @@ class Feature {
      addChild(feature: IBasicFeature, props: Partial<IProps> = {}, translate = true) {
         if (translate) {
             const [leftTop] = Feature.getRectWrapPoints(this.pointArr);
-            feature.translate(leftTop.x, leftTop.y)
-            console.log(111);
+            feature.translate(leftTop.x, leftTop.y);   // 移动到父元素左上角
         }
         if (this.children.find(cf => cf === feature)) return;  // 非基础元素不添加 或者 已经存在
         this.children.push(feature);
@@ -283,6 +282,7 @@ class Feature {
         function setProps(f: Feature) {   // 递归设置子元素属性
             if (props) {
                 props.cbSelect != undefined && (f.cbSelect = props.cbSelect);
+                props.cbCapture != undefined && (f.cbCapture = props.cbCapture);
                 props.angle != undefined && (f.angle = props.angle);
             }
             f.children.forEach(cf => { setProps(cf) })
@@ -464,7 +464,7 @@ class Feature {
 
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.isShowAdsorbLine && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
+        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem' && this.gls.cbAdsorption && this.adsorbTypes.length > 0) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {

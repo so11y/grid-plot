@@ -74,7 +74,7 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
+        this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
         this.rotateCtx(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);

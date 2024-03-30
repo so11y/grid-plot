@@ -1,16 +1,15 @@
-import { Events } from "../../Constants";
-import { IPoint } from "../../Interface";
-import { getMousePos } from "../../utils";
-import Rect from "../basic-shape/Rect";
+import { Events } from "../../../Constants";
+import { getMousePos } from "../../../utils";
+import Pnt from "../Pnt";
 
 // 吸附功能的点,方便选取用
-class AdsorbPnt extends Rect {
+class AdsorbPnt extends Pnt {
 
     cbAdsorption: boolean = true;  // 是否吸附
     cbCrossLine: boolean = true;
     crossLineStrokeStyle = "#2471A3";
 
-    constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
+    constructor(width: number = 7, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff";
         this.className = "AdsorbPnt";

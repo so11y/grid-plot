@@ -1,5 +1,5 @@
 
-import { CoordinateSystem } from "./Constants";
+import { AlignType, CoordinateSystem } from "./Constants";
 import { IPoint, IVctor, ISize, IVctor } from "./Interface";
 
 /**
@@ -162,7 +162,7 @@ function getPntInVct(O: IPoint, vct: IVctor, k = 0): IPoint {
     };
 };
 
-function getRotateAng(vct:IVctor = [0, 0], vct2:IVctor = [0, 0]) {
+function getRotateAng(vct: IVctor = [0, 0], vct2: IVctor = [0, 0]) {
     let EPSILON = 1.0e-8;
     let dist, dot, cross, degree, angle;
 
@@ -375,7 +375,7 @@ function isBasicFeature(f?: any) {
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any) {
     if (!f) return false;
-    return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt' || f.className === 'SCtrlPnt'
+    return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt'
 }
 
 function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
@@ -388,6 +388,24 @@ function getUnitSize() {
     return CoordinateSystem.GRID_SIZE * CoordinateSystem.GRID_SIZE
 }
 
+function determinePosition(pointA: IPoint, pointB: IPoint) {
+    const dy = pointB.y - pointA.y;
+    const dx = pointB.x - pointA.x;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+            return AlignType.RIGHT;
+        } else {
+            return AlignType.LEFT;
+        }
+    } else {
+        if (dy > 0) {
+            return AlignType.BOTTOM;
+        } else {
+            return AlignType.TOP;
+        }
+    }
+}
+
 export {
     getMousePos,
     getUnitSize,
@@ -397,6 +415,7 @@ export {
     hex2Rgba,
     rgb2Hex,
 
+    determinePosition,
     calculateBezierPointForCubic,
     getVector,
     getVctLen,

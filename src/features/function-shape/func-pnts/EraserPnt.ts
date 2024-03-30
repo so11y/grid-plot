@@ -1,13 +1,12 @@
-import { Events } from "../../Constants";
-import { getMousePos } from "../../utils";
-import Rect from "../basic-shape/Rect";
+import { getMousePos } from "../../../utils";
+import Pnt from "../Pnt";
 
 // 橡皮擦工具
-class EraserPnt extends Rect {
+class EraserPnt extends Pnt {
 
     public static instance: EraserPnt | null = null;
     // 静态方法，用于获取单例实例  
-    public static getInstance(width = 14): EraserPnt {
+    public static getInstance(width = 7): EraserPnt {
         if (!EraserPnt.instance) {
             EraserPnt.instance = new EraserPnt(width);
         }
@@ -16,7 +15,7 @@ class EraserPnt extends Rect {
 
     isMouseDown = false;
 
-    constructor(width: number = 14) {   // 相对坐标
+    constructor(width: number = 7) {   // 相对坐标
         if (EraserPnt.instance) {
             return EraserPnt.instance;
         }

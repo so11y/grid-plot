@@ -691,10 +691,10 @@ function reset(clear = false) {
     rect7.strokeStyle = "red"
     // rect6.cbTransform = false;
     gls.value.addFeature(rect7, false);
-    rect5.addChild(rect7, {})
+    rect5.addChild(rect7, {cbSelect: false, cbCapture: false})
 
-    let link = new Link(rect5, rect6);
-    gls.value.addFeature(link, false);
+    // let link = new Link(rect5, rect6);
+    // gls.value.addFeature(link, false);
 
     gls.value.enableStack();
 }

@@ -1,16 +1,16 @@
 import { IPoint } from "../../../Interface";
 import { createVctor } from "../../../utils";
-import Rect from "../../basic-shape/Rect";
 import Bbox from "../Bbox";
+import Pnt from "../Pnt";
 
 // 自定义控制点元素
-class BCtrlPnt extends Rect {
+class BCtrlPnt extends Pnt {
 
     getPoint: () => IPoint;
     lastAngle: number;
     parent: Bbox | null = null;
 
-    constructor(parent: Bbox, fn: () => IPoint, width: number = 14) {   // 相对坐标
+    constructor(parent: Bbox, fn: () => IPoint, width: number = 7) {   // 相对坐标
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
@@ -19,7 +19,7 @@ class BCtrlPnt extends Rect {
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
-        this.isShowAdsorbLine = false;
+        
         this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
         this.lineWidth = 0;
@@ -28,7 +28,6 @@ class BCtrlPnt extends Rect {
         this.radius = .2;
         this.dragendEvents.push(this.onUpdateParentVct.bind(this))
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
-        this.gls.addFeature(this, false);
     }
 
     // 更新bbox的水平与垂直向量

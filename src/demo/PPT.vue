@@ -8,13 +8,10 @@
 <script lang="ts">
 import GridSystem from "../GridSystem";
 import Rect from "../features/basic-shape/Rect";
-import Line from "../features/basic-shape/Line";
 import Text from "../features/basic-shape/Text";
 import Img from "../features/basic-shape/Img";
 import Circle from "../features/basic-shape/Circle";
-// import Circle from "../features/Circle";
 import { FontFamily } from "../Constants";
-import GridLine from "../GridLine";
 
 export default {
   data() {
@@ -92,16 +89,16 @@ export default {
     text6.fillStyle = "transparent"
     text6.isStroke = false;
     text.lineWidth = 0
-    text.fontFamily = FontFamily.YOUSHE
-    text.color = '#404040'
+    text.textInfo.fontFamily = FontFamily.YOUSHE
+    text.textInfo.color = '#404040'
     // text.bold = true
     // text1.fontSize = 7
     // text3.fontSize = 7
     // text5.fontSize = 7
-    text3.color = "#efad6b"
-    text2.color = "#666"
-    text4.color = "#666"
-    text6.color = "#666"
+    text3.textInfo.color = "#efad6b"
+    text2.textInfo.color = "#666"
+    text4.textInfo.color = "#666"
+    text6.textInfo.color = "#666"
 
     rect.fillStyle = '#f2f2f2';
     // rect.cbSelect = false;
@@ -152,7 +149,7 @@ export default {
     // let imgs = document.querySelector("#vid");
     let img;
     if (imgs) {
-      img = new Img(imgs, 370, 250);
+      img = new Img(imgs as HTMLImageElement, 370, 250);
       img.isStroke = false
       img.zIndex = 2
       gls.addFeature(rect3);

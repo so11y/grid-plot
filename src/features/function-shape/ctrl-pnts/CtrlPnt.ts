@@ -1,26 +1,24 @@
-import Rect from "../../basic-shape/Rect";
 import Feature from "../../Feature";
+import Pnt from "../Pnt";
 
 // 控制点元素，依赖pointArr
-class CtrlPnt extends Rect {
+class CtrlPnt extends Pnt {
 
     index: number = 0;  // 关联的点是第几个
 
-    constructor(parent: Feature, i = 0, width: number = 14) {   // 相对坐标
+    constructor(parent: Feature, i = 0, width: number = 7) {   // 相对坐标
         const pos = parent.pointArr[i];
         super(pos.x, pos.y, width, width);
         this.className = "CtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
-        this.isShowAdsorbLine = false;
         this.isOnlyCenterAdsorb = true;
         this.index = i;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
         this.lineWidth = 0;
         this.zIndex = Infinity;
         this.isStroke = false;
-        this.gls.addFeature(this, false);
         this.translateEvents.push(this.onUpdateParentPos.bind(this));
         this.drawEvents.push(this.onUpdatePosByParent.bind(this))
     }

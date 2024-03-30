@@ -2,10 +2,10 @@ import { CoordinateSystem, FontFamily, Events, Orientation } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
-import AdsorbPnt from "./features/function-shape/AdsorbPnt";
+import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMidOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -14,13 +14,8 @@ import Text from "./features/basic-shape/Text";
 import Bbox from "./features/function-shape/Bbox";
 import Circle from "./features/basic-shape/Circle";
 import SelectArea from "./features/function-shape/SelectArea";
-import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
-import EraserPnt from "./features/function-shape/EraserPnt";
-import { Link } from "ant-design-vue/es/anchor";
-import BCtrlPnt from "./features/function-shape/ctrl-pnts/BCtrlPnt";
-import CtrlPnt from "./features/function-shape/ctrl-pnts/CtrlPnt";
-import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
+import EraserPnt from "./features/function-shape/func-pnts/EraserPnt";
 
 class GridSystem {
 
