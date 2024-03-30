@@ -693,8 +693,11 @@ function reset(clear = false) {
     gls.value.addFeature(rect7, false);
     rect5.addChild(rect7, {cbSelect: false, cbCapture: false})
 
-    // let link = new Link(rect5, rect6);
-    // gls.value.addFeature(link, false);
+    let link = new Link(rect5, rect6);
+    gls.value.addFeature(link, false);
+    // setTimeout(() => {
+    //     console.log(link.getPointOfPer(.9));
+    // }, 100);
 
     gls.value.enableStack();
 }

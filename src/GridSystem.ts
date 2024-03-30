@@ -98,8 +98,8 @@ class GridSystem {
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
-            // this.timer = setInterval(() => {this.draw(loop, fn)})
-            this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
+            this.timer = setInterval(() => { this.draw(loop, fn) })
+            // this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
     };
 
@@ -149,7 +149,7 @@ class GridSystem {
         this.domElement.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.domElement.ondrop = this.dropToFeature.bind(this);
+        this.domElement.addEventListener("drop", e => this.dropToFeature(e));
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -1156,7 +1156,7 @@ class GridSystem {
             this.createFeature(fp)
         })
     }
-    
+
     loadFont(fontFamily: FontFamily) { // 加载字体
         const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
         if (!document.fonts.has(fontface)) {

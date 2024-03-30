@@ -16,6 +16,7 @@ class Line extends Feature {
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
     curveCtrlPnt: CtrlPnt[] = [];
+    actualPointArr: IPixelPos[] | null = null;   // 实际渲染到画布上的点集合
 
     tipInfo: ITxt = {
         txt: '',
@@ -152,6 +153,12 @@ class Line extends Feature {
     getCtrlPnts() {
         const ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CtrlPnt) && f.parent === this);
         return ctrlPnts;
+    }
+
+    getPointOfPer(per:number){  // 获取选段百分之多少处的点 per: 0~1
+        const pointArr = this.actualPointArr || this.pointArr;
+        const index = Math.round(pointArr.length * per);
+        return pointArr[index]
     }
 
     getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {

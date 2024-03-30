@@ -44,6 +44,15 @@ interface ITxt {
     bolder: boolean,
 }
 
+interface ITriangle {
+    hidden: boolean,
+    width: number,
+    height: number,
+    angle: number,
+    color: string,
+    lineWidth: number,
+}
+
 type IProps = Partial<Feature & Text & Img & Link & Group> & {
     id: string,
     children: IProps[]
@@ -51,4 +60,4 @@ type IProps = Partial<Feature & Text & Img & Link & Group> & {
 
 type IBasicFeature = Line | Rect | Circle | Group
 
-export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, IProps, IBasicFeature };
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature };

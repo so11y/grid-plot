@@ -1,6 +1,6 @@
 import { FontFamily, LinkMark, LinkStyle } from "../../Constants";
-import { IPixelPos, IPoint, IRelativePos, IVctor } from "../../Interface";
-import { createVctor, getPntInVct, getPntsOf3Bezier } from "../../utils";
+import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
+import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier } from "../../utils";
 import Feature from "../Feature";
 import Line from "./Line";
 
@@ -12,6 +12,14 @@ export default class Link extends Line {
     linkStyle: LinkStyle = LinkStyle.CURVE;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
+    triangleInfo: ITriangle = {
+        hidden: false,
+        width: 8,
+        height: 10,
+        angle: 0,
+        color: "#C4FFC9",
+        lineWidth: 3,
+    }
 
     // 如果是传的是点,那么可能无法更新link的位置
     constructor(startFeature: Feature | IRelativePos, endFeature: Feature | IRelativePos) {
@@ -63,8 +71,28 @@ export default class Link extends Line {
                 newPnts = pointArr;
                 break;
         }
+        this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, radius);
+        // if (this.tipInfo.txt && pointArr.length > 1) {
+        this.drawTriangle(ctx, newPnts);
+        // }
         return path;
+    }
+
+    drawTriangle(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {
+        if (pointArr.length < 2) return;
+        const [end1Pos, end2Pos] = [pointArr[pointArr.length - 1], pointArr[pointArr.length - 2]];
+        const angle = getAngleOfTwoPnts(end2Pos, end1Pos);   // 获取两个点 水平方向上的角度
+        ctx.save();
+        this.rotateCtx(ctx, end1Pos, angle + 90);
+        ctx.strokeStyle = this.triangleInfo.color;
+        ctx.lineWidth = this.triangleInfo.lineWidth;
+        ctx.lineJoin = this.lineJoin;
+        ctx.moveTo(end1Pos.x - this.triangleInfo.width, end1Pos.y + this.triangleInfo.height);
+        ctx.lineTo(end1Pos.x, end1Pos.y - this.triangleInfo.height / 2);
+        ctx.lineTo(end1Pos.x + this.triangleInfo.width, end1Pos.y + this.triangleInfo.height);
+        ctx.stroke();
+        ctx.restore();
     }
 
     // 修改起点或终点的位置

@@ -9,6 +9,7 @@ import AnchorPnt from "./func-pnts/AnchorPnt";
 import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
 import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
+import Pnt from "./Pnt";
 
 // 形变(放大,缩小)元素用
 export default class Bbox extends Rect {
@@ -491,7 +492,7 @@ export default class Bbox extends Rect {
     enableAnchorPnts(bool = true) {
         if (bool) {
             const anchorPnts: AnchorPnt[] = []
-            for (let index = 0; index < 4; index++) {
+            for (let index = 0; index < 1; index++) {
                 switch (index) {
                     case 0: {
                         let leftAp = new AnchorPnt(this, () => {
@@ -554,8 +555,23 @@ export default class Bbox extends Rect {
                     const endFeature = this.gls.features.find(f => isBasicFeature(f) && isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)));
                     if (endFeature) {
                         link.modifyTarget(endFeature, LinkMark.END)
-                        let align = determinePosition(Feature.getCenterPos(endFeature.pointArr), upPos);
-                        console.log(align);
+                        // let align = determinePosition(Feature.getCenterPos(endFeature.pointArr), upPos);
+                        // console.log(align);
+                        // new AnchorPnt(endFeature as IBasicFeature, () => {
+                        //     const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(endFeature.pointArr)
+                        //     switch (align) {
+                        //         case AlignType.LEFT:
+                        //             return getMidOfTwoPnts(leftTop, leftBottom)
+                        //         case AlignType.RIGHT:
+                        //             return getMidOfTwoPnts(rightTop, rightBottom)
+                        //         case AlignType.TOP:
+                        //             return getMidOfTwoPnts(leftTop, rightTop)
+                        //         case AlignType.BOTTOM:
+                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
+                        //         default:
+                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
+                        //     }
+                        // })
                     }
                     this.enableAnchorPnts(false)
                     this.enableAnchorPnts(true)
