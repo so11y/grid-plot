@@ -688,13 +688,16 @@ function reset(clear = false) {
     gls.value.addFeature(rect6, false);
 
     let rect7 = new Rect(50, 50, width, width);
-    rect7.strokeStyle = "red"
     // rect6.cbTransform = false;
     gls.value.addFeature(rect7, false);
-    rect5.addChild(rect7, {})
+    rect5.addChild(rect7, {cbSelect: false, cbCapture: false})
 
     let link = new Link(rect5, rect6);
     gls.value.addFeature(link, false);
+    link.triangleInfo.hidden = false;
+    // setTimeout(() => {
+    //     console.log(link.getPointOfPer(.9));
+    // }, 100);
 
     gls.value.enableStack();
 }

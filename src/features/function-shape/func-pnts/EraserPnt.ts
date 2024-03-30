@@ -1,9 +1,8 @@
-import { Events } from "../../Constants";
-import { getMousePos } from "../../utils";
-import Rect from "../basic-shape/Rect";
+import { getMousePos } from "../../../utils";
+import Pnt from "../Pnt";
 
 // 橡皮擦工具
-class EraserPnt extends Rect {
+class EraserPnt extends Pnt {
 
     public static instance: EraserPnt | null = null;
     // 静态方法，用于获取单例实例  

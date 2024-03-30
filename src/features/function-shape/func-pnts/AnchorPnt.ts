@@ -1,14 +1,14 @@
-import { IBasicFeature, IPoint } from "../../Interface";
-import Rect from "../basic-shape/Rect";
+import { IBasicFeature, IPoint } from "../../../Interface";
+import Pnt from "../Pnt";
 
 // 连接线的锚点
-class AnchorPnt extends Rect {
+class AnchorPnt extends Pnt {
 
     getPoint: () => IPoint;
     isBinding = false;  // 是否与link绑定了
     parent: IBasicFeature;
 
-    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 14) {   // 相对坐标
+    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 10) {   // 相对坐标
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
@@ -17,7 +17,7 @@ class AnchorPnt extends Rect {
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isOnlyCenterAdsorb = true;
-        this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
+        this.fillStyle = this.hoverStyle = this.focusStyle = "#C4FFC9"
         this.lineWidth = 0;
         this.radius = .2;
         this.zIndex = Infinity;

@@ -2,10 +2,10 @@ import { CoordinateSystem, FontFamily, Events, Orientation } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
-import AdsorbPnt from "./features/function-shape/AdsorbPnt";
+import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMidOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -14,13 +14,8 @@ import Text from "./features/basic-shape/Text";
 import Bbox from "./features/function-shape/Bbox";
 import Circle from "./features/basic-shape/Circle";
 import SelectArea from "./features/function-shape/SelectArea";
-import AnchorPnt from "./features/function-shape/AnchorPnt";
 import Group from "./features/function-shape/Group";
-import EraserPnt from "./features/function-shape/EraserPnt";
-import { Link } from "ant-design-vue/es/anchor";
-import BCtrlPnt from "./features/function-shape/ctrl-pnts/BCtrlPnt";
-import CtrlPnt from "./features/function-shape/ctrl-pnts/CtrlPnt";
-import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
+import EraserPnt from "./features/function-shape/func-pnts/EraserPnt";
 
 class GridSystem {
 
@@ -70,6 +65,7 @@ class GridSystem {
     cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
+    isShowAdsorbLine:boolean = false;
 
     // 提供的事件
     ondrag: Function = () => { };
@@ -103,8 +99,8 @@ class GridSystem {
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
-            // this.timer = setInterval(() => {this.draw(loop, fn)})
-            this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
+            this.timer = setInterval(() => { this.draw(loop, fn) })
+            // this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
     };
 
@@ -154,7 +150,7 @@ class GridSystem {
         this.domElement.addEventListener("contextmenu", (e) => { // 禁用右键上下文
             e.preventDefault();
         });
-        this.domElement.ondrop = this.dropToFeature.bind(this);
+        this.domElement.addEventListener("drop", e => this.dropToFeature(e));
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
@@ -1161,7 +1157,7 @@ class GridSystem {
             this.createFeature(fp)
         })
     }
-    
+
     loadFont(fontFamily: FontFamily) { // 加载字体
         const fontface = new FontFace(fontFamily, `url(${fontMap.get(fontFamily)})`);
         if (!document.fonts.has(fontface)) {

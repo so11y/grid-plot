@@ -1,14 +1,15 @@
-import { CtrlType, LinkMark } from "@/Constants";
+import { AlignType, CtrlType, LinkMark } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { IBasicFeature, IVctor } from "../../Interface";
-import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isPntInPolygon } from "../../utils";
+import { createVctor, determinePosition, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
-import AnchorPnt from "./AnchorPnt";
+import AnchorPnt from "./func-pnts/AnchorPnt";
 import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
 import CtrlPnt from "./ctrl-pnts/CtrlPnt";
 import SelectArea from "./SelectArea";
+import Pnt from "./Pnt";
 
 // 形变(放大,缩小)元素用
 export default class Bbox extends Rect {
@@ -24,7 +25,7 @@ export default class Bbox extends Rect {
     lastLenY = 0;
     target: Feature;
 
-    constructor(target: IBasicFeature | SelectArea) {   // 相对坐标
+    constructor(target: IBasicFeature | SelectArea, isAnchor = true) {   // 相对坐标
         // const angle = target.angle;
         // target.rotate(-angle)
         const center = Feature.getCenterPos(target.pointArr);
@@ -46,7 +47,7 @@ export default class Bbox extends Rect {
         this.initBCtrlPnt();
         this.setVct();
         this.setPointArrPer(target, getLenOfTwoPnts(this.pointArr[0], this.pointArr[1]), getLenOfTwoPnts(this.pointArr[0], this.pointArr[3]));
-        this.enableAnchorPnts();
+        isAnchor && this.enableAnchorPnts();  // 添加锚点,连接线
         this.gls.addFeature(this, false);
     }
 
@@ -94,8 +95,8 @@ export default class Bbox extends Rect {
             const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
-            const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
-            return rotateCtrlPnt;
+            const rotateCtrlPos = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
+            return rotateCtrlPos;
         }, Bbox.ctrlPSize);
         bCtrlP.name = CtrlType.ANGLE_CTRL;
         bCtrlP.adsorbTypes = []
@@ -488,31 +489,100 @@ export default class Bbox extends Rect {
         return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
     }
 
-    enableAnchorPnts() {
-        let link: Link;
-        let leftAp = new AnchorPnt(this, () => {
-            const pointArr = this.pointArr;
-            const vct = createVctor(pointArr[0], pointArr[1]);   // 控制点1,2的向量
-            const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
-            const rotateCtrlPnt = getPntInVct(midPnt, vct, -15)  // 关联点长度同步移动
-            return rotateCtrlPnt;
-        });
-        leftAp.mousedownEvents.push((e: any) => {
-            const start = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-            link = new Link(this.target, start);
-            this.gls.addFeature(link, false);
-        })
-        leftAp.dragEvents.push((e: any) => {
-            const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-            link.pointArr[1] = end;
-        })
-        leftAp.mouseupEvents.push((e: any) => {
-            const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
-            const endFeature = this.gls.features.find(f => isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)));
-            if(endFeature){
-                link.modifyTarget(endFeature, LinkMark.END)
+    enableAnchorPnts(bool = true) {
+        if (bool) {
+            const anchorPnts: AnchorPnt[] = []
+            for (let index = 0; index < 1; index++) {
+                switch (index) {
+                    case 0: {
+                        let leftAp = new AnchorPnt(this, () => {
+                            const midPnt = getMidOfTwoPnts(this.pointArr[0], this.pointArr[3]);
+                            const anchorPos = getPntInVct(midPnt, this.vctX, -8)  // 关联点长度同步移动
+                            return anchorPos;
+                        });
+                        leftAp.name = AlignType.LEFT
+                        anchorPnts.push(leftAp);
+                    }
+                        break;
+                    case 1: {
+                        let topAp = new AnchorPnt(this, () => {
+                            const midPnt = getMidOfTwoPnts(this.pointArr[0], this.pointArr[1]);
+                            const anchorPos = getPntInVct(midPnt, this.vctY, -8)  // 关联点长度同步移动
+                            return anchorPos;
+                        });
+                        topAp.name = AlignType.TOP
+                        anchorPnts.push(topAp);
+                    }
+                        break;
+                    case 2: {
+                        let rightAp = new AnchorPnt(this, () => {
+                            const midPnt = getMidOfTwoPnts(this.pointArr[2], this.pointArr[1]);
+                            const anchorPos = getPntInVct(midPnt, this.vctX, 8)  // 关联点长度同步移动
+                            return anchorPos;
+                        });
+                        rightAp.name = AlignType.RIGHT
+                        anchorPnts.push(rightAp);
+                    }
+                        break;
+                    case 3: {
+                        let bottomAp = new AnchorPnt(this, () => {
+                            const midPnt = getMidOfTwoPnts(this.pointArr[2], this.pointArr[3]);
+                            const anchorPos = getPntInVct(midPnt, this.vctY, 8)  // 关联点长度同步移动
+                            return anchorPos;
+                        });
+                        bottomAp.name = AlignType.BOTTOM
+                        anchorPnts.push(bottomAp);
+                    }
+                        break;
+                    default:
+                        break;
+                }
             }
-        })
+
+            let link: Link;
+            anchorPnts.forEach(ap => {
+                ap.mousedownEvents.push((e: any) => {
+                    const start = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
+                    link = new Link(this.target, start);
+                    this.gls.addFeature(link, false);
+                })
+                ap.dragEvents.push((e: any) => {
+                    const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
+                    link.pointArr[1] = end;
+                })
+                ap.mouseupEvents.push((e: any) => {
+                    const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
+                    const endFeature = this.gls.features.find(f => isBasicFeature(f) && isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)));
+                    if (endFeature) {
+                        link.modifyTarget(endFeature, LinkMark.END)
+                        // let align = determinePosition(Feature.getCenterPos(endFeature.pointArr), upPos);
+                        // console.log(align);
+                        // new AnchorPnt(endFeature as IBasicFeature, () => {
+                        //     const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(endFeature.pointArr)
+                        //     switch (align) {
+                        //         case AlignType.LEFT:
+                        //             return getMidOfTwoPnts(leftTop, leftBottom)
+                        //         case AlignType.RIGHT:
+                        //             return getMidOfTwoPnts(rightTop, rightBottom)
+                        //         case AlignType.TOP:
+                        //             return getMidOfTwoPnts(leftTop, rightTop)
+                        //         case AlignType.BOTTOM:
+                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
+                        //         default:
+                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
+                        //     }
+                        // })
+                    }
+                    this.enableAnchorPnts(false)
+                    this.enableAnchorPnts(true)
+                })
+            })
+        } else {
+            const anchorPnts = this.getAnchorPnts();
+            anchorPnts.forEach(ap => {
+                this.gls.removeFeature(ap, false);
+            })
+        }
     }
 
     destroy() {

@@ -2,6 +2,21 @@ import { IPoint, IPixelPos } from "../../Interface";
 import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
 import Feature from "../Feature";
 
+// 绘制圆角矩形
+function drawRoundedRect(x: number, y: number, w: number, h: number, r: number) {
+    const path = new Path2D();
+    path.moveTo(x + r, y);
+    path.lineTo(x + w / 4 - r, y);
+    path.arc(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
+    path.lineTo(x + w, y + h - r);
+    path.arc(x + w - r, y + h - r, r, 0, Math.PI * 0.5);
+    path.lineTo(x + r, y + h);
+    path.arc(x + r, y + h - r, r, Math.PI * 0.5, Math.PI);
+    path.lineTo(x, y + r);
+    path.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
+    return path;
+}
+
 class Rect extends Feature {
 
     radius = 0;   // 做成圆,radius = width/10
@@ -52,10 +67,10 @@ class Rect extends Feature {
         if (this.isFixedSize) {
             const { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
-            path = this.drawRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
+            path = drawRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
             // path.roundRect(leftTop.x, leftTop.y, width, height, r);
-            path = this.drawRoundedRect(leftTop.x, leftTop.y, width, height, radius);
+            path = drawRoundedRect(leftTop.x, leftTop.y, width, height, radius);
         }
         ctx.save()
         this.isClosePath && path.closePath()
@@ -74,27 +89,12 @@ class Rect extends Feature {
             ctx.fillStyle = this.fillStyle;
         }
         ctx.lineWidth = lineWidth;
-        this.isShowAdsorbLine && this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
+        this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
         this.rotateCtx(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path)
         ctx.restore();
-        return path;
-    }
-
-    // 绘制圆角矩形
-    drawRoundedRect(x: number, y: number, w: number, h: number, r: number) {
-        const path = new Path2D();
-        path.moveTo(x + r, y);
-        path.lineTo(x + w / 4 - r, y);
-        path.arc(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
-        path.lineTo(x + w, y + h - r);
-        path.arc(x + w - r, y + h - r, r, 0, Math.PI * 0.5);
-        path.lineTo(x + r, y + h);
-        path.arc(x + r, y + h - r, r, Math.PI * 0.5, Math.PI);
-        path.lineTo(x, y + r);
-        path.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
         return path;
     }
 

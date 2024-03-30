@@ -1,10 +1,9 @@
-import { Events } from "../../Constants";
-import { IPoint } from "../../Interface";
-import { getMousePos } from "../../utils";
-import Rect from "../basic-shape/Rect";
+import { Events } from "../../../Constants";
+import { getMousePos } from "../../../utils";
+import Pnt from "../Pnt";
 
 // 吸附功能的点,方便选取用
-class AdsorbPnt extends Rect {
+class AdsorbPnt extends Pnt {
 
     cbAdsorption: boolean = true;  // 是否吸附
     cbCrossLine: boolean = true;
