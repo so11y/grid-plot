@@ -99,8 +99,8 @@ class GridSystem {
         // this.ctx.rotate(-30 * Math.PI/180)
         // console.timeEnd();
         if (loop) {  // 是否循环渲染
-            this.timer = setInterval(() => { this.draw(loop, fn) })
-            // this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
+            // this.timer = setInterval(() => { this.draw(loop, fn) })
+            this.timer = window.requestAnimationFrame(() => this.draw(loop, fn))
         }
     };
 

@@ -61,7 +61,6 @@ class Feature {
     name: string = ''  // 元素的name, 给当前元素起个名字
     hidden: boolean = false;   // 是否隐藏元素,跳过渲染
     position: IRelativePos = { x: 0, y: 0 }  // 元素包围盒的中心点, 一般Rect类型用
-    offset: IRelativePos = { x: 0, y: 0 } // 相对于父元素中心点偏移
     size: ISize = { width: 0, height: 0 }  // 元素包围盒的宽高
     scale: IPoint = { x: 1, y: 1 }; // 元素缩放, [暂未用到]
     angle: number = 0; // 元素旋转的角度
