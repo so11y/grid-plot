@@ -1,8 +1,9 @@
-import { FontFamily, CtrlType, AlignType } from "../../Constants";
+import { FontFamily, CtrlType, AlignType, ClassName } from "../../Constants";
 import { IPoint, IPixelPos, ITxt } from "../../Interface";
 import Rect from "./Rect";
 import Feature from "../Feature";
 
+// 文本元素
 class Text extends Rect {
 
     static mousePos: IPoint = { x: 0, y: 0 }
@@ -38,7 +39,7 @@ class Text extends Rect {
             height = this.gls.getPixelLen(fontSize)
         }
         this.setSize(width, height)
-        this.className = "Text";
+        this.className = ClassName.TEXT;
         this.fitSize = false;
         this.textInfo.txt = text;
         this.textInfo.fontSize = fontSize;

@@ -1,5 +1,5 @@
 
-import { AlignType } from "@/Constants";
+import { AlignType, ClassName } from "@/Constants";
 import { IBasicFeature, IPixelPos, IPoint, IRelativePos } from "@/Interface";
 import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
@@ -10,7 +10,7 @@ export default class Group extends Feature {
     constructor(features: IBasicFeature[]) {   // 相对坐标
         super([]);
         features.forEach(f => this.add(f))
-        this.className = 'Group';
+        this.className = ClassName.GROUP;
         // this.fillStyle = this.focusStyle = this.hoverStyle = this.strokeStyle = "transparent";
         this.isStroke = false;
         this.isClosePath = true;

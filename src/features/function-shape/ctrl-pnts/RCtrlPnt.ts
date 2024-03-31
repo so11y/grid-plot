@@ -1,9 +1,10 @@
+import { ClassName } from "@/Constants";
 import { IPoint } from "../../../Interface";
 import { createVctor } from "../../../utils";
 import Bbox from "../Bbox";
 import Pnt from "../Pnt";
 
-// rotate 控制点元素
+// rotate 旋转控制点元素
 class RCtrlPnt extends Pnt {
 
     getPoint: () => IPoint;
@@ -15,7 +16,7 @@ class RCtrlPnt extends Pnt {
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
         this.getPoint = fn;
-        this.className = "RCtrlPnt";
+        this.className = ClassName.RCTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;

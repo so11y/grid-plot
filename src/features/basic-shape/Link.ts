@@ -1,4 +1,4 @@
-import { FontFamily, LinkMark, LinkStyle } from "../../Constants";
+import { ClassName, FontFamily, LinkMark, LinkStyle } from "../../Constants";
 import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
 import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier } from "../../utils";
 import Feature from "../Feature";
@@ -6,6 +6,7 @@ import Line from "./Line";
 
 let startIndex = 0;
 
+// 连接线
 export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
@@ -40,7 +41,7 @@ export default class Link extends Line {
 
         super([startPos as IRelativePos, endPos as IRelativePos]);
 
-        this.className = "Link"
+        this.className = ClassName.LINK
         this.cbTranslate = false;
         this.tipInfo.txt = '测试文字'
         this.tipInfo.offset.y = -10;

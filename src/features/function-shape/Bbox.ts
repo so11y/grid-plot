@@ -1,7 +1,6 @@
-import { AlignType, CtrlType, LinkMark } from "@/Constants";
-import GridSystem from "@/GridSystem";
+import { AlignType, ClassName, CtrlType, LinkMark } from "@/Constants";
 import { IBasicFeature, IVctor } from "../../Interface";
-import { createVctor, determinePosition, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
+import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -9,9 +8,8 @@ import AnchorPnt from "./func-pnts/AnchorPnt";
 import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./ctrl-pnts/SCtrlPnt";
 import SelectArea from "./SelectArea";
-import Pnt from "./Pnt";
 
-// 形变(放大,缩小)元素用
+// 包围盒元素, 形变(放大,缩小)元素用
 export default class Bbox extends Rect {
 
     static isAbsorbAngle = true; // 是否旋转角度的吸附
@@ -31,7 +29,7 @@ export default class Bbox extends Rect {
         const center = Feature.getCenterPos(target.pointArr);
         const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(target.pointArr);  // [leftTop, rightTop, rightBottom, leftBottom]
         super(center.x, center.y, maxX - minX, maxY - minY);
-        this.className = 'Bbox';
+        this.className = ClassName.BBOX;
         this.isFixedPos = target.isFixedPos;
         // this.rotate(angle)
         // target.rotate(angle)
@@ -292,10 +290,6 @@ export default class Bbox extends Rect {
             this.lastLenY = lenY;
             this.ratio = this.getRatio();
         })
-
-        this.getCtrlPnts().forEach(cp => cp.dragendEvents.push(() => {
-            GridSystem.Stack && GridSystem.Stack.record()
-        }))
     }
 
     onSizeChange() {
@@ -485,7 +479,7 @@ export default class Bbox extends Rect {
     }
 
     getCtrlPnts(): (SCtrlPnt | RCtrlPnt)[] {
-        return this.gls.features.filter(f => (f.className == 'SCtrlPnt' || f.className == 'RCtrlPnt') && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
+        return this.gls.features.filter(f => (f.className == ClassName.SCTRLPNT || f.className == ClassName.RCTRLPNT) && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
     }
 
     enableAnchorPnts(bool = true) {
@@ -585,7 +579,7 @@ export default class Bbox extends Rect {
     }
 
     getAnchorPnts(): AnchorPnt[] {
-        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
+        return this.gls.features.filter(f => f.className == ClassName.ANCHORPNT && f.parent == this) as AnchorPnt[];
     }
 
     destroy() {

@@ -1,7 +1,8 @@
+import { ClassName } from "@/Constants";
 import Feature from "../../Feature";
 import Pnt from "../Pnt";
 
-// size控制点元素，依赖pointArr
+// size 宽高控制点元素，依赖pointArr
 class SCtrlPnt extends Pnt {
 
     index: number = 0;  // 关联的点是第几个
@@ -9,7 +10,7 @@ class SCtrlPnt extends Pnt {
     constructor(parent: Feature, i = 0, width: number = 14) {   // 相对坐标
         const pos = parent.pointArr[i];
         super(pos.x, pos.y, width, width);
-        this.className = "SCtrlPnt";
+        this.className = ClassName.SCTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;

@@ -2,8 +2,9 @@ import Feature from "../Feature";
 import { IPoint, IPixelPos, IRelativePos, ITxt } from "../../Interface";
 import SCtrlPnt from "../function-shape/ctrl-pnts/SCtrlPnt";
 import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
-import { FontFamily } from "@/Constants";
+import { ClassName, FontFamily } from "@/Constants";
 
+// 线段元素
 class Line extends Feature {
 
     static freeLineConfig = {  // 自由画笔线条粗细参数配置
@@ -29,7 +30,7 @@ class Line extends Feature {
 
     constructor(pointArr: IRelativePos[] = []) {
         super(pointArr);
-        this.className = "Line";
+        this.className = ClassName.LINE;
         this.isClosePath = false;
         this.hoverStyle = '#F8EA7A'
     }

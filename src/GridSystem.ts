@@ -1,4 +1,4 @@
-import { CoordinateSystem, FontFamily, Events, Orientation } from "./Constants";
+import { CoordinateSystem, FontFamily, Events, Orientation, ClassName } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
@@ -28,7 +28,7 @@ class GridSystem {
     static Shortcuts: Shortcuts | null;
     static Eraser: EraserPnt | null;
 
-    className = 'GridSystem';
+    className:string = ClassName.GRIDSYSTEM;
     scale: number = 10;
     angle: number = 0;
     pageSlicePos: IPoint = {
@@ -109,7 +109,7 @@ class GridSystem {
 
     // --------------------以下是私有的方法----------------------------
     // --------------------绘制元素，以及鼠标事件监听----------------------------
-    private drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
+    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
         features.forEach(f => {
             const isBasic = isBasicFeature(f);
             if (f.hidden) return;
@@ -146,7 +146,7 @@ class GridSystem {
         })
     }
 
-    private initEventListener() {
+    initEventListener() {
         this.domElement.addEventListener("mousemove", this.mouseMove);
         this.domElement.addEventListener("mousedown", this.mouseDown);
         this.domElement.addEventListener("mousewheel", this.mouseWheel);
@@ -312,7 +312,7 @@ class GridSystem {
                 focusNode._orientations = null;
                 focusNode.onmouseup && focusNode.onmouseup(e);
                 focusNode.ondragend && focusNode.ondragend(e);
-                if ((isBasicFeature(this.focusNode) || this.getFocusNode() instanceof SelectArea) && moveFlag) {
+                if ((isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea) && moveFlag) {  // 鼠标抬起后,记录一下
                     GridSystem.Stack && GridSystem.Stack.record(); // 移动时候记录,没移动的不记录
                 }
             }
@@ -912,45 +912,45 @@ class GridSystem {
         let feature: IBasicFeature | undefined;
         if (this.features.find(f => f.id === props.id)) return;
         switch (props.className) {
-            case 'Img':
+            case ClassName.IMG:
                 if (props.position && props.size) {
                     feature = new Img(props.src || '', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
                 break;
-            case 'Rect':
+            case ClassName.RECT:
                 if (props.position && props.size) {
                     feature = new Rect(props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
                 break;
-            case 'Text':
+            case ClassName.TEXT:
                 if (props.position && props.size) {
                     feature = new Text(props.textInfo ? props.textInfo.txt : '占位符', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
                 break;
-            case 'Circle':
+            case ClassName.CIRCLE:
                 if (props.position && props.size) {
                     feature = new Circle(props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
                     throw "参数异常"
                 }
                 break;
-            case 'Group':
+            case ClassName.GROUP:
                 if (props.position && props.size) {
                     feature = new Group([])
                 } else {
                     throw "参数异常"
                 }
                 break;
-            case 'Line':
+            case ClassName.LINE:
                 feature = new Line(props.pointArr)
                 break;
-            case 'Link':
+            case ClassName.LINK:
                 // if (props.startFeatureId && props.endFeatureId) {
                 //     const startFeature = this.findFeatureById(props.startFeatureId, true);
                 //     const endFeature = this.findFeatureById(props.endFeatureId, true);
@@ -1028,28 +1028,23 @@ class GridSystem {
         props.isOnlyVerticalMove != undefined && (feature.isOnlyVerticalMove = props.isOnlyVerticalMove)
         props.isHorizonalRevert != undefined && (feature.isHorizonalRevert = props.isHorizonalRevert)
         props.isVerticalRevert != undefined && (feature.isVerticalRevert = props.isVerticalRevert)
-
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
             props.radius != undefined && (feature.radius = props.radius);
         }
-
         if (feature instanceof Img) {
             props.src != undefined && (feature.src = props.src);
         }
-
         if (feature instanceof Text) {
             props.fitSize != undefined && (feature.fitSize = props.fitSize);
             props.textInfo != undefined && (feature.textInfo = props.textInfo);
         }
-
         if (feature instanceof Line) {
             props.isFreeStyle != undefined && (feature.isFreeStyle = props.isFreeStyle);
             props.lineWidthArr != undefined && (feature.lineWidthArr = props.lineWidthArr);
             props.tipInfo != undefined && (feature.tipInfo = props.tipInfo);
             props.actualPointArr != undefined && (feature.actualPointArr = props.actualPointArr)
         }  // 38
-
         return feature;
     }
     recordFeature(f: IBasicFeature, onlyStyle = false): Partial<IProps> {  // 复制或读取元素属性
@@ -1130,7 +1125,7 @@ class GridSystem {
         const bbox = this.features.find(f => f instanceof Bbox);
         this.removeFeature(bbox, false);
         if (feature) {
-            if (feature.className === 'Link' || feature.isFixedSize || !feature.cbTransform) return;
+            if (feature.className === ClassName.LINK || feature.isFixedSize || !feature.cbTransform) return;
             const nbbox = new Bbox(feature);
             return nbbox;
         }
@@ -1226,7 +1221,7 @@ class GridSystem {
                 });
                 ctx.fillStyle = this.background
                 ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-                if(isBasicFeature(feature, false)){
+                if (isBasicFeature(feature, false)) {
                     feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
                 }
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });

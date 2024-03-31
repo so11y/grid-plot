@@ -1,8 +1,8 @@
-import { AlignType, CtrlType, Orientation } from "../Constants";
+import { AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
-import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
+import { getLenOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
 import gsap from "gsap";
 
 class Feature {
@@ -55,7 +55,7 @@ class Feature {
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0; // 虚线位移
 
-    className = 'Feature'  //类名
+    className = ClassName.FEATURE  //类名
     id: string  // id,元素的唯一标识
     name: string = ''  // 元素的name, 给当前元素起个名字
     hidden: boolean = false;   // 是否隐藏元素,跳过渲染
@@ -225,7 +225,7 @@ class Feature {
      * @param path 
      */
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
+        if (Feature.TargetRender && Feature.TargetRender?.className === ClassName.GRIDSYSTEM) {
             if (this.cbCapture && this.gls.cbSelectFeature) {
                 const mousePos = this.gls.mousePos;
                 let isPointIn = false;
@@ -366,9 +366,9 @@ class Feature {
             default:
                 break;
         }
-        if (isParent) {
+        if (isParent && isBasicFeature(this)) {
             this.gls.enableBbox();
-            this.gls.enableBbox(this);
+            this.gls.enableBbox(this as unknown as IBasicFeature);
         }
     }
 
@@ -462,7 +462,7 @@ class Feature {
 
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender.className === 'GridSystem' && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
+        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {

@@ -127,6 +127,27 @@ enum AlignType {
     VERTICAL = 'vertical',
 }
 
+enum ClassName {
+    IMG = 'img',
+    CIRCLE = 'circle',
+    LINE = 'line',
+    LINK = 'link',
+    RECT = 'rect',
+    TEXT = 'text',
+    RCTRLPNT = 'rctrlpnt',
+    SCTRLPNT = 'sctrlpnt',
+    ADSORBPNT = 'adsorbpnt',
+    ANCHORPNT = 'anchorpnt',
+    ERASERPNT = 'eraserpnt',
+    BBOX = 'bbox',
+    GROUP = 'group',
+    PNT = 'pnt',
+    SELECTAREA = 'selectarea',
+    GRIDSYSTEM = 'gridsystem',
+    MINIMAP = 'minimap',
+    FEATURE = 'feature',
+}
+
 export {
     CoordinateSystem,
     CtrlType,
@@ -140,4 +161,5 @@ export {
     SelectMode,
     DrawAreaMode,
     AlignType,
+    ClassName,
 }

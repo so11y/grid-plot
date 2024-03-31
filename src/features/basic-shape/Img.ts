@@ -1,8 +1,9 @@
-import { AlignType } from "@/Constants";
+import { AlignType, ClassName } from "@/Constants";
 import GridSystem from "@/GridSystem";
 import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 
+// 图片/视频
 class Img extends Rect {
 
     domElement: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
@@ -17,7 +18,7 @@ class Img extends Rect {
         }
         
         super(x, y, width, height);
-        this.className = "Img";
+        this.className = ClassName.IMG;
         this.src = src;
         if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
             const video = this.domElement = document.createElement("video") as HTMLVideoElement;

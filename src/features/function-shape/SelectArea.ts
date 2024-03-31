@@ -1,5 +1,5 @@
 import { IBasicFeature } from "@/Interface";
-import { DrawAreaMode, SelectMode } from "../../Constants";
+import { ClassName, DrawAreaMode, SelectMode } from "../../Constants";
 import { isPntInPolygon, getMousePos, isBasicFeature } from "../../utils";
 import Group from "./Group";
 
@@ -13,7 +13,7 @@ class SelectArea extends Group {
     constructor(fn = () => { }) {
         super([]);
         this.callback = fn;
-        this.className = "SelectArea";
+        this.className = ClassName.SELECTAREA;
         this.cbTransformChild = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "rgba(220, 233, 126, .4)"
         document.addEventListener("mousedown", this.setPointArr);

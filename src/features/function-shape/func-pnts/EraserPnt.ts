@@ -1,3 +1,4 @@
+import { ClassName } from "@/Constants";
 import { getMousePos } from "../../../utils";
 import Pnt from "../Pnt";
 
@@ -21,7 +22,7 @@ class EraserPnt extends Pnt {
         }
         super(0, 0, width, width);
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff";
-        this.className = "EraserPnt";
+        this.className = ClassName.ERASERPNT;
         this.zIndex = Infinity;
         this.isStroke = false;
         this.isFixedSize = true;

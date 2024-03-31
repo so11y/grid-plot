@@ -1,6 +1,5 @@
 
-import { AlignType, CoordinateSystem } from "./Constants";
-import Group from "./features/function-shape/Group";
+import { AlignType, ClassName, CoordinateSystem } from "./Constants";
 import { IPoint, ISize, IVctor } from "./Interface";
 
 /**
@@ -370,14 +369,14 @@ function beautifyHTML(html: string, indentSize = 2) {
 // 判断是否时基础元素
 function isBasicFeature(f?: any, hasGroup = true) {  //  hasGroup 是否包括Group类元素
     if (!f) return false;
-    if(!hasGroup && f.className === 'Group') return
-    // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof SCtrlPnt)
-    return f.className == 'Img' || f.className == 'Line' || f.className == 'Link' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
+    if (!hasGroup && f.className === ClassName.GROUP) return
+    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.LINK || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP
 }
 // 判断是否时控制点元素
-function isCtrlFeature(f?: any) {
+function isCtrlFeature(f?: any, hasAnchor = true) {
     if (!f) return false;
-    return f.className === 'SCtrlPnt' || f.className === 'RCtrlPnt' || f.className === 'AnchorPnt'
+    if (!hasAnchor && f.className === ClassName.ANCHORPNT) return
+    return f.className === ClassName.SCTRLPNT || f.className === ClassName.RCTRLPNT || f.className === ClassName.ANCHORPNT
 }
 
 function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
@@ -406,6 +405,27 @@ function determinePosition(pointA: IPoint, pointB: IPoint) {
             return AlignType.TOP;
         }
     }
+}
+
+// 绘制圆角矩形
+function getRoundedRect(x: number, y: number, w: number, h: number, r: number) {
+    const path = new Path2D();
+    path.moveTo(x + r, y);
+    path.lineTo(x + w / 4 - r, y);
+    path.arc(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
+    path.lineTo(x + w, y + h - r);
+    path.arc(x + w - r, y + h - r, r, 0, Math.PI * 0.5);
+    path.lineTo(x + r, y + h);
+    path.arc(x + r, y + h - r, r, Math.PI * 0.5, Math.PI);
+    path.lineTo(x, y + r);
+    path.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
+    return path;
+}
+
+function getCirclePoints(x: number, y: number, width: number, height: number, angle = 0) {
+    let O: [number, number] = [x, y];
+    let points = getPntsInEllipse(O, width / 2, height / 2, 0, 360, angle);
+    return points;
 }
 
 export {
@@ -444,4 +464,7 @@ export {
     isPntInPolygon,
     isBasicFeature,
     isCtrlFeature,
+
+    getRoundedRect,
+    getCirclePoints,
 }
