@@ -916,52 +916,52 @@ class GridSystem {
                 if (props.position && props.size) {
                     feature = new Img(props.src || '', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
-                    throw "参数异常"
+                    throw "参数异常!"
                 }
                 break;
             case ClassName.RECT:
                 if (props.position && props.size) {
                     feature = new Rect(props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
-                    throw "参数异常"
+                    throw "参数异常!"
                 }
                 break;
             case ClassName.TEXT:
                 if (props.position && props.size) {
                     feature = new Text(props.textInfo ? props.textInfo.txt : '占位符', props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
-                    throw "参数异常"
+                    throw "参数异常!"
                 }
                 break;
             case ClassName.CIRCLE:
                 if (props.position && props.size) {
                     feature = new Circle(props.position.x, props.position.y, props.size.width, props.size.height)
                 } else {
-                    throw "参数异常"
+                    throw "参数异常!"
                 }
                 break;
             case ClassName.GROUP:
                 if (props.position && props.size) {
                     feature = new Group([])
                 } else {
-                    throw "参数异常"
+                    throw "参数异常!"
                 }
                 break;
             case ClassName.LINE:
                 feature = new Line(props.pointArr)
                 break;
             case ClassName.LINK:
-                // if (props.startFeatureId && props.endFeatureId) {
-                //     const startFeature = this.findFeatureById(props.startFeatureId, true);
-                //     const endFeature = this.findFeatureById(props.endFeatureId, true);
-                //     if (startFeature && endFeature) {
-                //         feature = new Link(startFeature, endFeature)
-                //     } else {
-                //         throw "参数异常"
-                //     }
-                // } else {
-                //     throw "参数异常"
-                // }
+                if (props.startFeature && props.endFeature) {
+                    const startFeature = this.features.find(f=> f.id === (props.startFeature && props.startFeature.id));
+                    const endFeature = this.features.find(f=> f.id === (props.endFeature && props.endFeature.id));
+                    if (startFeature && endFeature) {
+                        feature = new Link(startFeature, endFeature)
+                    } else {
+                        throw "参数异常!"
+                    }
+                } else {
+                    throw "参数异常!"
+                }
                 break;
             default:
                 break;
@@ -983,7 +983,7 @@ class GridSystem {
                     // }
                 }
             } else {
-                throw "参数异常,缺少id"
+                throw "参数异常!,缺少id"
             }
         }
         return feature;

@@ -31,30 +31,6 @@ enum CtrlType {
     // BEZIER_POINT = "bezierPoint"  // 贝塞尔曲线控制点
 }
 
-// 元素的类型,小类
-enum BlockType {
-    RECT = "rect",
-    CIRCLE = "circle",
-    IMAGE = "image",
-    VIDEO = "video",
-    FREELINE = "freeline",
-    TEXT = "text",
-    LINE = "line",
-    PIPE = "pipe",
-    LINK = "link",
-    TRIANGLE = "triangle",
-    POLYGON = "polygon",
-    ARROW = "arrow",
-    CUSTOM = "custom",
-}
-
-// 操作的类型
-enum OperateType {
-    ADD = "add",
-    DEL = "del",
-    UPDATE = "update",
-}
-
 // link的起点终点标识
 enum LinkMark {
     START = "start",
@@ -151,8 +127,6 @@ enum ClassName {
 export {
     CoordinateSystem,
     CtrlType,
-    BlockType,
-    OperateType,
     LinkMark,
     Events,
     LinkStyle,

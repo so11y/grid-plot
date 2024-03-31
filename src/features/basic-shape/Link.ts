@@ -56,7 +56,6 @@ export default class Link extends Line {
             this.endFeature = endFeature;
             endFeature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
         }
-        this.gls.addFeature(this, false)
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
