@@ -1,6 +1,6 @@
 
 import { AlignType } from "@/Constants";
-import { IBasicFeature, IPoint, IRelativePos } from "@/Interface";
+import { IBasicFeature, IPixelPos, IPoint, IRelativePos } from "@/Interface";
 import { getLenOfPntToLine, getLenOfTwoPnts, isBasicFeature } from "@/utils";
 import Feature from "../Feature";
 
@@ -267,6 +267,10 @@ export default class Group extends Feature {
             width: getLenOfTwoPnts(leftTop, rightTop),
             height: getLenOfTwoPnts(leftTop, leftBottom),
         }
+    }
+
+    getSvg(pointArr?: IPixelPos[], lineWidth?: number): string {
+        return ""
     }
 
     // flex-start：子项在起点位置对齐

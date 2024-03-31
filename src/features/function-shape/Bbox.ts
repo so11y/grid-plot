@@ -6,8 +6,8 @@ import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
 import AnchorPnt from "./func-pnts/AnchorPnt";
-import BCtrlPnt from "./ctrl-pnts/BCtrlPnt";
-import CtrlPnt from "./ctrl-pnts/CtrlPnt";
+import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
+import SCtrlPnt from "./ctrl-pnts/SCtrlPnt";
 import SelectArea from "./SelectArea";
 import Pnt from "./Pnt";
 
@@ -73,7 +73,6 @@ export default class Bbox extends Rect {
         target.children.forEach(f => {
             this.setPointArrPer(f, width, height);
         })
-        console.log(target.pntExtentPerOfBBox, "target.pntExtentPe");
     }
 
     // 初始化设置包围盒水平方向与垂直方向的向量
@@ -86,12 +85,12 @@ export default class Bbox extends Rect {
     initBCtrlPnt() {
         const pointArr = this.pointArr;
         pointArr.forEach((p, i) => {
-            const ctrlP = new CtrlPnt(this, i, Bbox.ctrlPSize);
+            const ctrlP = new SCtrlPnt(this, i, Bbox.ctrlPSize);
             ctrlP.name = CtrlType.SIZE_CTRL;
             ctrlP.translateEvents.push(this.onSizeChange.bind(ctrlP))
         })
         // 旋转点
-        const bCtrlP = new BCtrlPnt(this, () => {
+        const bCtrlP = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const vct = createVctor(pointArr[0], pointArr[3]);   // 控制点1,2的向量
             const midPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
@@ -146,7 +145,7 @@ export default class Bbox extends Rect {
         })
 
         // 左边
-        const bCtrlP2 = new BCtrlPnt(this, () => {
+        const bCtrlP2 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[3]);
             return widthCtrlPnt;
@@ -183,7 +182,7 @@ export default class Bbox extends Rect {
         })
 
         // 右边
-        const bCtrlP3 = new BCtrlPnt(this, () => {
+        const bCtrlP3 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const widthCtrlPnt = getMidOfTwoPnts(pointArr[1], pointArr[2]);
             return widthCtrlPnt;
@@ -221,7 +220,7 @@ export default class Bbox extends Rect {
         })
 
         // 上边
-        const bCtrlP4 = new BCtrlPnt(this, () => {
+        const bCtrlP4 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[0], pointArr[1]);
             return heightCtrlPnt;
@@ -258,7 +257,7 @@ export default class Bbox extends Rect {
         })
 
         // 下边
-        const bCtrlP5 = new BCtrlPnt(this, () => {
+        const bCtrlP5 = new RCtrlPnt(this, () => {
             const pointArr = this.pointArr;
             const heightCtrlPnt = getMidOfTwoPnts(pointArr[2], pointArr[3]);
             return heightCtrlPnt;
@@ -485,8 +484,8 @@ export default class Bbox extends Rect {
         }
     }
 
-    getCtrlPnts(): (CtrlPnt | BCtrlPnt)[] {
-        return this.gls.features.filter(f => (f.className == 'CtrlPnt' || f.className == 'BCtrlPnt') && f.parent == this) as (CtrlPnt | BCtrlPnt)[];
+    getCtrlPnts(): (SCtrlPnt | RCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == 'SCtrlPnt' || f.className == 'RCtrlPnt') && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
     }
 
     enableAnchorPnts(bool = true) {
@@ -583,6 +582,10 @@ export default class Bbox extends Rect {
                 this.gls.removeFeature(ap, false);
             })
         }
+    }
+
+    getAnchorPnts(): AnchorPnt[] {
+        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
     }
 
     destroy() {

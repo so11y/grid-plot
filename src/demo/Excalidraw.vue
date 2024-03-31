@@ -2,9 +2,9 @@
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
-                <div :class="['icon-wrap', { 'active': activeI === 0 }]" @click="onSelectTool(8)" title="锁定状态">
+                <!-- <div :class="['icon-wrap', { 'active': activeI === 0 }]" @click="onSelectTool(8)" title="锁定状态">
                     <i class="iconfont gls-xuanze"></i>
-                </div>
+                </div> -->
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
@@ -483,7 +483,7 @@ function onSelectTool(index = 0, param?: any) {
             }
             downMoveToFeature();
             break;
-        case 5: // 选择区域
+        case 5: // 创建文字
             var txt = prompt("请输入文字", "测试文字");
             if (txt) {
                 message.info("点击画布创建吧!")
@@ -763,10 +763,10 @@ function reset(clear = false) {
     // }
 
 
-    // let rect5 = new Rect(50, 50, width, width);
-    // rect5.name = "rect5"
-    // // rect5.cbTransform = false;
-    // gls.value.addFeature(rect5, false);
+    let rect5 = new Rect(50, 50, width, width);
+    rect5.name = "rect5"
+    // rect5.cbTransform = false;
+    gls.value.addFeature(rect5, false);
 
     // function getTreeData(root: Itree, ydist = 50) {
     //     let xdist = 150;
@@ -819,10 +819,10 @@ function reset(clear = false) {
     // // rect6.cbTransform = false;
     // gls.value.addFeature(rect6, false);
 
-    // let rect7 = new Rect(50, 50, width, width);
-    // // rect6.cbTransform = false;
-    // gls.value.addFeature(rect7, false);
-    // rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
+    let rect7 = new Rect(50, 50, width, width);
+    // rect6.cbTransform = false;
+    gls.value.addFeature(rect7, false);
+    rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
     // let link = new Link(rect5, rect6);
     // gls.value.addFeature(link, false);

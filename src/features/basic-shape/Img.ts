@@ -1,4 +1,5 @@
 import { AlignType } from "@/Constants";
+import GridSystem from "@/GridSystem";
 import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 
@@ -14,6 +15,7 @@ class Img extends Rect {
         if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
             throw "只支持0.5M一下的文件!"
         }
+        
         super(x, y, width, height);
         this.className = "Img";
         this.src = src;
@@ -33,13 +35,14 @@ class Img extends Rect {
                 video.play();
             })
         } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
-            const image = this.domElement = new Image();
+            this.domElement = new Image();
             this.domElement.src = src;
             if (!height) {
                 this.domElement.onload = () => {
                     const domElement = this.domElement as HTMLImageElement;
                     height = (domElement.height / domElement.width) * width;
                     this.setSize(width, height)
+                    GridSystem.Stack && GridSystem.Stack.record();
                 }
             }
         } else {

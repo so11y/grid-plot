@@ -3,7 +3,6 @@ import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
-import AnchorPnt from "./function-shape/AnchorPnt";
 import gsap from "gsap";
 
 class Feature {
@@ -288,7 +287,7 @@ class Feature {
         }
         setProps(feature);
         if (!this.gls.features.find(f => f === feature)) {
-            this.gls.addFeature(feature, true)
+            this.gls.addFeature(feature)
         }
     }
     removeChild(feature: Feature) { // 删除指定子元素
@@ -498,10 +497,6 @@ class Feature {
                 ctx.restore();
             }
         }
-    }
-
-    getAnchorPnts(): AnchorPnt[] {
-        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
     }
 
     toCenter(feature: Feature) { // 将元素移动到画中间

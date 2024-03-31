@@ -1,6 +1,5 @@
 import Rect from "@/features/basic-shape/Rect";
 import { IPixelPos } from "@/Interface";
-import { getLenOfTwoPnts } from "@/utils";
 import Feature from "../Feature";
 
 class Pnt extends Rect {

@@ -139,5 +139,5 @@ export {
     Orientation,
     SelectMode,
     DrawAreaMode,
-    AlignType
+    AlignType,
 }

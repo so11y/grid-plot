@@ -3,8 +3,8 @@ import { createVctor } from "../../../utils";
 import Bbox from "../Bbox";
 import Pnt from "../Pnt";
 
-// 自定义控制点元素
-class BCtrlPnt extends Pnt {
+// rotate 控制点元素
+class RCtrlPnt extends Pnt {
 
     getPoint: () => IPoint;
     lastAngle: number;
@@ -15,7 +15,7 @@ class BCtrlPnt extends Pnt {
         super(pos.x, pos.y, width, width);
         this.lastAngle = parent.angle;
         this.getPoint = fn;
-        this.className = "BCtrlPnt";
+        this.className = "RCtrlPnt";
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
@@ -46,4 +46,4 @@ class BCtrlPnt extends Pnt {
     }
 }
 
-export default BCtrlPnt;
+export default RCtrlPnt;

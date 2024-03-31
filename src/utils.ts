@@ -1,6 +1,7 @@
 
 import { AlignType, CoordinateSystem } from "./Constants";
-import { IPoint, IVctor, ISize, IVctor } from "./Interface";
+import Group from "./features/function-shape/Group";
+import { IPoint, ISize, IVctor } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
@@ -367,15 +368,16 @@ function beautifyHTML(html: string, indentSize = 2) {
 
 // ----------------------------判断型方法-------------------------------
 // 判断是否时基础元素
-function isBasicFeature(f?: any) {
+function isBasicFeature(f?: any, hasGroup = true) {  //  hasGroup 是否包括Group类元素
     if (!f) return false;
-    // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof CtrlPnt)
+    if(!hasGroup && f.className === 'Group') return
+    // return (f instanceof Rect || f instanceof Line || f instanceof Circle) && !(f instanceof AnchorPnt) && !(f instanceof SCtrlPnt)
     return f.className == 'Img' || f.className == 'Line' || f.className == 'Link' || f.className == 'Rect' || f.className == 'Text' || f.className == 'Circle' || f.className == 'Group'
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any) {
     if (!f) return false;
-    return f.className === 'CtrlPnt' || f.className === 'BCtrlPnt' || f.className === 'AnchorPnt'
+    return f.className === 'SCtrlPnt' || f.className === 'RCtrlPnt' || f.className === 'AnchorPnt'
 }
 
 function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {

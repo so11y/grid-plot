@@ -19,8 +19,6 @@ function drawRoundedRect(x: number, y: number, w: number, h: number, r: number) 
 
 class Rect extends Feature {
 
-    radius = 0;   // 做成圆,radius = width/10
-
     constructor(x: number = 0, y: number = 0, width: number = 15, height: number = 15) {   // 相对坐标
         const pointArr = getRectPoint({ x, y }, { width, height })
         super(pointArr);
