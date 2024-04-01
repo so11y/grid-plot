@@ -69,7 +69,8 @@ enum Events {
 enum LinkStyle {
     DEFAULT = 'default',  // 直线
     BROKEN = 'broken', // 折线
-    CURVE = 'curve'  // 曲线
+    CURVE_H = 'curve_h',  // 曲线
+    CURVE_V = 'curve_v'  // 曲线
 }
 
 // 对齐方向

@@ -69,7 +69,7 @@ class Feature {
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
     adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
-    pntMinDistance = 2;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
+    pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
         left: IPoint[],
         right: IPoint[]

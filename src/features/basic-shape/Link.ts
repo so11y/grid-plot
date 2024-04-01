@@ -10,7 +10,7 @@ let startIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 200  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.CURVE;
+    linkStyle: LinkStyle = LinkStyle.CURVE_H;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
     triangleInfo: ITriangle = {
@@ -64,8 +64,12 @@ export default class Link extends Line {
             case LinkStyle.BROKEN:
                 newPnts = this.getBrokenPoints(pointArr[0], pointArr[1]);
                 break;
-            case LinkStyle.CURVE:
-                newPnts = this.getCurvePoints(pointArr[0], pointArr[1]);
+            case LinkStyle.CURVE_V:
+                newPnts = this.getCurveVPoints(pointArr[0], pointArr[1]);
+                this.flowSegment(ctx, newPnts, lineWidth);
+                break;
+            case LinkStyle.CURVE_H:
+                newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
                 this.flowSegment(ctx, newPnts, lineWidth);
                 break;
             default:
@@ -139,20 +143,32 @@ export default class Link extends Line {
             case LinkStyle.BROKEN:
                 const pnts = [pointArr[1], pointArr[2]]
                 return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
-            case LinkStyle.CURVE:
+            case LinkStyle.CURVE_V: // CURVE_V或CURVE_H
+            case LinkStyle.CURVE_H: {
                 const mid = pointArr.length / 2
                 return [pointArr[mid - 1], pointArr[mid + 1]]
+            }
             default:
                 return [pointArr[0], pointArr[pointArr.length - 1]]
         }
     }
 
-    getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1.5): IPixelPos[] {
-        const vct1 = createVctor(startPos, { x: startPos.x, y: -1000000 });
-        const vct2 = createVctor(endPos, { x: endPos.x, y: -1000000 });
-        const cp1 = getPntInVct(startPos, vct1, (startPos.y - endPos.y) / ctrlExtent);
-        const cp2 = getPntInVct(endPos, vct2, (endPos.y - startPos.y) / ctrlExtent);
+    getCurveVPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1.5): IPixelPos[] {
+        const vct = [0, -1000000] as IVctor;
+        const cp1 = getPntInVct(startPos, vct, (startPos.y - endPos.y) / ctrlExtent);
+        const cp2 = getPntInVct(endPos, vct, (endPos.y - startPos.y) / ctrlExtent);
         const points = getPntsOf3Bezier(startPos, cp1, cp2, endPos, this.pntsLimit);
+        return points;
+    }
+
+    getCurveHPoints(startPos: IPixelPos, endPos: IPixelPos, degreex = .8, degreey = .3): IPixelPos[] {
+        const vct1 = [-100, 0] as IVctor;
+        const vct3 = [100, 0] as IVctor;
+        const cp1 = getPntInVct(startPos, vct1, (endPos.x - startPos.x) * degreex)
+        const scp = { x: cp1.x, y: cp1.y + (endPos.y - startPos.y) * degreey };
+        const cp2 = getPntInVct(endPos, vct3, (endPos.x - startPos.x) * degreex)
+        const ecp = { x: cp2.x, y: cp2.y + (startPos.y - endPos.y) * degreey };
+        const points = getPntsOf3Bezier(startPos, scp, ecp, endPos, this.pntsLimit);
         return points;
     }
 

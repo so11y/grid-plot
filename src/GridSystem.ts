@@ -1,4 +1,4 @@
-import { CoordinateSystem, FontFamily, Events, Orientation, ClassName } from "./Constants";
+import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
@@ -28,7 +28,7 @@ class GridSystem {
     static Shortcuts: Shortcuts | null;
     static Eraser: EraserPnt | null;
 
-    className:string = ClassName.GRIDSYSTEM;
+    className: string = ClassName.GRIDSYSTEM;
     scale: number = 10;
     angle: number = 0;
     pageSlicePos: IPoint = {
@@ -54,8 +54,7 @@ class GridSystem {
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
 
-    dragEndTransition: boolean | number = 2.3;  // 画布拖拽松开是否过渡，时间大于零表示过渡时间
-    dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ infinity
+    dragingSensitivity: number = 1.2;   // 拖拽时候的灵敏度, 建议 0 ~ 3
     friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
@@ -231,8 +230,8 @@ class GridSystem {
     }
 
     private mouseDown = (ev: any) => {
+        cancelAnimationFrame(this.timer2);
         const lastFocusNode = this.getFocusNode();
-        this.timer2 && cancelAnimationFrame(this.timer2);
         const curPageSlicePos = { x: this.pageSlicePos.x, y: this.pageSlicePos.y }
         const velocity = { x: 0, y: 0 }; // 速度分量
         const lastMove = { x: 0, y: 0 } // 上一次鼠标位置
@@ -952,8 +951,14 @@ class GridSystem {
                 break;
             case ClassName.LINK:
                 if (props.startFeature && props.endFeature) {
-                    const startFeature = this.features.find(f=> f.id === (props.startFeature && props.startFeature.id));
-                    const endFeature = this.features.find(f=> f.id === (props.endFeature && props.endFeature.id));
+                    let startFeature, endFeature;
+                    if (props.startFeature.id && props.endFeature.id) {  // 是元素
+                        startFeature = this.features.find(f => f.id === (props.startFeature && props.startFeature.id));
+                        endFeature = this.features.find(f => f.id === (props.endFeature && props.endFeature.id));
+                    } else {  // 是点坐标
+                        startFeature = props.startFeature;
+                        endFeature = props.endFeature;
+                    }
                     if (startFeature && endFeature) {
                         feature = new Link(startFeature, endFeature)
                     } else {
@@ -973,7 +978,7 @@ class GridSystem {
                 if (props.children) {
                     props.children.forEach(cfProp => {
                         const cf = this.features.find(f => f.id === cfProp.id);
-                        feature && feature.addChild(cf as IBasicFeature || this.createFeature(cfProp))
+                        feature && feature.addChild(cf as IBasicFeature || this.createFeature(cfProp as IProps), {}, false)
                     })
                     if (feature instanceof Group) {  // gourp添加子元素需要resize
                         feature.toResize(feature.children);
@@ -1047,7 +1052,7 @@ class GridSystem {
         }  // 38
         return feature;
     }
-    recordFeature(f: IBasicFeature, onlyStyle = false): Partial<IProps> {  // 复制或读取元素属性
+    recordFeature(f: IBasicFeature | IProps, onlyStyle = false): Partial<IProps> {  // 复制或读取元素属性
         const styleProps = {
             fillStyle: f.fillStyle,
             focusStyle: f.focusStyle,
@@ -1064,6 +1069,7 @@ class GridSystem {
             textInfo: f instanceof Text ? f.textInfo : {},
             tipInfo: f instanceof Line ? f.tipInfo : {},
             triangleInfo: f instanceof Link ? f.actualPointArr : {},
+            linkStyle: f instanceof Link ? f.linkStyle : LinkStyle.DEFAULT,
         }
         if (onlyStyle) {
             return styleProps as Partial<IProps>
@@ -1099,9 +1105,9 @@ class GridSystem {
                 startFeature: f instanceof Link ? f.startFeature ? this.recordFeature(f.startFeature as IBasicFeature) as Feature : null : null,
                 endFeature: f instanceof Link ? f.endFeature ? this.recordFeature(f.endFeature as IBasicFeature) as Feature : null : null,
 
-                children: f.children.map(cf => this.recordFeature(cf as IBasicFeature)) as IProps[],
-                ...styleProps
-                // parent: f.parent ? f.parent.id: '',
+                children: f.children ? f.children.map(cf => this.recordFeature(cf)) as IProps[] : [],
+                // parent: f.parent ? this.recordFeature(f.parent as IBasicFeature) as Feature: null,
+                ...styleProps,
             }
         }
     }

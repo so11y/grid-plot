@@ -79,7 +79,7 @@
                     <li @click="reset(true)"><i class="iconfont gls-shanchu" /> 重置画布</li>
                     <!-- <li @click="darkTheme"><i class="iconfont gls-shanchu" /> 深色模式</li> -->
                     <a-divider type="horizonal"></a-divider>
-                    <li @click="linkTo('https://littlesunnn.github.io/')"><i class="iconfont gls-github" /> GitHub</li>
+                    <li @click="linkTo('https://github.com/littlesunnn/grid-plot.git')"><i class="iconfont gls-github" /> GitHub</li>
                     <li @click="linkTo('https://space.bilibili.com/436686692?spm_id_from=333.788.0.0')"><i
                             class="iconfont gls-bilibili" /> 关注up实时进展...</li>
                     <a-divider type="horizonal"></a-divider>
@@ -815,17 +815,17 @@ function reset(clear = false) {
 
     // console.log(getTreeData(treeNodes));
 
-    // let rect6 = new Rect(220, 220, width, width);
-    // // rect6.cbTransform = false;
-    // gls.value.addFeature(rect6, false);
+    let rect6 = new Rect(220, 220, width, width);
+    // rect6.cbTransform = false;
+    gls.value.addFeature(rect6, false);
 
     let rect7 = new Rect(50, 50, width, width);
     // rect6.cbTransform = false;
     gls.value.addFeature(rect7, false);
     rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
-    // let link = new Link(rect5, rect6);
-    // gls.value.addFeature(link, false);
+    let link = new Link(rect5, rect6);
+    gls.value.addFeature(link, false);
     // link.triangleInfo.hidden = false;
     // setTimeout(() => {
     //     console.log(link.getPointOfPer(.9));
