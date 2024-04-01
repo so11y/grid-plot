@@ -54,11 +54,11 @@ interface ITriangle {
     fill: string,
 }
 
-type IProps = Partial<Feature & Text & Img & Link & Group> & {
+type IProps = Partial<Feature & Text & Img & Link & Group & Line> & {
     id: string,
     children: IProps[]
 }
 
-type IBasicFeature = Line | Rect | Circle | Group
+type IBasicFeature = Line | Rect | Circle | Group | Link
 
 export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature };

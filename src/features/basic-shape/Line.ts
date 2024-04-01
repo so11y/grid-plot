@@ -1,9 +1,10 @@
 import Feature from "../Feature";
 import { IPoint, IPixelPos, IRelativePos, ITxt } from "../../Interface";
-import CtrlPnt from "../function-shape/ctrl-pnts/CtrlPnt";
+import SCtrlPnt from "../function-shape/ctrl-pnts/SCtrlPnt";
 import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
-import { FontFamily } from "@/Constants";
+import { ClassName, FontFamily } from "@/Constants";
 
+// 线段元素
 class Line extends Feature {
 
     static freeLineConfig = {  // 自由画笔线条粗细参数配置
@@ -15,7 +16,7 @@ class Line extends Feature {
 
     isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
-    curveCtrlPnt: CtrlPnt[] = [];
+    curveCtrlPnt: SCtrlPnt[] = [];
     actualPointArr: IPixelPos[] | null = null;   // 实际渲染到画布上的点集合
 
     tipInfo: ITxt = {
@@ -29,7 +30,7 @@ class Line extends Feature {
 
     constructor(pointArr: IRelativePos[] = []) {
         super(pointArr);
-        this.className = "Line";
+        this.className = ClassName.LINE;
         this.isClosePath = false;
         this.hoverStyle = '#F8EA7A'
     }
@@ -135,12 +136,11 @@ class Line extends Feature {
         this.clearCtrlPos();
         if (bool) {
             this.pointArr.forEach((p, i) => {
-                new CtrlPnt(this, i);
+                new SCtrlPnt(this, i);
             })
         } else {
             this.clearCtrlPos();
         }
-        console.log(this.children, this.curveCtrlPnt);
     }
 
     clearCtrlPos() {
@@ -151,11 +151,11 @@ class Line extends Feature {
     }
 
     getCtrlPnts() {
-        const ctrlPnts = this.gls.features.filter(f => (f instanceof CtrlPnt || f instanceof CtrlPnt) && f.parent === this);
+        const ctrlPnts = this.gls.features.filter(f => (f instanceof SCtrlPnt || f instanceof SCtrlPnt) && f.parent === this);
         return ctrlPnts;
     }
 
-    getPointOfPer(per:number){  // 获取选段百分之多少处的点 per: 0~1
+    getPointOfPer(per: number) {  // 获取选段百分之多少处的点 per: 0~1
         const pointArr = this.actualPointArr || this.pointArr;
         const index = Math.round(pointArr.length * per);
         return pointArr[index]
@@ -163,7 +163,7 @@ class Line extends Feature {
 
     getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {
         let path = ''
-        if (this.isFreeStyle) {
+        if (this.isFreeStyle) {  // 自由画笔
             pointArr.forEach((p, i) => {
                 if (i > 1) {
                     const { x: centerX, y: centerY } = pointArr[i - 1]
@@ -177,17 +177,23 @@ class Line extends Feature {
             })
             return path;
         } else {
-            pointArr.forEach((p, i) => {
-                if (i === 0) {
-                    path += `M ${p.x} ${p.y} `
-                } else {
-                    path += `L ${p.x} ${p.y} `
+            let path = super.getSvg(pointArr, lineWidth);
+            if (this.tipInfo.txt) {
+                const [startP, endP] = this.getTwoPntByTip(pointArr);
+                const center = getMidOfTwoPnts(startP, endP);
+                let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
+                if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
+                    angle += 180  // 镜像翻转,文字始终朝上
                 }
-            })
-            if (this.isClosePath) {
-                path += ' Z'
+                const fontSize = this.gls.getRatioSize(this.tipInfo.fontSize);
+                const width = fontSize * this.tipInfo.txt.length;
+                path += `
+                <g transform="rotate(${angle} ${center.x} ${center.y})">
+                <text x="${center.x - width / 2}" y="${center.y}" dominant-baseline="hanging" style="fill:${this.tipInfo.color}; font-family: '${this.tipInfo.fontFamily}'; font-size: ${fontSize}; font-weight:${this.tipInfo.bolder ? 'bolder' : ''};"
+                >${this.tipInfo.txt}</text>
+                </g>`
             }
-            return `<path d="${path}" stroke="${this.strokeStyle}" stroke-width="${lineWidth}" fill="${this.isClosePath ? this.fillStyle : 'transparent'}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
+            return path;
         }
     }
 

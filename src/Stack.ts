@@ -28,7 +28,7 @@ class Stack {
         this.statusList.push(featurePropsArr);
         this.pointer = this.statusList.length - 1;
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
-        // console.log("记录一下", featurePropsArr);
+        console.log("记录一下", featurePropsArr);
     }
     // [featuresArr1, featuresArr2, featuresArr3]
 

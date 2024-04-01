@@ -1,3 +1,4 @@
+import { ClassName } from "./Constants";
 import GridSystem from "./GridSystem";
 import { getMousePos } from "./utils"
 
@@ -10,7 +11,7 @@ interface ViewRect {
 
 // 小地图
 class MiniMap extends GridSystem {
-    className = 'MiniMap'
+    className = ClassName.MINIMAP
     // static gls: GridSystem;
     viewRect: ViewRect;  // 当前显示的区域
     isDraging: boolean;  // 是否正在渲染中

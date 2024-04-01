@@ -1,3 +1,4 @@
+import { ClassName } from "@/Constants";
 import { IBasicFeature, IPoint } from "../../../Interface";
 import Pnt from "../Pnt";
 
@@ -12,7 +13,7 @@ class AnchorPnt extends Pnt {
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
-        this.className = "AnchorPnt";
+        this.className = ClassName.ANCHORPNT;
         this.isFixedSize = true;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;

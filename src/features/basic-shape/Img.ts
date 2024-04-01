@@ -1,7 +1,9 @@
-import { AlignType } from "@/Constants";
+import { AlignType, ClassName } from "@/Constants";
+import GridSystem from "@/GridSystem";
 import { IPoint, IPixelPos } from "../../Interface";
 import Rect from "./Rect";
 
+// 图片/视频
 class Img extends Rect {
 
     domElement: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
@@ -14,8 +16,9 @@ class Img extends Rect {
         if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
             throw "只支持0.5M一下的文件!"
         }
+        
         super(x, y, width, height);
-        this.className = "Img";
+        this.className = ClassName.IMG;
         this.src = src;
         if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
             const video = this.domElement = document.createElement("video") as HTMLVideoElement;
@@ -33,13 +36,14 @@ class Img extends Rect {
                 video.play();
             })
         } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
-            const image = this.domElement = new Image();
+            this.domElement = new Image();
             this.domElement.src = src;
             if (!height) {
                 this.domElement.onload = () => {
                     const domElement = this.domElement as HTMLImageElement;
                     height = (domElement.height / domElement.width) * width;
                     this.setSize(width, height)
+                    GridSystem.Stack && GridSystem.Stack.record();
                 }
             }
         } else {

@@ -2,9 +2,9 @@
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
-                <div :class="['icon-wrap', { 'active': activeI === 0 }]" @click="onSelectTool(8)" title="锁定状态">
+                <!-- <div :class="['icon-wrap', { 'active': activeI === 0 }]" @click="onSelectTool(8)" title="锁定状态">
                     <i class="iconfont gls-xuanze"></i>
-                </div>
+                </div> -->
                 <a-divider type="vertical"></a-divider>
                 <div :class="['icon-wrap subscript', { 'active': activeI === 0 }]" @click="onSelectTool(0)" title="区域选择">
                     <i class="iconfont gls-kuangxuan"></i>
@@ -79,7 +79,7 @@
                     <li @click="reset(true)"><i class="iconfont gls-shanchu" /> 重置画布</li>
                     <!-- <li @click="darkTheme"><i class="iconfont gls-shanchu" /> 深色模式</li> -->
                     <a-divider type="horizonal"></a-divider>
-                    <li @click="linkTo('https://littlesunnn.github.io/')"><i class="iconfont gls-github" /> GitHub</li>
+                    <li @click="linkTo('https://github.com/littlesunnn/grid-plot.git')"><i class="iconfont gls-github" /> GitHub</li>
                     <li @click="linkTo('https://space.bilibili.com/436686692?spm_id_from=333.788.0.0')"><i
                             class="iconfont gls-bilibili" /> 关注up实时进展...</li>
                     <a-divider type="horizonal"></a-divider>
@@ -483,7 +483,7 @@ function onSelectTool(index = 0, param?: any) {
             }
             downMoveToFeature();
             break;
-        case 5: // 选择区域
+        case 5: // 创建文字
             var txt = prompt("请输入文字", "测试文字");
             if (txt) {
                 message.info("点击画布创建吧!")
@@ -613,6 +613,8 @@ function reset(clear = false) {
     setSize(canvasDom);
     startTime(gls.value as GridSystem);
 
+    let width = getUnitSize();
+
     // let rect = new Rect(100, 100, 100, 100)
     // rect.radius = 2;
     // rect.rotate(60)
@@ -634,17 +636,18 @@ function reset(clear = false) {
     // let circle = new Circle(280, 180, 30, 30)
     // gls.value.addFeature(circle, false)
 
-    // var line = new Line([
-    //     { x: 210, y: 60 },
-    //     { x: 300, y: 90 },
-    // ])
-    // line.tipInfo.txt = "测试文本"
-    // // line.enableCtrlPnts();
-    // gls.value.addFeature(line, false)
+    var line = new Line([
+        { x: 210, y: 60 },
+        { x: 300, y: 90 },
+        { x: 350, y: 190 },
+    ])
+    line.tipInfo.txt = "测试文本"
+    line.enableCtrlPnts();
+    gls.value.addFeature(line, false)
 
 
-    // let img = new Img("/img2.png", -1400, 100);
-    // gls.value.addFeature(img, false)
+    let img = new Img("/img2.png", 400, 100);
+    gls.value.addFeature(img, false)
 
     // // 合并为组
     // let group = new Group([rect, rect2, circle]);
@@ -677,11 +680,140 @@ function reset(clear = false) {
     // //     }
     // // })
 
-    let width = getUnitSize();
+    // interface Itree {
+    //     name: string,
+    //     children: Itree[],
+    //     x: number,
+    //     y: number,
+    // }
+
+    // const treeNodes = {
+    //     name: "根节点",
+    //     x: 50, y: 50,
+    //     children: [
+    //         {
+    //             name: "子节点1",
+    //             children: [
+    //                 {
+    //                     name: "孙节点1",
+    //                     children: [
+    //                         {
+    //                             name: "曾孙节点1",
+    //                             children: []
+    //                         },
+    //                         {
+    //                             name: "曾孙节点2",
+    //                             children: [
+    //                                 {
+    //                                     name: "玄孙节点1",
+    //                                     children: []
+    //                                 }
+    //                             ]
+    //                         }
+    //                     ]
+    //                 },
+    //                 {
+    //                     name: "孙节点2",
+    //                     children: []
+    //                 }
+    //             ]
+    //         },
+    //         {
+    //             name: "子节点2",
+    //             children: [
+    //                 {
+    //                     name: "孙节点3",
+    //                     children: [
+    //                         {
+    //                             name: "曾孙节点3",
+    //                             children: [
+    //                                 {
+    //                                     name: "玄孙节点2",
+    //                                     children: [
+    //                                         {
+    //                                             name: "来孙节点1",
+    //                                             children: []
+    //                                         }
+    //                                     ]
+    //                                 }
+    //                             ]
+    //                         },
+    //                         {
+    //                             name: "曾孙节点4",
+    //                             children: []
+    //                         }
+    //                     ]
+    //                 },
+    //                 {
+    //                     name: "孙节点4",
+    //                     children: [
+    //                         {
+    //                             name: "曾孙节点5",
+    //                             children: []
+    //                         }
+    //                     ]
+    //                 }
+    //             ]
+    //         },
+    //         {
+    //             name: "子节点3",
+    //             children: []
+    //         }
+    //     ]
+    // }
+
+
     let rect5 = new Rect(50, 50, width, width);
     rect5.name = "rect5"
     // rect5.cbTransform = false;
     gls.value.addFeature(rect5, false);
+
+    // function getTreeData(root: Itree, ydist = 50) {
+    //     let xdist = 150;
+    //     if (root.children && root.children.length > 1) {
+    //         let bool = true;
+    //         root.children.forEach(item => {
+    //             item.x = root.x;
+    //             item.y = root.y + ydist;
+    //             if (bool) {
+    //                 item.x += xdist
+    //             } else {
+    //                 item.x -= xdist
+    //             }
+    //             bool = !bool;
+    //             if (bool) {
+    //                 xdist += 50
+    //             }
+    //             if (item.children) {
+    //                 getTreeData(item, ydist + 50);
+    //             }
+    //         })
+    //     } else if(root.children.length == 1){
+    //         root.children[0].x = root.x;
+    //         root.children[0].y = root.y + ydist / 2;
+    //     }
+    //     return root;
+    // }
+
+    // function setTreeData(root: Itree, gls: GridSystem) {
+    //     const rect1 = new Rect(root.x, root.y, width, width);
+    //     gls.addFeature(rect1, false);
+    //     if (root.children) {
+    //         root.children.forEach(cd => {
+    //             const rect2 = new Rect(cd.x, cd.y, width, width);
+    //             gls.addFeature(rect2, false);
+    //             let link = new Link(rect1, rect2);
+    //             gls.addFeature(link, false);
+    //             if (cd.children) {
+    //                 setTreeData(cd, gls)
+    //             }
+    //         })
+    //     }
+    // }
+
+    // setTreeData(getTreeData(treeNodes), gls.value)
+
+    // console.log(getTreeData(treeNodes));
 
     let rect6 = new Rect(220, 220, width, width);
     // rect6.cbTransform = false;
@@ -690,11 +822,11 @@ function reset(clear = false) {
     let rect7 = new Rect(50, 50, width, width);
     // rect6.cbTransform = false;
     gls.value.addFeature(rect7, false);
-    rect5.addChild(rect7, {cbSelect: false, cbCapture: false})
+    rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
     let link = new Link(rect5, rect6);
     gls.value.addFeature(link, false);
-    link.triangleInfo.hidden = false;
+    // link.triangleInfo.hidden = false;
     // setTimeout(() => {
     //     console.log(link.getPointOfPer(.9));
     // }, 100);

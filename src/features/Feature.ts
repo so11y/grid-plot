@@ -1,9 +1,8 @@
-import { AlignType, CtrlType, Orientation } from "../Constants";
+import { AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
-import { getLenOfTwoPnts, getRotatePnt, getUuid } from "../utils";
-import AnchorPnt from "./function-shape/AnchorPnt";
+import { getLenOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
 import gsap from "gsap";
 
 class Feature {
@@ -56,12 +55,11 @@ class Feature {
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0; // 虚线位移
 
-    className = 'Feature'  //类名
+    className = ClassName.FEATURE  //类名
     id: string  // id,元素的唯一标识
     name: string = ''  // 元素的name, 给当前元素起个名字
     hidden: boolean = false;   // 是否隐藏元素,跳过渲染
     position: IRelativePos = { x: 0, y: 0 }  // 元素包围盒的中心点, 一般Rect类型用
-    offset: IRelativePos = { x: 0, y: 0 } // 相对于父元素中心点偏移
     size: ISize = { width: 0, height: 0 }  // 元素包围盒的宽高
     scale: IPoint = { x: 1, y: 1 }; // 元素缩放, [暂未用到]
     angle: number = 0; // 元素旋转的角度
@@ -71,7 +69,7 @@ class Feature {
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
     adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
-    pntMinDistance = 2;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
+    pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
         left: IPoint[],
         right: IPoint[]
@@ -227,7 +225,7 @@ class Feature {
      * @param path 
      */
     setPointIn(ctx: CanvasRenderingContext2D, path?: Path2D) {
-        if (Feature.TargetRender && Feature.TargetRender?.className === 'GridSystem') {
+        if (Feature.TargetRender && Feature.TargetRender?.className === ClassName.GRIDSYSTEM) {
             if (this.cbCapture && this.gls.cbSelectFeature) {
                 const mousePos = this.gls.mousePos;
                 let isPointIn = false;
@@ -289,7 +287,7 @@ class Feature {
         }
         setProps(feature);
         if (!this.gls.features.find(f => f === feature)) {
-            this.gls.addFeature(feature, true)
+            this.gls.addFeature(feature)
         }
     }
     removeChild(feature: Feature) { // 删除指定子元素
@@ -368,9 +366,9 @@ class Feature {
             default:
                 break;
         }
-        if (isParent) {
+        if (isParent && isBasicFeature(this)) {
             this.gls.enableBbox();
-            this.gls.enableBbox(this);
+            this.gls.enableBbox(this as unknown as IBasicFeature);
         }
     }
 
@@ -464,7 +462,7 @@ class Feature {
 
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender.className === 'GridSystem' && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
+        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {
@@ -499,10 +497,6 @@ class Feature {
                 ctx.restore();
             }
         }
-    }
-
-    getAnchorPnts(): AnchorPnt[] {
-        return this.gls.features.filter(f => f.className == 'AnchorPnt' && f.parent == this) as AnchorPnt[];
     }
 
     toCenter(feature: Feature) { // 将元素移动到画中间

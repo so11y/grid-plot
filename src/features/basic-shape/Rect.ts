@@ -1,30 +1,15 @@
+import { ClassName } from "@/Constants";
 import { IPoint, IPixelPos } from "../../Interface";
-import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint } from "../../utils";
+import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint, getRoundedRect } from "../../utils";
 import Feature from "../Feature";
 
-// 绘制圆角矩形
-function drawRoundedRect(x: number, y: number, w: number, h: number, r: number) {
-    const path = new Path2D();
-    path.moveTo(x + r, y);
-    path.lineTo(x + w / 4 - r, y);
-    path.arc(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2);
-    path.lineTo(x + w, y + h - r);
-    path.arc(x + w - r, y + h - r, r, 0, Math.PI * 0.5);
-    path.lineTo(x + r, y + h);
-    path.arc(x + r, y + h - r, r, Math.PI * 0.5, Math.PI);
-    path.lineTo(x, y + r);
-    path.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
-    return path;
-}
-
+// 矩形元素
 class Rect extends Feature {
-
-    radius = 0;   // 做成圆,radius = width/10
 
     constructor(x: number = 0, y: number = 0, width: number = 15, height: number = 15) {   // 相对坐标
         const pointArr = getRectPoint({ x, y }, { width, height })
         super(pointArr);
-        this.className = "Rect";
+        this.className = ClassName.RECT;
         this.position.x = x;
         this.position.y = y;
         this.size.width = width;
@@ -67,10 +52,10 @@ class Rect extends Feature {
         if (this.isFixedSize) {
             const { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
             // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
-            path = drawRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
+            path = getRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
             // path.roundRect(leftTop.x, leftTop.y, width, height, r);
-            path = drawRoundedRect(leftTop.x, leftTop.y, width, height, radius);
+            path = getRoundedRect(leftTop.x, leftTop.y, width, height, radius);
         }
         ctx.save()
         this.isClosePath && path.closePath()

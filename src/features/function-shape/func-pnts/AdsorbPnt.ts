@@ -1,4 +1,4 @@
-import { Events } from "../../../Constants";
+import { ClassName, Events } from "../../../Constants";
 import { getMousePos } from "../../../utils";
 import Pnt from "../Pnt";
 
@@ -12,7 +12,7 @@ class AdsorbPnt extends Pnt {
     constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff";
-        this.className = "AdsorbPnt";
+        this.className = ClassName.ADSORBPNT;
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .3;
