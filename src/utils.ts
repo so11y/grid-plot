@@ -202,7 +202,7 @@ function getMidOfTwoPnts(p1: IPoint, p2: IPoint) {
 };
 
 /**
- * 获取O点到直线PQ的距离
+ * 获取O点到直线PQ的垂直距离
  */
 function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
     if ((O.x == P.x && O.y == P.y) || (P.x == Q.x && P.y == Q.y)) {
@@ -210,7 +210,7 @@ function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
     }
     let rotateAng = getRotateAng([O.x - P.x, O.y - P.y], [Q.x - P.x, Q.y - P.y]);
     let len = getLenOfTwoPnts(O, P) * Math.sin(rotateAng * Math.PI / 180);
-    len = len < 0 ? -len : len;
+    len = len < 0 ? -len : len;  // 不要打开方向有问题
     return len;
 };
 

@@ -32,8 +32,8 @@ class GridSystem {
     scale: number = 10;
     angle: number = 0;
     pageSlicePos: IPoint = {
-        x: 200,
-        y: 200,
+        x: 0,
+        y: 0,
     };
     firstPageSlicePos: IPoint = Object.freeze({
         x: this.pageSlicePos.x,

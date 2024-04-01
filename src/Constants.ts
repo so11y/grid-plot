@@ -27,6 +27,7 @@ enum CtrlType {
     ANGLE_CTRL = "angleCtrl",
     WIDTH_CTRL = "widthCtrl",
     HEIGHT_CTRL = "heightCtrl",
+    ANCHOR_CTRL = "anchorCtrl",
     ROTATE_DIST = 25,
     // BEZIER_POINT = "bezierPoint"  // 贝塞尔曲线控制点
 }

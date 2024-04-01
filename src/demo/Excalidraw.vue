@@ -615,10 +615,10 @@ function reset(clear = false) {
 
     let width = getUnitSize();
 
-    // let rect = new Rect(100, 100, 100, 100)
-    // rect.radius = 2;
-    // rect.rotate(60)
-    // gls.value.addFeature(rect, false)
+    let rect = new Rect(100, 100, 100, 100)
+    rect.radius = 2;
+    rect.rotate(60)
+    gls.value.addFeature(rect, false)
 
     // const text = new Text(`当内容
     // 特别多的时候，canvas不会自动
@@ -629,12 +629,12 @@ function reset(clear = false) {
     // gls.value.addFeature(text, false);
     // // rect.addFeature(text);
 
-    // let rect2 = new Rect(150, 150, 50, 50)
-    // rect2.fillStyle = "transparent"
-    // gls.value.addFeature(rect2, false)
+    let rect2 = new Rect(150, 150, 50, 50)
+    rect2.fillStyle = "transparent"
+    gls.value.addFeature(rect2, false)
 
-    // let circle = new Circle(280, 180, 30, 30)
-    // gls.value.addFeature(circle, false)
+    let circle = new Circle(280, 180, 30, 30)
+    gls.value.addFeature(circle, false)
 
     var line = new Line([
         { x: 210, y: 60 },
@@ -646,21 +646,22 @@ function reset(clear = false) {
     gls.value.addFeature(line, false)
 
 
-    let img = new Img("/img2.png", 400, 100);
-    gls.value.addFeature(img, false)
+    // let img = new Img("/img2.png", 400, 100);
+    // gls.value.addFeature(img, false)
 
     // // 合并为组
-    // let group = new Group([rect, rect2, circle]);
-    // group.translate(-10, 100)
-    // group.cbTransformChild = false;
-    // gls.value.addFeature(group, false)
+    let group = new Group([rect, rect2, circle]);
+    group.translate(10, 300)
+    group.cbTransformChild = false;
+    gls.value.addFeature(group, false)
     // rect.onMousemove = () => {
     //     console.log(222);
     // }
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    // group.resizeEvents.push(group.toLeftAlign.bind(group, group.children))
+    group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
+    group.resizeEvents.push(group.toHorizonalAlign.bind(group, group.children))
 
     // // // 网格坐标
     // // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})
