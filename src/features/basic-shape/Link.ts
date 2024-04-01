@@ -13,6 +13,7 @@ export default class Link extends Line {
     linkStyle: LinkStyle = LinkStyle.CURVE_H;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
+    isFlowSegment = false;
     triangleInfo: ITriangle = {
         hidden: true,
         width: .8,
@@ -46,7 +47,7 @@ export default class Link extends Line {
         this.tipInfo.txt = '测试文字'
         this.tipInfo.offset.y = -10;
         this.tipInfo.fontFamily = FontFamily.SHISHANG;
-        this.strokeStyle = "rgba(220, 233, 126, 1)";
+        this.strokeStyle = "rgba(220, 233, 126, .4)";
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
@@ -66,11 +67,9 @@ export default class Link extends Line {
                 break;
             case LinkStyle.CURVE_V:
                 newPnts = this.getCurveVPoints(pointArr[0], pointArr[1]);
-                this.flowSegment(ctx, newPnts, lineWidth);
                 break;
             case LinkStyle.CURVE_H:
                 newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
-                this.flowSegment(ctx, newPnts, lineWidth);
                 break;
             default:
                 newPnts = pointArr;
@@ -78,9 +77,8 @@ export default class Link extends Line {
         }
         this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, radius);
-        // if (this.tipInfo.txt && pointArr.length > 1) {
         this.drawTriangle(ctx, newPnts);
-        // }
+        this.flowSegment(ctx, newPnts, lineWidth);
         return path;
     }
 
@@ -181,6 +179,7 @@ export default class Link extends Line {
 
     // 流光
     flowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPixelPos[], lineWidth = 0) {
+        if(!this.isFlowSegment) return
         const path = new Path2D();
         ctx.beginPath();
         const flowPnts = curvePnts.slice(startIndex, startIndex + Math.ceil(this.pntsLimit * .2)) // 取总长度的百分之20片段
@@ -196,9 +195,9 @@ export default class Link extends Line {
         gradient.addColorStop(0, "rgb(0, 255, 127,0)")
         gradient.addColorStop(0.2, "rgb(0, 255, 127,0.01)")
         gradient.addColorStop(0.4, "rgb(0, 255, 127,0.04)")
-        gradient.addColorStop(0.6, "rgb(0, 255, 127,0.1)")
-        gradient.addColorStop(0.8, "rgb(0, 255, 127,0.2)")
-        gradient.addColorStop(1, "rgb(0, 255, 127,.6)");
+        gradient.addColorStop(0.6, "rgb(0, 255, 127,0.3)")
+        gradient.addColorStop(0.8, "rgb(0, 255, 127,0.6)")
+        gradient.addColorStop(1, "rgb(0, 255, 127,.9)");
         ctx.strokeStyle = gradient;
         ctx.lineCap = this.lineCap;
         ctx.stroke(path);

@@ -79,6 +79,7 @@ class Rect extends Feature {
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path)
+        this.flowLineDash();
         ctx.restore();
         return path;
     }

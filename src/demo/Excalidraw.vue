@@ -825,6 +825,9 @@ function reset(clear = false) {
     rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
     let link = new Link(rect5, rect6);
+    link.lineDashArr = [5,15]
+    link.isFlowSegment = true;
+    link.isFlowLineDash = true;
     gls.value.addFeature(link, false);
     // link.triangleInfo.hidden = false;
     // setTimeout(() => {
