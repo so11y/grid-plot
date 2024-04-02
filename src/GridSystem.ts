@@ -1,4 +1,4 @@
-import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle } from "./Constants";
+import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle, AdsorbType } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
@@ -32,8 +32,8 @@ class GridSystem {
     scale: number = 10;
     angle: number = 0;
     pageSlicePos: IPoint = {
-        x: 200,
-        y: 200,
+        x: 0,
+        y: 0,
     };
     firstPageSlicePos: IPoint = Object.freeze({
         x: this.pageSlicePos.x,
@@ -272,8 +272,8 @@ class GridSystem {
                             focusNode.translate(mx - lastMove.x, my - lastMove.y); // 移动元素
                             if (this.cbAdsorption) {  // 是否边缘吸附
                                 const { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
-                                    gridCompute: focusNode.adsorbTypes.includes("grid"),
-                                    featureCompute: focusNode.adsorbTypes.includes("feature"),
+                                    gridCompute: focusNode.adsorbTypes.includes(AdsorbType.GRID),
+                                    featureCompute: focusNode.adsorbTypes.includes(AdsorbType.FEATURE),
                                     onlyCenter: focusNode.isOnlyCenterAdsorb
                                 });
                                 focusNode.translate(offsetX, offsetY)
@@ -619,7 +619,7 @@ class GridSystem {
         }
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, AnchorPnt Bbox
+    getFocusNode() { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as IBasicFeature;
@@ -1020,6 +1020,7 @@ class GridSystem {
 
         props.zIndex != undefined && (feature.zIndex = props.zIndex)
         props.adsorbTypes != undefined && (feature.adsorbTypes = props.adsorbTypes)
+        props.ctrlTypes != undefined && (feature.ctrlTypes = props.ctrlTypes)
         props.pntMinDistance != undefined && (feature.pntMinDistance = props.pntMinDistance)
 
         props.isClosePath != undefined && (feature.isClosePath = props.isClosePath)
@@ -1033,6 +1034,8 @@ class GridSystem {
         props.isOnlyVerticalMove != undefined && (feature.isOnlyVerticalMove = props.isOnlyVerticalMove)
         props.isHorizonalRevert != undefined && (feature.isHorizonalRevert = props.isHorizonalRevert)
         props.isVerticalRevert != undefined && (feature.isVerticalRevert = props.isVerticalRevert)
+        props.isFlowLineDash != undefined && (feature.isFlowLineDash = props.isFlowLineDash)
+        
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
             props.radius != undefined && (feature.radius = props.radius);
@@ -1064,6 +1067,7 @@ class GridSystem {
             lineDashArr: f.lineDashArr,
             lineDashOffset: f.lineDashOffset,
             isStroke: f.isStroke,  // 是否渲染边框
+            isFlowLineDash: f.isFlowLineDash,
             radius: f instanceof Rect ? f.radius : 0,
             fitSize: f instanceof Text ? f.fitSize : false,
             textInfo: f instanceof Text ? f.textInfo : {},
@@ -1082,6 +1086,7 @@ class GridSystem {
                 angle: f.angle,
                 zIndex: f.zIndex,
                 adsorbTypes: f.adsorbTypes,
+                ctrlTypes: f.ctrlTypes,
                 pntMinDistance: f.pntMinDistance,
 
                 isClosePath: f.isClosePath,

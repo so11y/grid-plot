@@ -4,7 +4,7 @@ import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier } from ".
 import Feature from "../Feature";
 import Line from "./Line";
 
-let startIndex = 0;
+let flowIndex = 0;
 
 // 连接线
 export default class Link extends Line {
@@ -13,6 +13,7 @@ export default class Link extends Line {
     linkStyle: LinkStyle = LinkStyle.CURVE_H;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
+    isFlowSegment = false;
     triangleInfo: ITriangle = {
         hidden: true,
         width: .8,
@@ -46,15 +47,17 @@ export default class Link extends Line {
         this.tipInfo.txt = '测试文字'
         this.tipInfo.offset.y = -10;
         this.tipInfo.fontFamily = FontFamily.SHISHANG;
-        this.strokeStyle = "rgba(220, 233, 126, 1)";
+        this.strokeStyle = "rgba(220, 233, 126, .4)";
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
             startFeature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
+            startFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
         }
         if (endFeature instanceof Feature) {
             this.endFeature = endFeature;
             endFeature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
+            endFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
         }
     }
 
@@ -66,11 +69,9 @@ export default class Link extends Line {
                 break;
             case LinkStyle.CURVE_V:
                 newPnts = this.getCurveVPoints(pointArr[0], pointArr[1]);
-                this.flowSegment(ctx, newPnts, lineWidth);
                 break;
             case LinkStyle.CURVE_H:
                 newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
-                this.flowSegment(ctx, newPnts, lineWidth);
                 break;
             default:
                 newPnts = pointArr;
@@ -78,9 +79,9 @@ export default class Link extends Line {
         }
         this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, radius);
-        // if (this.tipInfo.txt && pointArr.length > 1) {
         this.drawTriangle(ctx, newPnts);
-        // }
+        const flowIndex = this.getFlowIndex(newPnts.length);
+        this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);
         return path;
     }
 
@@ -180,32 +181,42 @@ export default class Link extends Line {
     }
 
     // 流光
-    flowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPixelPos[], lineWidth = 0) {
-        const path = new Path2D();
-        ctx.beginPath();
-        const flowPnts = curvePnts.slice(startIndex, startIndex + Math.ceil(this.pntsLimit * .2)) // 取总长度的百分之20片段
-        flowPnts.forEach((p, i) => {
-            if (i == 0) {
-                path.moveTo(p.x, p.y);
-            } else {
-                path.lineTo(p.x, p.y);
-            }
-        })
-        ctx.lineWidth = lineWidth * .9
-        const gradient = ctx.createLinearGradient(flowPnts[0].x, flowPnts[0].y, flowPnts[flowPnts.length - 1].x, flowPnts[flowPnts.length - 1].y)
-        gradient.addColorStop(0, "rgb(0, 255, 127,0)")
-        gradient.addColorStop(0.2, "rgb(0, 255, 127,0.01)")
-        gradient.addColorStop(0.4, "rgb(0, 255, 127,0.04)")
-        gradient.addColorStop(0.6, "rgb(0, 255, 127,0.1)")
-        gradient.addColorStop(0.8, "rgb(0, 255, 127,0.2)")
-        gradient.addColorStop(1, "rgb(0, 255, 127,.6)");
-        ctx.strokeStyle = gradient;
-        ctx.lineCap = this.lineCap;
-        ctx.stroke(path);
-        if (startIndex >= (this.pntsLimit - Math.ceil(this.pntsLimit * .2))) {
-            startIndex = 0;
+    getFlowIndex(endIndex = 0) {
+        if (!this.isFlowSegment) return
+        if (flowIndex >= (endIndex)) {
+            flowIndex = 0;
         } else {
-            startIndex += .3;
+            flowIndex += .3;
+        }
+        return Math.floor(flowIndex);
+    }
+
+    drawFlowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPixelPos[], lineWidth = 0, flowIndex = 0) {
+        const path = new Path2D();
+        let endIndex = flowIndex + Math.ceil(curvePnts.length * .2)
+        if (endIndex > curvePnts.length - 1) {
+            endIndex = curvePnts.length - 1;
+        }
+        const flowPnts = curvePnts.slice(flowIndex, endIndex) // 取总长度的百分之20片段
+        if (flowPnts.length > 0) {
+            flowPnts.forEach((p, i) => {
+                if (i == 0) {
+                    path.moveTo(p.x, p.y);
+                } else {
+                    path.lineTo(p.x, p.y);
+                }
+            })
+            ctx.lineWidth = lineWidth * .9
+            const gradient = ctx.createLinearGradient(flowPnts[0].x, flowPnts[0].y, flowPnts[flowPnts.length - 1].x, flowPnts[flowPnts.length - 1].y)
+            gradient.addColorStop(0, "rgb(0, 255, 127,0)")
+            gradient.addColorStop(0.2, "rgb(0, 255, 127,0.01)")
+            gradient.addColorStop(0.4, "rgb(0, 255, 127,0.04)")
+            gradient.addColorStop(0.6, "rgb(0, 255, 127,0.3)")
+            gradient.addColorStop(0.8, "rgb(0, 255, 127,0.6)")
+            gradient.addColorStop(1, "rgb(0, 255, 127,.9)");
+            ctx.strokeStyle = gradient;
+            ctx.lineCap = this.lineCap;
+            ctx.stroke(path);
         }
     }
 }

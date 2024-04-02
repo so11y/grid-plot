@@ -101,9 +101,8 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        if (this.tipInfo.txt && pointArr.length > 1) {
-            this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
-        }
+        this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        this.flowLineDash();
         ctx.restore()
         return path;
     }

@@ -1,4 +1,4 @@
-import { AlignType, ClassName, CtrlType, Orientation } from "../Constants";
+import { AdsorbType, AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
@@ -54,7 +54,7 @@ class Feature {
     opacity: number = 1; // 整体透明度
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0; // 虚线位移
-
+    
     className = ClassName.FEATURE  //类名
     id: string  // id,元素的唯一标识
     name: string = ''  // 元素的name, 给当前元素起个名字
@@ -68,7 +68,8 @@ class Feature {
     parent: Feature | null = null;  // 元素的父元素
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
-    adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
+    adsorbTypes = [AdsorbType.GRID, AdsorbType.FEATURE];  // 移动时吸附规则  "grid", "feature"
+    ctrlTypes = [CtrlType.WIDTH_CTRL, CtrlType.HEIGHT_CTRL, CtrlType.SIZE_CTRL, CtrlType.ANGLE_CTRL, CtrlType.ANCHOR_CTRL];  // 可用的控制点类型有哪些
     pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
         left: IPoint[],
@@ -92,6 +93,7 @@ class Feature {
     isOnlyVerticalMove: boolean = false;  // 元素是否只能垂直方向拖拽(移动)
     isHorizonalRevert = false;  // 元素是否水平翻转了(用于确定元素左上角的点)
     isVerticalRevert = false;  // 元素是否垂直翻转了(用于确定元素左上角的点)
+    isFlowLineDash = false; // 虚线位移
 
     // 节点功能
     cbCapture: boolean = true;  // 元素是否可被鼠标捕获
@@ -215,6 +217,7 @@ class Feature {
         this.isClosePath && ctx.fill(path);
         this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
+        this.flowLineDash();
         ctx.restore();
         return path;
     }
@@ -372,6 +375,15 @@ class Feature {
         }
     }
 
+    flowLineDash(speed = 1, direction = true){
+        if(!this.isFlowLineDash || !this.lineDashArr || this.lineDashArr.length != 2) return
+        if(direction){
+            this.lineDashOffset-=speed;
+        }else {
+            this.lineDashOffset+=speed;
+        }
+    }
+
     // --------------------元素鼠标事件相关----------------
     onmouseover(e?: any) {
         this.mouseoverEvents.forEach(f => { f(e) })
@@ -459,7 +471,6 @@ class Feature {
             this.gls.removeFeature(cf, false);
         })
     };
-
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {

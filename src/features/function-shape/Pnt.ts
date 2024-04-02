@@ -15,6 +15,7 @@ class Pnt extends Rect {
         this.zIndex = Infinity;
         this.lineWidth = 0;
         this.radius = .5;
+        this.isStroke = false;
         this.gls.addFeature(this, false);
     }
 

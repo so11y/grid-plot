@@ -2,8 +2,8 @@ import { ClassName } from "@/Constants";
 import { IBasicFeature, IPoint } from "../../../Interface";
 import Pnt from "../Pnt";
 
-// 连接线的锚点
-class AnchorPnt extends Pnt {
+// 锚点连线控制点
+class ACtrlPnt extends Pnt {
 
     getPoint: () => IPoint;
     isBinding = false;  // 是否与link绑定了
@@ -35,4 +35,4 @@ class AnchorPnt extends Pnt {
     }
 }
 
-export default AnchorPnt;
+export default ACtrlPnt;

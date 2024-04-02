@@ -6,7 +6,7 @@ import Rect from "./Rect";
 // 图片/视频
 class Img extends Rect {
 
-    domElement: HTMLImageElement | HTMLVideoElement | null = null;  // 图片/视频的dom元素
+    domElement: HTMLImageElement | null = null;  // 图片/视频的dom元素
     src: string // 图片/视频的地址
 
     /**
@@ -20,22 +20,7 @@ class Img extends Rect {
         super(x, y, width, height);
         this.className = ClassName.IMG;
         this.src = src;
-        if (src.endsWith(".mp4") || src.startsWith("data:video/mp4;")) {
-            const video = this.domElement = document.createElement("video") as HTMLVideoElement;
-            document.body.appendChild(this.domElement);
-            this.domElement.src = src;
-            this.domElement.style.display = "none";
-            this.domElement.play();
-            // 视频加载完成事件
-            if (!width && !height) {
-                this.domElement.addEventListener('loadeddata', () => {  // 重新设置img大小
-                    this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
-                });
-            }
-            this.mousedownEvents.push(() => {
-                video.play();
-            })
-        } else if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
+        if (src.endsWith('.png') || src.endsWith('.jpg') || src.startsWith("data:image/png;") || src.startsWith("data:image/jpeg;")) {
             this.domElement = new Image();
             this.domElement.src = src;
             if (!height) {
