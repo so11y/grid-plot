@@ -1,4 +1,5 @@
 <template>
+    <!-- <video src="./test.mp4" autoplay></video> -->
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
@@ -79,7 +80,8 @@
                     <li @click="reset(true)"><i class="iconfont gls-shanchu" /> 重置画布</li>
                     <!-- <li @click="darkTheme"><i class="iconfont gls-shanchu" /> 深色模式</li> -->
                     <a-divider type="horizonal"></a-divider>
-                    <li @click="linkTo('https://github.com/littlesunnn/grid-plot.git')"><i class="iconfont gls-github" /> GitHub</li>
+                    <li @click="linkTo('https://github.com/littlesunnn/grid-plot.git')"><i class="iconfont gls-github" />
+                        GitHub</li>
                     <li @click="linkTo('https://space.bilibili.com/436686692?spm_id_from=333.788.0.0')"><i
                             class="iconfont gls-bilibili" /> 关注up实时进展...</li>
                     <a-divider type="horizonal"></a-divider>
@@ -389,6 +391,7 @@
 import { AlignType } from "@/Constants";
 import Circle from "@/features/basic-shape/Circle";
 import Img from "@/features/basic-shape/Img";
+import Video from "@/features/basic-shape/Video";
 import Line from "@/features/basic-shape/Line";
 import Link from "@/features/basic-shape/Link";
 import Rect from "@/features/basic-shape/Rect";
@@ -404,6 +407,7 @@ import { DrawAreaMode, FontFamily } from "../Constants";
 import GridSystem from "../GridSystem";
 import { IBasicFeature } from "@/Interface";
 import { getUnitSize, getMousePos } from "../utils"
+import Pnt from "@/features/function-shape/Pnt";
 
 const cvs = ref(null);
 const activeI = ref(-1);
@@ -649,6 +653,9 @@ function reset(clear = false) {
     // let img = new Img("/img2.png", 400, 100);
     // gls.value.addFeature(img, false)
 
+    // let video = new Video("C:/Users/Administrator/Pictures/QQ录屏20240319191830.mp4", 400, 100);
+    // gls.value.addFeature(video, false)
+
     // // 合并为组
     let group = new Group([rect, rect2, circle]);
     group.translate(10, 300)
@@ -820,15 +827,24 @@ function reset(clear = false) {
     // rect6.cbTransform = false;
     gls.value.addFeature(rect6, false);
 
-    let rect7 = new Rect(50, 50, width, width);
+    let rect7 = new Pnt();
     // rect6.cbTransform = false;
     gls.value.addFeature(rect7, false);
     rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
     let link = new Link(rect5, rect6);
-    link.lineDashArr = [5,15]
+    link.lineDashArr = [5, 15]
     link.isFlowSegment = true;
     link.isFlowLineDash = true;
+    let rect8 = new Pnt();
+    gls.value.addFeature(rect8, false);
+    // link.drawFlowSegment = (ctx: CanvasRenderingContext2D, curvePnts = [], lineWidth = 0, flowIndex = 0) => {
+    //     // console.log(flowIndex, curvePnts[flowIndex], "flowIndex");
+    //     if (curvePnts[flowIndex]) {
+    //         const pos = gls.value?.getRelativePos(curvePnts[flowIndex])
+    //         rect8.setPos(pos.x, pos.y)
+    //     }
+    // }
     gls.value.addFeature(link, false);
     // link.triangleInfo.hidden = false;
     // setTimeout(() => {

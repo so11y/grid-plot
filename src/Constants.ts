@@ -83,6 +83,11 @@ enum Orientation {
     CENTER_X = 'centerx',
     CENTER_Y = 'centery',
 }
+// 对齐配置类型
+enum AdsorbType {
+    GRID = 'grid',
+    FEATURE = 'feature',
+}
 
 // 选中模式
 enum SelectMode {
@@ -101,12 +106,14 @@ enum AlignType {
     LEFT = 'left',
     BOTTOM = 'bottom',
     RIGHT = 'right',
+    CENTER = 'center',
     HORIZONAL = 'horizonal',
     VERTICAL = 'vertical',
 }
 
 enum ClassName {
     IMG = 'img',
+    VIDEO = 'video',
     CIRCLE = 'circle',
     LINE = 'line',
     LINK = 'link',
@@ -134,6 +141,7 @@ export {
     LinkStyle,
     FontFamily,
     Orientation,
+    AdsorbType,
     SelectMode,
     DrawAreaMode,
     AlignType,

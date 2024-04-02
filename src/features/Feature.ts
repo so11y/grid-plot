@@ -1,4 +1,4 @@
-import { AlignType, ClassName, CtrlType, Orientation } from "../Constants";
+import { AdsorbType, AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
@@ -68,8 +68,8 @@ class Feature {
     parent: Feature | null = null;  // 元素的父元素
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
-    adsorbTypes = ["grid"];  // 移动时吸附规则  "grid", "feature"
-    ctrlTypes = [CtrlType.WIDTH_CTRL, CtrlType.HEIGHT_CTRL, CtrlType.SIZE_CTRL, CtrlType.ANGLE_CTRL, CtrlType.ANCHOR_CTRL];  // 移动
+    adsorbTypes = [AdsorbType.GRID, AdsorbType.FEATURE];  // 移动时吸附规则  "grid", "feature"
+    ctrlTypes = [CtrlType.WIDTH_CTRL, CtrlType.HEIGHT_CTRL, CtrlType.SIZE_CTRL, CtrlType.ANGLE_CTRL, CtrlType.ANCHOR_CTRL];  // 可用的控制点类型有哪些
     pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
         left: IPoint[],
