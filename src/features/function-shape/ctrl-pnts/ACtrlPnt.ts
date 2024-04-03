@@ -25,7 +25,7 @@ class ACtrlPnt extends Pnt {
         this.isStroke = false;
         this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
-        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
+        this.on('draw', this.onUpdatePosByParent.bind(this))
     }
 
     onUpdatePosByParent() {

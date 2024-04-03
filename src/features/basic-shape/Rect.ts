@@ -17,7 +17,7 @@ class Rect extends Feature {
         this.isClosePath = true;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         // if (radius == 0) {
         // pointArr.forEach((p, i) => {
         //     if (i == 0) {  // 第一个点

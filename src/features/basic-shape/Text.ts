@@ -54,7 +54,7 @@ class Text extends Rect {
         this.textArr = [];
         this.contentHeight = 0;
         let lastWidth = this.getSize().width;
-        this.resizeEvents.push((e: CtrlType) => {  // 控制点改变大小触发的钩子
+        this.on('resize', (e: CtrlType) => {  // 控制点改变大小触发的钩子
             if (this.fitSize && e === CtrlType.SIZE_CTRL) {
                 const { width } = this.getSize()
                 this.textInfo.fontSize *= (1 + (width - lastWidth) / width);   // 根据宽度变化的百分比,同步放大fontSize
@@ -123,7 +123,7 @@ class Text extends Rect {
         return textArr;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);

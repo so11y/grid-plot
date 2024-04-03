@@ -203,14 +203,15 @@ class GridSystem {
         const { x: downX, y: downY } = getMousePos(this.domElement, ev);
         const { x: px, y: py } = this.pageSlicePos;
         this.features.forEach(f => f.isFocused = false);
-        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
+        const focusNodes = this.features.slice().reverse().filter(f => f.cbSelect && f.isPointIn)
+        let focusNode = this.focusNode = focusNodes[0];  // 寻找鼠标悬浮元素
         let moveFlag = false;
         let mousemove = (e: any) => { };
         if (this.cbSelectFeature) {
             if (ev.buttons != 1) {
                 this.focusNode = focusNode;
             } else {  // 左键点击
-                focusNode?.onmousedown && focusNode.onmousedown(ev);
+                focusNodes.forEach(f => f.dispatch(new CustomEvent('mousedown', { detail: ev })))
                 if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
                     if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
@@ -220,7 +221,7 @@ class GridSystem {
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
                 if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
-                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
+                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev }))};
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
@@ -247,7 +248,7 @@ class GridSystem {
                         }
                         lastMove.x = mx;
                         lastMove.y = my;
-                        focusNode.ondrag && focusNode.ondrag(e);
+                        focusNode.dispatch(new CustomEvent('drag', { detail: e }))
                     }
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
@@ -271,8 +272,8 @@ class GridSystem {
             document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
             if (focusNode) {
                 focusNode._orientations = null;
-                focusNode.onmouseup && focusNode.onmouseup(e);
-                focusNode.ondragend && focusNode.ondragend(e);
+                focusNode.dispatch(new CustomEvent('mouseup', { detail: e }))
+                focusNode.dispatch(new CustomEvent('dragend', { detail: e }))
                 if ((isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea) && moveFlag) {  // 鼠标抬起后,记录一下
                     GridSystem.Stack && GridSystem.Stack.record(); // 移动时候记录,没移动的不记录
                 }
@@ -306,7 +307,7 @@ class GridSystem {
         if (new Date().getTime() - this.lastClickTime < CoordinateSystem.DB_CLICK_DURATION) {  // 如果是双击
             this.ondbclick && this.ondbclick(ev);
             if (focusNode) {
-                focusNode.ondbclick && focusNode.ondbclick(ev);
+                focusNode.dispatch(new CustomEvent('dbclick', { detail: ev }))
             }
             document.dispatchEvent(new CustomEvent(Events.DB_CLICK, { detail: ev }));
         }
@@ -572,7 +573,7 @@ class GridSystem {
             const radius = this.getRatioSize(f.radius, f.isFixedSize);
             const lineDashArr = f.lineDashArr.length == 2 ? [this.getRatioSize(f.lineDashArr[0], f.isFixedSize), this.getRatioSize(f.lineDashArr[1], f.isFixedSize)] : [];
             path = f.draw(this.ctx, pointArr, lineWidth, lineDashArr as [number, number], radius);
-            f.ondraw && f.ondraw()
+            f.dispatch(new CustomEvent('draw', { detail: '' }))
             this.ctx.save();
             f.isOverflowHidden && this.ctx.clip(path);
             if (isBasic) {
@@ -599,7 +600,7 @@ class GridSystem {
                 }, 10);
             }
             feature.destroy();
-            feature.ondelete();
+            feature.dispatch(new CustomEvent('delete', { detail: '' }))
             this.features = this.features.filter(f => feature && (f.id != feature.id));
             feature = null;
             isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 删除元素记录
@@ -1207,7 +1208,8 @@ class GridSystem {
                         point.y -= offset.y; // 垂直方向移动到顶部边界  
                     });
                     const lineWidth = this.getRatioSize(cf.lineWidth);
-                    cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
+                    const lineDashArr = cf.lineDashArr.length == 2 ? [this.getRatioSize(cf.lineDashArr[0], cf.isFixedSize), this.getRatioSize(cf.lineDashArr[1], cf.isFixedSize)] : [];
+                    cf.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(cf.radius));
                     drawChildren(ctx, cf.children, offset)
                 }
             });
@@ -1229,7 +1231,8 @@ class GridSystem {
                 ctx.fillStyle = this.background
                 ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
                 if (isBasicFeature(feature, false)) {
-                    feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                    const lineDashArr = feature.lineDashArr.length == 2 ? [this.getRatioSize(feature.lineDashArr[0], feature.isFixedSize), this.getRatioSize(feature.lineDashArr[1], feature.isFixedSize)] : [];
+                    feature.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(feature.radius));
                 }
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const url = offscreenCanvas.toDataURL("image/png");   // canvas 转 图片
@@ -1403,7 +1406,8 @@ class GridSystem {
                     p.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                     p.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
-                feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                const lineDashArr = feature.lineDashArr.length == 2 ? [this.getRatioSize(feature.lineDashArr[0], feature.isFixedSize), this.getRatioSize(feature.lineDashArr[1], feature.isFixedSize)] : [];
+                feature.draw(ctx, pointArr, lineWidth,lineDashArr,  this.getRatioSize(feature.radius));
             })
             this.scale = scale;
             return offscreenCanvas.toDataURL("image/png");

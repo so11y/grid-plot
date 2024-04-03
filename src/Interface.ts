@@ -61,4 +61,8 @@ type IProps = Partial<Feature & Text & Img & Link & Group & Line> & {
 
 type IBasicFeature = Line | Rect | Circle | Group | Link
 
-export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature };
+interface Listeners {
+    [key: string]: Function[]
+}
+
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners };

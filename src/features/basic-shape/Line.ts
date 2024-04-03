@@ -35,7 +35,7 @@ class Line extends Feature {
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius: number) {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;

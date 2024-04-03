@@ -44,7 +44,7 @@ class Video extends Rect {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);

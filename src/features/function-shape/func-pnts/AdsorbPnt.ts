@@ -27,7 +27,7 @@ class AdsorbPnt extends Pnt {
     }
 
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius?: number): Path2D {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius?: number): Path2D {
         const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         // const center = this.getCenterPos(pointArr);
         // if (this.cbCrossLine) {

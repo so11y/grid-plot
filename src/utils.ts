@@ -253,13 +253,28 @@ function getPntsOf3Bezier(p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint, counts
  * 获取三次贝塞尔曲线上的一点，t∈[0,1]
  * @param t 介于0 ~ 1, 表示点在曲线中的相对位置
  */
-function getPntIn3Bezier(p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint, t: number): IPoint {
+function getPntIn3Bezier(p1: IPoint, cp1: IPoint, cp2: IPoint, p2: IPoint, t: number): IPoint {
     let t_ = 1 - t;
-    let x = p0.x * t_ * t_ * t_ + 3 * p1.x * t * t_ * t_ + 3 * p2.x * t * t * t_ + p3.x * t * t * t,
-        y = p0.y * t_ * t_ * t_ + 3 * p1.y * t * t_ * t_ + 3 * p2.y * t * t * t_ + p3.y * t * t * t;
+    let x = p1.x * t_ * t_ * t_ + 3 * cp1.x * t * t_ * t_ + 3 * cp2.x * t * t * t_ + p2.x * t * t * t,
+        y = p1.y * t_ * t_ * t_ + 3 * cp1.y * t * t_ * t_ + 3 * cp2.y * t * t * t_ + p2.y * t * t * t;
     return { x, y };
 };
 
+function getPntsOf2Bezier(p1: IPoint, cp: IPoint, p2: IPoint, counts: number): IPoint[] {
+    let per = counts && counts != 0 ? 1 / counts : 0.02;    //取点间隔
+    let points: IPoint[] = [];
+    for (let t = 0; t <= 0.999999; t += per) {
+        points.push(getPntIn2Bezier(p1, cp, p2, t));
+    }
+    return points;
+};
+
+function getPntIn2Bezier(p1: IPoint, cp: IPoint, p2: IPoint, t: number): IPoint {
+    // 计算曲线上的点  
+    var x = Math.pow(1 - t, 2) * p1.x + 2 * (1 - t) * t * cp.x + Math.pow(t, 2) * p2.x;
+    var y = Math.pow(1 - t, 2) * p1.y + 2 * (1 - t) * t * cp.y + Math.pow(t, 2) * p2.y;
+    return { x, y };
+}
 /**
  * 在一段椭圆弧上均匀取点，rotateAngle是椭圆绕中心点逆时针旋转的角度
  * endAngle必须大于startAngle, ~[-360, 360]
@@ -453,6 +468,7 @@ export {
     createVctor,
     getRotatePnt,
     getPntsOf3Bezier,
+    getPntsOf2Bezier,
     getRectPoint,
     getPntsInEllipse,
 

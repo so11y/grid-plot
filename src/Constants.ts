@@ -70,9 +70,11 @@ enum Events {
 // 线段样式
 enum LinkStyle {
     DEFAULT = 'default',  // 直线
-    BROKEN = 'broken', // 折线
+    BROKEN_ONE = 'broken_one', // 折线
+    BROKEN_TWO = 'broken_two', // 折线
     CURVE_H = 'curve_h',  // 曲线
-    CURVE_V = 'curve_v'  // 曲线
+    CURVE_V = 'curve_v',  // 曲线
+    CURVE = 'curve'  // 曲线
 }
 
 // 对齐方向

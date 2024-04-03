@@ -19,7 +19,7 @@ class Pnt extends Rect {
         this.gls.addFeature(this, false);
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         if (this.isPointIn) {
             ctx.fillStyle = this.hoverStyle;
             if (this.gls.focusNode === this) {

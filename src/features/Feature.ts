@@ -1,7 +1,7 @@
 import { AdsorbType, AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize, Listeners } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
 import gsap from "gsap";
 
@@ -42,6 +42,7 @@ class Feature {
         }
     }
 
+    listeners: Listeners = {};
     pointArr: IRelativePos[] = [];
     fillStyle: string = 'transparent';
     strokeStyle: string = '#f08c00';
@@ -102,38 +103,6 @@ class Feature {
     cbTransform: boolean = true;  // 元素是否可被形变缩放
     cbTransformChild: boolean = true; // 元素的子元素是否可被形变缩放
 
-    // // 节点事件
-    // ondelete: Function | null = null;
-
-    onTranslate: Function | null = null;  // 移动时,包含draging时
-    translateEvents: Function[] = [];
-    onMouseover: Function | null = null;  // 鼠标悬浮后就会被调用
-    mouseoverEvents: Function[] = [];
-    onMousemove: Function | null = null;  // 在元素上移动触发
-    mousemoveEvents: Function[] = [];
-    onMousedown: Function | null = null;  // 鼠标点击后就会被调用
-    mousedownEvents: Function[] = [];
-    onMouseup: Function | null = null;  // 鼠标松开后就会被调用
-    mouseupEvents: Function[] = [];
-    onMouseleave: Function | null = null;  // 鼠标离开后就会被调用
-    mouseleaveEvents: Function[] = [];
-    onDbclick: Function | null = null;  // 鼠标双击后就会被调用
-    dbclickEvents: Function[] = [];
-    onDragend: Function | null = null;  // 拖拽中的事件
-    dragendEvents: Function[] = [];
-    onDrag: Function | null = null;  // 拖拽中的事件
-    dragEvents: Function[] = [];
-    onResize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
-    resizeEvents: Function[] = [];
-    onDraw: Function | null = null;  // 每次绘制触发
-    drawEvents: Function[] = [];
-    onRotate: Function | null = null;  // 旋转时
-    rotateEvents: Function[] = [];
-    onDelete: Function | null = null;  // 删除的时候
-    deleteEvents: Function[] = [];
-    onBlur: Function | null = null;  // 删除的时候
-    blurEvents: Function[] = [];
-
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
     constructor(pointArr: IRelativePos[] = []) {
@@ -153,7 +122,7 @@ class Feature {
         this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
-        this.onrotate && this.onrotate();
+        this.dispatch(new CustomEvent('rotate', { detail: '' }))
     }
 
     /**
@@ -176,7 +145,7 @@ class Feature {
         if (this.children) {  // 子元素递归偏移
             this.children.forEach(cf => cf.translate(offsetX, offsetY))
         }
-        this.ontranslate();
+        this.dispatch(new CustomEvent('translate', { detail: '' }))
     }
 
     /**
@@ -187,7 +156,7 @@ class Feature {
      * @param r 元素的圆角 一般Rect用
      * @returns 
      */
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius: number) {
         const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
@@ -238,12 +207,12 @@ class Feature {
                     isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
                 if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
-                    this.onmouseover && this.onmouseover();
+                    this.dispatch(new CustomEvent('mouseover', { detail: '' }))
                 } else if (this.isPointIn && !isPointIn) {
-                    this.onmouseleave && this.onmouseleave();
+                    this.dispatch(new CustomEvent('mouseleave', { detail: '' }))
                 }
                 this.isPointIn = isPointIn;
-                this.isPointIn && this.onmousemove && this.onmousemove();
+                    this.isPointIn &&  this.dispatch(new CustomEvent('mousemove', { detail: '' }));
             }
         }
     }
@@ -385,88 +354,6 @@ class Feature {
         }
     }
 
-    // --------------------元素鼠标事件相关----------------
-    onmouseover(e?: any) {
-        this.mouseoverEvents.forEach(f => { f(e) })
-        this.onMouseover && this.onMouseover(e);
-    }
-    onmousemove(e?: any) {
-        this.mousemoveEvents.forEach(f => { f(e) })
-        this.onMousemove && this.onMousemove(e);
-    }
-    onmousedown(e?: any) {
-        this.mousedownEvents.forEach(f => { f(e) })
-        this.onMousedown && this.onMousedown(e);
-    }
-    onmouseup(e?: any) {
-        this.mouseupEvents.forEach(f => { f(e) })
-        this.onMouseup && this.onMouseup(e);
-    }
-    onmouseleave(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmouseleave(e)
-        })
-        this.mouseleaveEvents.forEach(f => { f(e) })
-        this.onMouseleave && this.onMouseleave(e);
-    }
-    ondbclick(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondbclick(e)
-        })
-        this.dbclickEvents.forEach(f => { f(e) })
-        this.onDbclick && this.onDbclick(e);
-    }
-    // --------------------元素绘制相关----------------
-    ontranslate(e?: any) {
-        this.children.forEach(cf => {
-            cf.ontranslate(e)
-        })
-        this.translateEvents.forEach(f => { f(e) })
-        this.onTranslate && this.onTranslate(e);
-    }
-    onresize(type?: CtrlType) {
-        this.children.forEach(cf => {
-            cf.onresize(type)
-        })
-        this.resizeEvents.forEach(f => { f(type) })
-        this.onResize && this.onResize(type);
-    }
-    ondraw(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondraw(e)
-        })
-        this.drawEvents.forEach(f => { f(e) })
-        this.onDraw && this.onDraw(e);
-    }
-    onrotate(e?: any) {
-        this.children.forEach(cf => {
-            cf.onrotate(e)
-        })
-        this.rotateEvents.forEach(f => { f(e) })
-        this.onRotate && this.onRotate(e);
-    }
-    ondragend(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondragend(e)
-        })
-        this.dragendEvents.forEach(f => { f(e) })
-        this.onDragend && this.onDragend(e);
-    }
-    ondrag(e?: any) {
-        this.dragEvents.forEach(f => { f(e) })
-        this.onDrag && this.onDrag(e);
-    }
-    // --------------------元素操作相关----------------
-    ondelete(e?: any) {
-        this.deleteEvents.forEach(f => { f(e) })
-        this.onDelete && this.onDelete(e);
-    }
-    // 只作用于基础元素
-    onblur(e?: any) {
-        this.blurEvents.forEach(f => { f(e) })
-        this.onBlur && this.onBlur(e);
-    }
-
     destroy() {
         this.children.forEach(cf => {
             this.gls.removeFeature(cf, false);
@@ -536,6 +423,29 @@ class Feature {
             ctx.translate(O.x, O.y)
             ctx.rotate(angle * Math.PI / 180)
             ctx.translate(-O.x, -O.y)
+        }
+    }
+
+    on(type: string, callback: Function) {
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
+        }
+        this.listeners[type].push(callback);
+    }
+    // 取消订阅事件
+    off(type: string, callback: Function) {
+        if (this.listeners[type]) 1
+        const index = this.listeners[type].indexOf(callback);
+        if (index != -1) {
+            this.listeners[type].splice(index, 1);
+        }
+    }
+    // 触发事件
+    dispatch(event: CustomEvent) {
+        if (this.listeners[event.type]) {
+            this.listeners[event.type].forEach(callback => {
+                callback(event);
+            });
         }
     }
 

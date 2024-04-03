@@ -1,6 +1,6 @@
 <template>
-    <video src="/test.mp4" autoplay></video>
-    <button onclick=click>++</button>
+    <!-- <video src="/test.mp4" autoplay></video>
+    <button onclick=click>++</button> -->
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
@@ -668,8 +668,8 @@ function reset(clear = false) {
     // group.onMousemove = () => {
     //     console.log(11);
     // }
-    group.resizeEvents.push(group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
-    group.resizeEvents.push(group.toHorizonalAlign.bind(group, group.children))
+    group.on('resize', group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
+    group.on('resize', group.toHorizonalAlign.bind(group, group.children))
 
     // // // 网格坐标
     // // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})

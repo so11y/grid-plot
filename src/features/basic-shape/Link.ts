@@ -1,6 +1,6 @@
 import { ClassName, FontFamily, LinkMark, LinkStyle } from "../../Constants";
 import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
-import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier } from "../../utils";
+import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier, getPntsOf2Bezier } from "../../utils";
 import Feature from "../Feature";
 import Line from "./Line";
 
@@ -9,8 +9,8 @@ let flowIndex = 0;
 // 连接线
 export default class Link extends Line {
 
-    pntsLimit = 200  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.CURVE_H;
+    pntsLimit = 100  // 曲线生成的点的数量
+    linkStyle: LinkStyle = LinkStyle.CURVE;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
     isFlowSegment = false;
@@ -51,27 +51,33 @@ export default class Link extends Line {
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
-            startFeature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
-            startFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
+            startFeature.on('translate', () => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
+            startFeature.on('delete', () => { this.gls.removeFeature(this) })
         }
         if (endFeature instanceof Feature) {
             this.endFeature = endFeature;
-            endFeature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
-            endFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
+            endFeature.on('translate', () => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
+            endFeature.on('delete', () => { this.gls.removeFeature(this) })
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         let newPnts: IPixelPos[] = [];
         switch (this.linkStyle) {
-            case LinkStyle.BROKEN:
-                newPnts = this.getBrokenPoints(pointArr[0], pointArr[1]);
+            case LinkStyle.BROKEN_TWO:
+                newPnts = this.getBrokenPoints2(pointArr[0], pointArr[1]);
+                break;
+            case LinkStyle.BROKEN_ONE:
+                newPnts = this.getBrokenPoints1(pointArr[0], pointArr[1]);
                 break;
             case LinkStyle.CURVE_V:
                 newPnts = this.getCurveVPoints(pointArr[0], pointArr[1]);
                 break;
             case LinkStyle.CURVE_H:
                 newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
+                break;
+            case LinkStyle.CURVE:
+                newPnts = this.getCurvePoints(pointArr[0], pointArr[1]);
                 break;
             default:
                 newPnts = pointArr;
@@ -116,7 +122,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.startFeature = feature;
                     this.pointArr[0] = center;
-                    feature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on('translate', () => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[0] = feature;
                 }
@@ -127,7 +133,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.endFeature = feature;
                     this.pointArr[1] = center;
-                    feature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on('translate', () => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[1] = feature;
                 }
@@ -141,9 +147,15 @@ export default class Link extends Line {
     getTwoPntByTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
         if (pointArr.length < 2) throw new Error("数组长度必须大于1");
         switch (this.linkStyle) {
-            case LinkStyle.BROKEN:
+            case LinkStyle.BROKEN_TWO: {
                 const pnts = [pointArr[1], pointArr[2]]
                 return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
+            }
+            case LinkStyle.BROKEN_ONE: {
+                const pnts = [pointArr[0], pointArr[2]]
+                return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
+            }
+            case LinkStyle.CURVE: // CURVE_V或CURVE_H
             case LinkStyle.CURVE_V: // CURVE_V或CURVE_H
             case LinkStyle.CURVE_H: {
                 const mid = pointArr.length / 2
@@ -173,10 +185,24 @@ export default class Link extends Line {
         return points;
     }
 
-    getBrokenPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 2): IPixelPos[] {
+    getBrokenPoints2(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = .2): IPixelPos[] {
         const vct = createVctor(startPos, { x: startPos.x, y: -1000000 });
-        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) / ctrlExtent);
+        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
         const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
+        return points;
+    }
+
+    getBrokenPoints1(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+        const vct = [-100, 0] as IVctor;
+        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
+        const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
+        return points;
+    }
+
+    getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+        const vct = [-100, 0] as IVctor;
+        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
+        const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
         return points;
     }
 

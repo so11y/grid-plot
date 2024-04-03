@@ -27,8 +27,8 @@ class RCtrlPnt extends Pnt {
         this.zIndex = Infinity;
         this.isStroke = false;
         this.radius = .2;
-        this.dragendEvents.push(this.onUpdateParentVct.bind(this))
-        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
+        this.on('dragend', this.onUpdateParentVct.bind(this))
+        this.on('draw', this.onUpdatePosByParent.bind(this))
     }
 
     // 更新bbox的水平与垂直向量
