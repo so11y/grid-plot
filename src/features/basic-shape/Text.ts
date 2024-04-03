@@ -123,8 +123,8 @@ class Text extends Rect {
         return textArr;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();

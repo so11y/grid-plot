@@ -1,3 +1,4 @@
+import { IPixelPos } from "@/Interface";
 import { ClassName, Events } from "../../../Constants";
 import { getMousePos } from "../../../utils";
 import Pnt from "../Pnt";
@@ -26,8 +27,8 @@ class AdsorbPnt extends Pnt {
     }
 
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius?: number): Path2D {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius?: number): Path2D {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         // const center = this.getCenterPos(pointArr);
         // if (this.cbCrossLine) {
         //     ctx.save();

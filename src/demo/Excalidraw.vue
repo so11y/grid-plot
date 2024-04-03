@@ -1,5 +1,6 @@
 <template>
-    <!-- <video src="./test.mp4" autoplay></video> -->
+    <video src="/test.mp4" autoplay></video>
+    <button onclick=click>++</button>
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
@@ -833,7 +834,7 @@ function reset(clear = false) {
     rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
     let link = new Link(rect5, rect6);
-    link.lineDashArr = [5, 15]
+    link.lineDashArr = [1, 2]
     link.isFlowSegment = true;
     link.isFlowLineDash = true;
     let rect8 = new Pnt();

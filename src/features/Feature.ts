@@ -54,7 +54,7 @@ class Feature {
     opacity: number = 1; // 整体透明度
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0; // 虚线位移
-    
+
     className = ClassName.FEATURE  //类名
     id: string  // id,元素的唯一标识
     name: string = ''  // 元素的name, 给当前元素起个名字
@@ -187,7 +187,7 @@ class Feature {
      * @param r 元素的圆角 一般Rect用
      * @returns 
      */
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius: number) {
         const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
@@ -198,10 +198,10 @@ class Feature {
         })
         ctx.save()
         this.isClosePath && path.closePath()
+        lineDashArr.length > 0 && ctx.setLineDash(lineDashArr)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
-        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
         ctx.lineDashOffset = this.lineDashOffset;
         ctx.strokeStyle = this.strokeStyle;
         if (this.isPointIn) {
@@ -375,12 +375,13 @@ class Feature {
         }
     }
 
-    flowLineDash(speed = 1, direction = true){
-        if(!this.isFlowLineDash || !this.lineDashArr || this.lineDashArr.length != 2) return
-        if(direction){
-            this.lineDashOffset-=speed;
-        }else {
-            this.lineDashOffset+=speed;
+    flowLineDash(speed = .1, direction = true) {
+        if (!this.isFlowLineDash || !this.lineDashArr || this.lineDashArr.length != 2) return
+        speed = this.gls.getRatioSize(speed);
+        if (direction) {
+            this.lineDashOffset -= speed;
+        } else {
+            this.lineDashOffset += speed;
         }
     }
 

@@ -61,7 +61,7 @@ export default class Link extends Line {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
         let newPnts: IPixelPos[] = [];
         switch (this.linkStyle) {
             case LinkStyle.BROKEN:
@@ -78,7 +78,7 @@ export default class Link extends Line {
                 break;
         }
         this.actualPointArr = newPnts;
-        const path = super.draw(ctx, newPnts, lineWidth, radius);
+        const path = super.draw(ctx, newPnts, lineWidth, lineDashArr, radius);
         this.drawTriangle(ctx, newPnts);
         const flowIndex = this.getFlowIndex(newPnts.length);
         this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);

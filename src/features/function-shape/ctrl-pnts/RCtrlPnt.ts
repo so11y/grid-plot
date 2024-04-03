@@ -20,7 +20,7 @@ class RCtrlPnt extends Pnt {
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
         this.isFixedSize = true;
-        
+
         this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
         this.lineWidth = 0;

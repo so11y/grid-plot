@@ -107,44 +107,6 @@ class GridSystem {
     };
 
     // --------------------以下是私有的方法----------------------------
-    // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
-        features.forEach(f => {
-            const isBasic = isBasicFeature(f);
-            if (f.hidden) return;
-            if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
-            const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
-            if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
-                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
-                if (Math.abs(maxX - minX) < 30 && Math.abs(maxY - minY) < 30) {
-                    return
-                }
-            }
-            if (!this.cbDragOutScreen) { // 是否渲染屏幕外的元素
-                if (pointArr.every(p => {
-                    return p.x < 0 || p.x > this.ctx.canvas.width || p.y < 0 || p.y > this.ctx.canvas.height
-                })) return
-            }
-            Feature.TargetRender = this;
-            const lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
-            let path;
-            // if (f instanceof Rect) {
-            const radius = this.getRatioSize(f.radius, f.isFixedSize);
-            //     path = f.draw(this.ctx, pointArr, lineWidth, radius)
-            // } else {
-            path = f.draw(this.ctx, pointArr, lineWidth, radius);
-            // }
-            f.ondraw && f.ondraw()
-            this.ctx.save();
-            f.isOverflowHidden && this.ctx.clip(path);
-            if (isBasic) {
-                const children = this.features.filter(cf => cf.parent === f && isBasicFeature(cf));  // 找出子元素
-                if (children.length > 0) this.drawFeatures(children, true);
-            }
-            this.ctx.restore();
-        })
-    }
-
     initEventListener() {
         this.domElement.addEventListener("mousemove", this.mouseMove);
         this.domElement.addEventListener("mousedown", this.mouseDown);
@@ -587,6 +549,40 @@ class GridSystem {
 
     // --------------------以下是暴露的方法----------------------------
     // --------------------画布内元素的增删查API----------------------------
+    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
+        features.forEach(f => {
+            const isBasic = isBasicFeature(f);
+            if (f.hidden) return;
+            if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
+            const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
+            if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因(也有元素本身很小)
+                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
+                if (Math.abs(maxX - minX) < CoordinateSystem.SCALE_SHOW_MIN_SIZE && Math.abs(maxY - minY) < CoordinateSystem.SCALE_SHOW_MIN_SIZE) {
+                    return
+                }
+            }
+            if (!this.cbDragOutScreen) { // 是否渲染屏幕外的元素
+                if (pointArr.every(p => {
+                    return p.x < 0 || p.x > this.ctx.canvas.width || p.y < 0 || p.y > this.ctx.canvas.height
+                })) return
+            }
+            Feature.TargetRender = this;
+            const lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
+            let path;
+            const radius = this.getRatioSize(f.radius, f.isFixedSize);
+            const lineDashArr = f.lineDashArr.length == 2 ? [this.getRatioSize(f.lineDashArr[0], f.isFixedSize), this.getRatioSize(f.lineDashArr[1], f.isFixedSize)] : [];
+            path = f.draw(this.ctx, pointArr, lineWidth, lineDashArr as [number, number], radius);
+            f.ondraw && f.ondraw()
+            this.ctx.save();
+            f.isOverflowHidden && this.ctx.clip(path);
+            if (isBasic) {
+                const children = this.features.filter(cf => cf.parent === f && isBasicFeature(cf));  // 找出子元素
+                if (children.length > 0) this.drawFeatures(children, true);
+            }
+            this.ctx.restore();
+        })
+    }
+
     removeFeature(f: Feature | string | undefined, isRecord = true) {
         if (!f) return;
         let feature: Feature | null | undefined = null;
@@ -1035,7 +1031,7 @@ class GridSystem {
         props.isHorizonalRevert != undefined && (feature.isHorizonalRevert = props.isHorizonalRevert)
         props.isVerticalRevert != undefined && (feature.isVerticalRevert = props.isVerticalRevert)
         props.isFlowLineDash != undefined && (feature.isFlowLineDash = props.isFlowLineDash)
-        
+
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
             props.radius != undefined && (feature.radius = props.radius);

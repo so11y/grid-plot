@@ -29,9 +29,9 @@ class Video extends Rect {
             if (!height) {
                 this.domElement.addEventListener('loadeddata', () => {  // 重新设置img大小
                     setTimeout(() => {
-                        console.log(video.videoWidth,video.videoWidth, video, "video.videoWidth");
+                        console.log(video.videoWidth, video.videoWidth, video, "video.videoWidth");
                     }, 1000);
-                    
+
                     height = (video.videoHeight / video.videoWidth) * width;
                     this.setSize(this.gls.getRelativeLen(video.videoWidth), this.gls.getRelativeLen(video.videoHeight))
                 });
@@ -44,8 +44,8 @@ class Video extends Rect {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();

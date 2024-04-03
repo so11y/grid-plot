@@ -16,7 +16,7 @@ class Img extends Rect {
         if (encodeURIComponent(src).replace(/%../g, "x").length > 500000) {
             throw "只支持0.5M一下的文件!"
         }
-        
+
         super(x, y, width, height);
         this.className = ClassName.IMG;
         this.src = src;
@@ -36,8 +36,8 @@ class Img extends Rect {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: [number, number], radius = 0) {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (this.domElement) {
             const { width, height, leftTop } = this.getSize(pointArr);
             ctx.save();
