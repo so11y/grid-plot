@@ -645,6 +645,7 @@ function reset(clear = false) {
         { x: 350, y: 190 },
     ])
     line.tipInfo.txt = "测试文本"
+    line.insertMidpoints();
     line.enableCtrlPnts();
     gls.value.addFeature(line, false)
 

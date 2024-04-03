@@ -592,14 +592,6 @@ export default class Bbox extends Rect {
         }
     }
 
-    getCtrlPnts(): (SCtrlPnt | RCtrlPnt)[] {
-        return this.gls.features.filter(f => (f.className == ClassName.SCTRLPNT || f.className == ClassName.RCTRLPNT) && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
-    }
-
-    getACtrlPnts(): ACtrlPnt[] {
-        return this.gls.features.filter(f => f.className == ClassName.ANCHORPNT && f.parent == this) as ACtrlPnt[];
-    }
-
     destroy() {
         const ctrlPnts = this.getCtrlPnts();
         const anchorPnts = this.getACtrlPnts();

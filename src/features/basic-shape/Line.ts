@@ -141,7 +141,6 @@ class Line extends Feature {
             this.clearCtrlPos();
         }
     }
-
     clearCtrlPos() {
         const ctrlPnts = this.getCtrlPnts();
         ctrlPnts.forEach(cp => {
@@ -149,9 +148,27 @@ class Line extends Feature {
         })
     }
 
-    getCtrlPnts() {
-        const ctrlPnts = this.gls.features.filter(f => (f instanceof SCtrlPnt || f instanceof SCtrlPnt) && f.parent === this);
-        return ctrlPnts;
+    // 每两点插入一个中点
+    insertMidpoints(pointArr = this.pointArr) {
+        // 结果数组，用来存放插入中点后的坐标  
+        let newPointArr = [];
+        // 遍历坐标数组  
+        for (let i = 0; i < pointArr.length - 1; i++) {
+            // 获取当前点和下一点  
+            const current = pointArr[i];
+            const next = pointArr[i + 1];
+            // 计算中间点  
+            const midpoint = {
+                x: (current.x + next.x) / 2,
+                y: (current.y + next.y) / 2
+            };
+            // 将当前点和中点加入结果数组  
+            newPointArr.push(current);
+            newPointArr.push(midpoint);
+        }
+        // 最后一个点不需要再计算中点，直接添加到结果数组  
+        newPointArr.push(pointArr[pointArr.length - 1]);
+        this.pointArr = newPointArr;
     }
 
     getPointOfPer(per: number) {  // 获取选段百分之多少处的点 per: 0~1

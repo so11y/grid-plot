@@ -4,6 +4,9 @@ import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize, Listeners } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
 import gsap from "gsap";
+import ACtrlPnt from "./function-shape/ctrl-pnts/ACtrlPnt";
+import SCtrlPnt from "./function-shape/ctrl-pnts/SCtrlPnt";
+import RCtrlPnt from "./function-shape/ctrl-pnts/RCtrlPnt";
 
 class Feature {
 
@@ -449,6 +452,13 @@ class Feature {
         }
     }
 
+    getCtrlPnts(): (SCtrlPnt | RCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == ClassName.SCTRLPNT || f.className == ClassName.RCTRLPNT) && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
+    }
+
+    getACtrlPnts(): ACtrlPnt[] {
+        return this.gls.features.filter(f => f.className == ClassName.ANCHORPNT && f.parent == this) as ACtrlPnt[];
+    }
 }
 
 export default Feature;
