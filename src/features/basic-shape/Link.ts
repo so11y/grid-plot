@@ -9,8 +9,8 @@ let flowIndex = 0;
 // 连接线
 export default class Link extends Line {
 
-    pntsLimit = 100  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.CURVE;
+    pntsLimit = 50  // 曲线生成的点的数量
+    linkStyle: LinkStyle = LinkStyle.BROKEN_ONE;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
     isFlowSegment = false;
@@ -194,14 +194,15 @@ export default class Link extends Line {
 
     getBrokenPoints1(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
         const vct = [-100, 0] as IVctor;
-        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
+        const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
         const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
         return points;
     }
 
     getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
-        const vct = [-100, 0] as IVctor;
-        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
+        const vct = [100, 0] as IVctor;
+        const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
+        this.gls.test = cp;
         const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
         return points;
     }

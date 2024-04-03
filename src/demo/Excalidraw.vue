@@ -1,6 +1,4 @@
 <template>
-    <!-- <video src="/test.mp4" autoplay></video>
-    <button onclick=click>++</button> -->
     <div class="app-container">
         <div class="top-toolbar">
             <a-row type="flex" align="middle">
