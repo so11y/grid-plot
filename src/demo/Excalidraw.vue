@@ -623,14 +623,14 @@ function reset(clear = false) {
     rect.rotate(60)
     gls.value.addFeature(rect, false)
 
-    // const text = new Text(`当内容
-    // 特别多的时候，canvas不会自动
-    // 换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
-    // text.fitSize = true;
-    // text.radius = 2
-    // // text.rotate(30)
-    // gls.value.addFeature(text, false);
-    // // rect.addFeature(text);
+    const text = new Text(`当内容
+    特别多的时候，canvas不会自动
+    换行，canvas需要特别处理当\n内容特别多的时候，canvas不会自动换行`, 620, 100, 200, 50);
+    text.fitSize = true;
+    text.radius = 2
+    // text.rotate(30)
+    gls.value.addFeature(text, false);
+    // rect.addFeature(text);
 
     let rect2 = new Rect(150, 150, 50, 50)
     rect2.fillStyle = "transparent"
@@ -832,12 +832,12 @@ function reset(clear = false) {
     gls.value.addFeature(rect7, false);
     rect5.addChild(rect7, { cbSelect: false, cbCapture: false })
 
-    let link = new Link(rect5, rect6);
-    link.lineDashArr = [1, 2]
-    link.isFlowSegment = true;
-    link.isFlowLineDash = true;
-    let rect8 = new Pnt();
-    gls.value.addFeature(rect8, false);
+    // let link = new Link(rect5, rect6);
+    // link.lineDashArr = [1, 2]
+    // link.isFlowSegment = true;
+    // link.isFlowLineDash = true;
+    // let rect8 = new Pnt();
+    // gls.value.addFeature(rect8, false);
     // link.drawFlowSegment = (ctx: CanvasRenderingContext2D, curvePnts = [], lineWidth = 0, flowIndex = 0) => {
     //     // console.log(flowIndex, curvePnts[flowIndex], "flowIndex");
     //     if (curvePnts[flowIndex]) {
@@ -845,7 +845,7 @@ function reset(clear = false) {
     //         rect8.setPos(pos.x, pos.y)
     //     }
     // }
-    gls.value.addFeature(link, false);
+    // gls.value.addFeature(link, false);
     // link.triangleInfo.hidden = false;
     // setTimeout(() => {
     //     console.log(link.getPointOfPer(.9));

@@ -1,4 +1,4 @@
-import { ClassName } from "@/Constants";
+import { AdsorbType, ClassName } from "@/Constants";
 import { IBasicFeature, IPoint } from "../../../Interface";
 import Pnt from "../Pnt";
 
@@ -23,6 +23,7 @@ class ACtrlPnt extends Pnt {
         this.radius = .2;
         this.zIndex = Infinity;
         this.isStroke = false;
+        this.adsorbTypes = [AdsorbType.POINT];
         this.isOnlyCenterAdsorb = true;
         this.gls.addFeature(this, false);
         this.on('draw', this.onUpdatePosByParent.bind(this))

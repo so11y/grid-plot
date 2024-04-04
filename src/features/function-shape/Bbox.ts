@@ -7,6 +7,7 @@ import Feature from "../Feature";
 import ACtrlPnt from "./ctrl-pnts/ACtrlPnt";
 import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./ctrl-pnts/SCtrlPnt";
+import Pnt from "./Pnt";
 import SelectArea from "./SelectArea";
 
 // 包围盒元素, 形变(放大,缩小)元素用
@@ -547,41 +548,27 @@ export default class Bbox extends Rect {
 
 
             let link: Link;
+            console.log(anchorPnts, "anchorPnts");
             anchorPnts.forEach(ap => {
                 ap.on('mousedown', (e: any) => {
-                    const start = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-                    link = new Link(this.target, start);
-                    this.gls.addFeature(link, false);
-                })
-                ap.on('drag', (e: any) => {
-                    const end = this.gls.getRelativePos(getMousePos(this.gls.domElement, e))
-                    link.pointArr[1] = end;
+                    if (!link) {
+                        link = new Link(this.target, ap);
+                        this.gls.addFeature(link, false);
+                    }
                 })
                 ap.on('mouseup', (e: any) => {
-                    const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e));
-                    const endFeature = this.gls.features.find(f => (isBasicFeature(f) || f.className == ClassName.PNT) && isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)));
+                    const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e.detail));
+                    const endFeature = this.gls.features.find(f => (f instanceof Pnt) && isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)) && !(f instanceof ACtrlPnt));
+                    this.gls.removeFeature(link, false)
                     if (endFeature) {
-                        link.modifyTarget(endFeature, LinkMark.END)
-                        // let align = determinePosition(Feature.getCenterPos(endFeature.pointArr), upPos);
-                        // console.log(align);
-                        // new ACtrlPnt(endFeature as IBasicFeature, () => {
-                        //     const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(endFeature.pointArr)
-                        //     switch (align) {
-                        //         case AlignType.LEFT:
-                        //             return getMidOfTwoPnts(leftTop, leftBottom)
-                        //         case AlignType.RIGHT:
-                        //             return getMidOfTwoPnts(rightTop, rightBottom)
-                        //         case AlignType.TOP:
-                        //             return getMidOfTwoPnts(leftTop, rightTop)
-                        //         case AlignType.BOTTOM:
-                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
-                        //         default:
-                        //             return getMidOfTwoPnts(leftBottom, rightBottom)
-                        //     }
-                        // })
+                        if (ap.name === AlignType.LEFT) {
+                            const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(this.target.pointArr)
+                            const leftP = getMidOfTwoPnts(leftTop, leftBottom);
+                            const tap = new Pnt(leftP.x, leftP.y,);
+                            this.target.addChild(tap, {}, false)
+                            this.gls.addFeature(new Link(tap, endFeature), false);
+                        }
                     }
-                    this.enableAnchorPnts(false)
-                    this.enableAnchorPnts(true)
                 })
             })
         } else {
@@ -594,10 +581,10 @@ export default class Bbox extends Rect {
 
     destroy() {
         const ctrlPnts = this.getCtrlPnts();
-        const anchorPnts = this.getACtrlPnts();
         ctrlPnts.forEach(cp => {
             this.gls.removeFeature(cp, false);
         })
+        const anchorPnts = this.getACtrlPnts();
         anchorPnts.forEach(ap => {
             this.gls.removeFeature(ap, false);
         })

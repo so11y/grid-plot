@@ -46,7 +46,7 @@ export default class Group extends Feature {
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
             const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
-            const len = getLenOfPntToLine({ x: 0, y: minY }, pointArr[0], pointArr[1]);
+            const len = getLenOfPntToLine({ x: 0, y: minY }, pointArr[0], pointArr[1], true);
             const dx = len * Math.sin(-angle * Math.PI / 180);
             const dy = len * Math.cos(-angle * Math.PI / 180);
             f.translate(-dx, -dy)
@@ -59,7 +59,7 @@ export default class Group extends Feature {
         features.forEach((f, i) => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
             const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
-            const len = getLenOfPntToLine({ x: minX, y: 0 }, pointArr[0], pointArr[3]);
+            const len = getLenOfPntToLine({ x: minX, y: 0 }, pointArr[0], pointArr[3], true);
             const dx = len * Math.cos(angle * Math.PI / 180);
             const dy = len * Math.sin(angle * Math.PI / 180);
             f.translate(-dx, -dy)
@@ -72,7 +72,7 @@ export default class Group extends Feature {
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
             const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
-            const len = getLenOfPntToLine({ x: 0, y: maxY }, pointArr[2], pointArr[3]);
+            const len = getLenOfPntToLine({ x: 0, y: maxY }, pointArr[2], pointArr[3], true);
             const dx = len * Math.sin(-angle * Math.PI / 180);
             const dy = len * Math.cos(-angle * Math.PI / 180);
             f.translate(dx, dy)
@@ -85,7 +85,7 @@ export default class Group extends Feature {
         features.forEach(f => {
             const fPointArr = f.getPointArr(f.pointArr, -angle, center); // 获取旋转之前的点
             const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(fPointArr);  // 获取包围盒最左侧的点
-            const len = getLenOfPntToLine({ x: maxX, y: 0 }, pointArr[1], pointArr[2]);
+            const len = getLenOfPntToLine({ x: maxX, y: 0 }, pointArr[1], pointArr[2], true);
             const dx = len * Math.cos(angle * Math.PI / 180);
             const dy = len * Math.sin(angle * Math.PI / 180);
             f.translate(dx, dy)

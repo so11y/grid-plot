@@ -5,7 +5,7 @@ import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getNearestPoint, getLenOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -19,6 +19,7 @@ import EraserPnt from "./features/function-shape/func-pnts/EraserPnt";
 import Link from "./features/basic-shape/Link";
 import RCtrlPnt from "./features/function-shape/ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
+import Pnt from "./features/function-shape/Pnt";
 
 class GridSystem {
 
@@ -221,7 +222,7 @@ class GridSystem {
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
                 if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
-                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev }))};
+                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev })) };
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
@@ -237,6 +238,7 @@ class GridSystem {
                                 const { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
                                     gridCompute: focusNode.adsorbTypes.includes(AdsorbType.GRID),
                                     featureCompute: focusNode.adsorbTypes.includes(AdsorbType.FEATURE),
+                                    pointCompute: focusNode.adsorbTypes.includes(AdsorbType.POINT),
                                     onlyCenter: focusNode.isOnlyCenterAdsorb
                                 });
                                 focusNode.translate(offsetX, offsetY)
@@ -321,7 +323,7 @@ class GridSystem {
      * @returns 
      */
     private getAdsorbOffsetDist(feature: Feature, options = {
-        gridCompute: false, featureCompute: false, onlyCenter: false
+        gridCompute: false, featureCompute: false, onlyCenter: false, pointCompute: false,
     }) {
         const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
@@ -332,6 +334,7 @@ class GridSystem {
         // 吸附的约束，灵敏度
         let min = gridSize * .2;
         let max = gridSize * .8;
+        const minD = 5;
 
         function getDeviation(num: number): number {   // 附近可吸附的位置
             const gridSize = CoordinateSystem.GRID_SIZE;
@@ -481,6 +484,20 @@ class GridSystem {
                             }
                         }
                     })
+                }
+            }
+        }
+        if (options.pointCompute) {
+            if (offsetX == 0 || offsetY == 0) {
+                const center = { x: centerX, y: centerY }
+                const points = this.features.filter(f => f instanceof Pnt).map(f => Feature.getCenterPos(f.pointArr));
+                const nearP = getNearestPoint(center, points) as IRelativePos;
+                if (nearP) {
+                    const d = getLenOfTwoPnts(nearP, center);
+                    if (d < minD) {
+                        offsetX = nearP.x - center.x;
+                        offsetY = nearP.y - center.y;
+                    }
                 }
             }
         }
@@ -1407,7 +1424,7 @@ class GridSystem {
                     p.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
                 const lineDashArr = feature.lineDashArr.length == 2 ? [this.getRatioSize(feature.lineDashArr[0], feature.isFixedSize), this.getRatioSize(feature.lineDashArr[1], feature.isFixedSize)] : [];
-                feature.draw(ctx, pointArr, lineWidth,lineDashArr,  this.getRatioSize(feature.radius));
+                feature.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(feature.radius));
             })
             this.scale = scale;
             return offscreenCanvas.toDataURL("image/png");
@@ -1440,7 +1457,7 @@ class GridSystem {
  * @param point 
  * @returns 
  */
-    getAdsorbPos(point: IRelativePos) {
+    getAdsorb2Grid(point: IRelativePos) {
         const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         // 相对像素
@@ -1471,6 +1488,20 @@ class GridSystem {
             const gridSize = CoordinateSystem.GRID_SIZE;
             return (num / gridSize) % gridSize;
         }
+    }
+
+    getAdsorb2Point(point: IRelativePos) {
+        // 吸附的约束，灵敏度
+        const minD = 5;
+        const points = this.features.filter(f => f instanceof Pnt).map(f => Feature.getCenterPos(f.pointArr));
+        const nearP = getNearestPoint(point, points) as IRelativePos;
+        if (nearP) {
+            const d = getLenOfTwoPnts(nearP, point);
+            if (d < minD) {
+                return { x: nearP.x - point.x, y: nearP.y - point.y };
+            }
+        }
+        return { x: 0, y: 0 };
     }
 
     destroy() {

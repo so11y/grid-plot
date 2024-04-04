@@ -90,6 +90,7 @@ enum Orientation {
 enum AdsorbType {
     GRID = 'grid',
     FEATURE = 'feature',
+    POINT = 'point',
 }
 
 // 选中模式
