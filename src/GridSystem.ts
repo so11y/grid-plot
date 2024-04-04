@@ -55,7 +55,7 @@ class GridSystem {
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
 
-    dragingSensitivity: number = 1.2;   // 拖拽时候的灵敏度, 建议 0 ~ 3
+    dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ 3
     friction = .93;  // 摩擦力
     lastClickTime: number = 0;  // 用于双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
@@ -201,8 +201,6 @@ class GridSystem {
 
         document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
         this.onmousedown && this.onmousedown(ev);
-        const { x: downX, y: downY } = getMousePos(this.domElement, ev);
-        const { x: px, y: py } = this.pageSlicePos;
         this.features.forEach(f => f.isFocused = false);
         const focusNodes = this.features.slice().reverse().filter(f => f.cbSelect && f.isPointIn)
         let focusNode = this.focusNode = focusNodes[0];  // 寻找鼠标悬浮元素
@@ -254,13 +252,14 @@ class GridSystem {
                     }
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
+                this.domElement.style.cursor = "grabbing"
                 mousemove = (e: any) => {
                     const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
                     this.ondrag && this.ondrag(e);
-                    this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
-                    this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
+                    if (lastMove.x && lastMove.y) {
+                        this.translate((moveX - lastMove.x) * this.dragingSensitivity, (moveY - lastMove.y) * this.dragingSensitivity)
+                    }
                     this.setPageSlicePosByExtent(this.extent);
-
                     velocity.x = moveX - lastMove.x; // 计算dx
                     velocity.y = moveY - lastMove.y; // 计算dy
                     lastMove.x = moveX;
@@ -269,6 +268,7 @@ class GridSystem {
             }
         }
         const mouseup = (e: any) => {
+            this.domElement.style.cursor = "auto"
             this.cbSelectFeature = true;
             this.onmouseup && this.onmouseup(e);
             document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
@@ -1333,15 +1333,18 @@ class GridSystem {
     }
 
     // ----------------------------画布相关操作方法------------------------------
-    translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {  // 移动画布
-        gsap.to(this.pageSlicePos, {
-            duration,
-            x: offsetX,
-            y: offsetY,
-            ease: "slow.out",
-        })
-        // this.pageSlicePos.x += offsetX;
-        // this.pageSlicePos.y += offsetY;
+    translate(offsetX: number = 0, offsetY: number = 0, duration = 0) {  // 移动画布
+        if (duration > 0) {
+            gsap.to(this.pageSlicePos, {
+                duration,
+                x: offsetX,
+                y: offsetY,
+                ease: "slow.out",
+            })
+        } else {
+            this.pageSlicePos.x += offsetX;
+            this.pageSlicePos.y += offsetY;
+        }
     }
     zoomTo(scale: number, point?: IRelativePos) { // 缩放至 
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
