@@ -10,7 +10,7 @@ let flowIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 50  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.BROKEN_ONE;
+    linkStyle: LinkStyle = LinkStyle.BROKEN_TWO;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
     isFlowSegment = false;
@@ -51,13 +51,13 @@ export default class Link extends Line {
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
-            startFeature.on('translate', () => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
-            startFeature.on('delete', () => { this.gls.removeFeature(this) })
+            startFeature.on('translate', this.onTranslateStart.bind(this))
+            startFeature.on('delete', this.onDelete.bind(this))
         }
         if (endFeature instanceof Feature) {
             this.endFeature = endFeature;
-            endFeature.on('translate', () => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
-            endFeature.on('delete', () => { this.gls.removeFeature(this) })
+            endFeature.on('translate', this.onTranslateEnd.bind(this))
+            endFeature.on('delete', this.onDelete.bind(this))
         }
     }
 
@@ -185,7 +185,7 @@ export default class Link extends Line {
         return points;
     }
 
-    getBrokenPoints2(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = .2): IPixelPos[] {
+    getBrokenPoints2(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = .5): IPixelPos[] {
         const vct = createVctor(startPos, { x: startPos.x, y: -1000000 });
         const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
         const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
@@ -246,4 +246,18 @@ export default class Link extends Line {
             ctx.stroke(path);
         }
     }
+
+    onTranslateStart() {
+        const feature = this.startFeature as Feature
+        this.pointArr[0] = Feature.getCenterPos(feature.pointArr)
+    }
+    onTranslateEnd() {
+        const feature = this.endFeature as Feature;
+        this.pointArr[1] = Feature.getCenterPos(feature.pointArr)
+    }
+
+    onDelete() {
+        this.gls.removeFeature(this)
+    }
+
 }

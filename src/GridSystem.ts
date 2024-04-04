@@ -1,11 +1,11 @@
-import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle, AdsorbType } from "./Constants";
+import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle, AdsorbType, AlignType } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getNearestPoint, getLenOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getNearestPoint, getLenOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements, getMidOfTwoPnts } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -20,6 +20,7 @@ import Link from "./features/basic-shape/Link";
 import RCtrlPnt from "./features/function-shape/ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
 import Pnt from "./features/function-shape/Pnt";
+import ACtrlPnt from "./features/function-shape/ctrl-pnts/ACtrlPnt";
 
 class GridSystem {
 
@@ -416,7 +417,7 @@ class GridSystem {
             // 元素间对其
             for (let index = 0; index < this.features.length; index++) {
                 const f = this.features[index];
-                if (f === feature) {
+                if (f === feature || !isBasicFeature(feature)) {
                     continue
                 }
                 const [left, right, top, bottom] = Feature.getRectWrapExtent(f.pointArr);
@@ -631,6 +632,7 @@ class GridSystem {
             if (!feature.zIndex) feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
+        this.initAnchorPnts(feature);
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
     getFocusNode() { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
@@ -1505,6 +1507,43 @@ class GridSystem {
             }
         }
         return { x: 0, y: 0 };
+    }
+
+    initAnchorPnts(feature: Feature) {
+        if (isBasicFeature(feature) && !(feature instanceof Line)) {
+            let pnt = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftTop, leftBottom);
+            });
+            pnt.name = AlignType.LEFT
+            pnt.cbSelect = false;
+            pnt.hidden = true;
+            feature.addChild(pnt, {}, false)
+            let pnt2 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(rightTop, rightBottom);
+            });
+            pnt2.name = AlignType.RIGHT
+            pnt2.cbSelect = false;
+            pnt2.hidden = true;
+            feature.addChild(pnt2, {}, false)
+            let pnt3 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftTop, rightTop);
+            });
+            pnt3.name = AlignType.TOP
+            pnt3.cbSelect = false;
+            pnt3.hidden = true;
+            feature.addChild(pnt3, {}, false)
+            let pnt4 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftBottom, rightBottom);
+            });
+            pnt4.name = AlignType.BOTTOM
+            pnt4.cbSelect = false;
+            pnt4.hidden = true;
+            feature.addChild(pnt4, {}, false)
+        }
     }
 
     destroy() {

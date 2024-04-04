@@ -92,7 +92,7 @@ class Feature {
     isOutScreen: boolean = false;  // 元素是否超出了画布范围
     isOverflowHidden: boolean = false;  // 子元素超出元素范围,是否隐藏(裁剪掉)
     isStroke: boolean = true;  // 元素是否绘制边框
-    isOnlyCenterAdsorb: boolean = false;  // 元素吸附是否只以包围盒的中心点对其
+    isOnlyCenterAdsorb: boolean = true;  // 元素吸附是否只以包围盒的中心点对其
     isOnlyHorizonalMove: boolean = false;  // 元素是否只能水平方向拖拽(移动)
     isOnlyVerticalMove: boolean = false;  // 元素是否只能垂直方向拖拽(移动)
     isHorizonalRevert = false;  // 元素是否水平翻转了(用于确定元素左上角的点)
@@ -357,12 +357,6 @@ class Feature {
         }
     }
 
-    destroy() {
-        this.children.forEach(cf => {
-            this.gls.removeFeature(cf, false);
-        })
-    };
-
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
         if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
@@ -459,6 +453,13 @@ class Feature {
     getACtrlPnts(): ACtrlPnt[] {
         return this.gls.features.filter(f => f.className == ClassName.ANCHORPNT && f.parent == this) as ACtrlPnt[];
     }
+
+    destroy() {
+        this.children.forEach(cf => {
+            this.gls.removeFeature(cf, false);
+        })
+    };
+
 }
 
 export default Feature;

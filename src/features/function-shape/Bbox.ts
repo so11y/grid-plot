@@ -1,5 +1,5 @@
 import { AlignType, ClassName, CtrlType, LinkMark } from "@/Constants";
-import { IBasicFeature, IVctor } from "../../Interface";
+import { IBasicFeature, IPoint, IVctor } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
@@ -490,7 +490,7 @@ export default class Bbox extends Rect {
     enableAnchorPnts(bool = true) {
         if (bool) {
             const anchorPnts: ACtrlPnt[] = []
-            for (let index = 0; index < 1; index++) {
+            for (let index = 0; index < 4; index++) {
                 switch (index) {
                     case 0: {
                         let leftAp = new ACtrlPnt(this, () => {
@@ -546,7 +546,6 @@ export default class Bbox extends Rect {
                 }
             }
 
-
             let link: Link;
             console.log(anchorPnts, "anchorPnts");
             anchorPnts.forEach(ap => {
@@ -554,19 +553,18 @@ export default class Bbox extends Rect {
                     if (!link) {
                         link = new Link(this.target, ap);
                         this.gls.addFeature(link, false);
+                        this.gls.features.filter(f => (f instanceof ACtrlPnt) && isBasicFeature(f.parent) && (f.hidden = false))
                     }
                 })
                 ap.on('mouseup', (e: any) => {
-                    const upPos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e.detail));
-                    const endFeature = this.gls.features.find(f => (f instanceof Pnt) && isPntInPolygon(upPos, Feature.getRectWrapPoints(f.pointArr)) && !(f instanceof ACtrlPnt));
+                    const mousePos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e.detail));
+                    const endFeature = this.gls.features.filter(f => (f instanceof ACtrlPnt) && f != ap).find(f => isPntInPolygon(mousePos, Feature.getRectWrapPoints(f.pointArr)));
                     this.gls.removeFeature(link, false)
+                    this.gls.features.filter(f => (f instanceof ACtrlPnt) && isBasicFeature(f.parent) && (f.hidden = true))
                     if (endFeature) {
-                        if (ap.name === AlignType.LEFT) {
-                            const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(this.target.pointArr)
-                            const leftP = getMidOfTwoPnts(leftTop, leftBottom);
-                            const tap = new Pnt(leftP.x, leftP.y,);
-                            this.target.addChild(tap, {}, false)
-                            this.gls.addFeature(new Link(tap, endFeature), false);
+                        const startFeature = this.target.children.find(cf => cf.name === ap.name);
+                        if (startFeature) {
+                            this.gls.addFeature(new Link(startFeature, endFeature), false);
                         }
                     }
                 })
