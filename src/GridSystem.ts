@@ -3,7 +3,7 @@ import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
-import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, Listeners } from "./Interface";
 import Stack from "./Stack";
 import { beautifyHTML, getNearestPoint, getLenOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements, getMidOfTwoPnts } from "./utils";
 import gsap from "gsap";
@@ -29,6 +29,7 @@ class GridSystem {
     static Bbox: Bbox | null;
     static Shortcuts: Shortcuts | null;
     static Eraser: EraserPnt | null;
+    static MultipleSelect: Group | null;
 
     className: string = ClassName.GRIDSYSTEM;
     scale: number = 10;
@@ -78,6 +79,7 @@ class GridSystem {
     onmousemove: Function = () => { };
     onmouseup: Function = () => { };
     ondbclick: Function = () => { };
+    listeners: Listeners = {};
 
     test: IPoint = { x: 0, y: 0 }
 
@@ -190,7 +192,7 @@ class GridSystem {
         const pos = getMousePos(this.domElement, e);
         this.mousePos.x = pos.x;
         this.mousePos.y = pos.y;
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_MOVE, { detail: e }));
+        this.dispatch(new CustomEvent(Events.MOUSE_MOVE, { detail: e }))
     }
 
     private mouseDown = (ev: any) => {
@@ -199,8 +201,7 @@ class GridSystem {
         const curPageSlicePos = { x: this.pageSlicePos.x, y: this.pageSlicePos.y }
         const velocity = { x: 0, y: 0 }; // 速度分量
         const lastMove = { x: 0, y: 0 } // 上一次鼠标位置
-
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
+        this.dispatch(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }))
         this.onmousedown && this.onmousedown(ev);
         this.features.forEach(f => f.isFocused = false);
         const focusNodes = this.features.slice().reverse().filter(f => f.cbSelect && f.isPointIn)
@@ -208,20 +209,31 @@ class GridSystem {
         let moveFlag = false;
         let mousemove = (e: any) => { };
         if (this.cbSelectFeature) {
-            if (ev.buttons != 1) {
+            if (ev.buttons != 1) {  // 1是左键,2是右键
                 this.focusNode = focusNode;
             } else {  // 左键点击
+                const basicFocusNode = this.getFocusNode();  // 获取focusNode中的基础元素
                 focusNodes.forEach(f => f.dispatch(new CustomEvent('mousedown', { detail: ev })))
                 if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
-                    if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                    if ((isBasicFeature(focusNode) || basicFocusNode instanceof SelectArea)) {
                         const bbox = this.enableBbox(focusNode as IBasicFeature | SelectArea);
                         bbox && (focusNode = bbox);
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
-                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev })) };
+                if (!(basicFocusNode instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
+                if (lastFocusNode && basicFocusNode !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev })) };
+                if (Shortcuts.isCtrlKey && basicFocusNode) {
+                    if (!GridSystem.MultipleSelect) {
+                        GridSystem.MultipleSelect = new Group([basicFocusNode])
+                        GridSystem.MultipleSelect.isRmoveChild = false;
+                        this.addFeature(GridSystem.MultipleSelect, false)
+                    } else {
+                        GridSystem.MultipleSelect.add(basicFocusNode);
+                    }
+                    console.log(GridSystem.MultipleSelect, "GridSystem.MultipleSelect");
+                }
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
@@ -266,13 +278,15 @@ class GridSystem {
                     lastMove.x = moveX;
                     lastMove.y = moveY;
                 }
+            } else {
+                this.removeFeature(GridSystem.MultipleSelect, false)
             }
         }
         const mouseup = (e: any) => {
             this.domElement.style.cursor = "auto"
             this.cbSelectFeature = true;
             this.onmouseup && this.onmouseup(e);
-            document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
+            this.dispatch(new CustomEvent(Events.MOUSE_UP, { detail: e }))
             if (focusNode) {
                 focusNode._orientations = null;
                 focusNode.dispatch(new CustomEvent('mouseup', { detail: e }))
@@ -284,7 +298,7 @@ class GridSystem {
             document.removeEventListener("mousemove", mousemove)
             document.removeEventListener("mouseup", mouseup);
             if (ev.buttons === 2 && this.pageSlicePos.x === curPageSlicePos.x && this.pageSlicePos.y === curPageSlicePos.y) {  // 判断右击
-                document.dispatchEvent(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }));
+                this.dispatch(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }))
             }
 
             // 摩擦力过渡停止
@@ -312,7 +326,7 @@ class GridSystem {
             if (focusNode) {
                 focusNode.dispatch(new CustomEvent('dbclick', { detail: ev }))
             }
-            document.dispatchEvent(new CustomEvent(Events.DB_CLICK, { detail: ev }));
+            this.dispatch(new CustomEvent(Events.DB_CLICK, { detail: ev }))
         }
         this.lastClickTime = new Date().getTime();
     }
@@ -533,7 +547,7 @@ class GridSystem {
                 this.back2center(x, y, lastGirdSize);
             }
         }
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }));
+        this.dispatch(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }))
     };
 
     // 以鼠标中心点位置去放大
@@ -602,7 +616,7 @@ class GridSystem {
         })
     }
 
-    removeFeature(f: Feature | string | undefined, isRecord = true) {
+    removeFeature(f: Feature | string | undefined | null, isRecord = true) {
         if (!f) return;
         let feature: Feature | null | undefined = null;
         if (f instanceof Feature) {
@@ -635,7 +649,7 @@ class GridSystem {
         this.initAnchorPnts(feature);
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
+    getFocusNode(): IBasicFeature | null { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as IBasicFeature;
@@ -653,7 +667,7 @@ class GridSystem {
             }
             return this.focusNode as IBasicFeature;
         }
-        return;
+        return null;
     }
 
     // --------------------------调整元素上下层级相关--------------------------------
@@ -735,8 +749,8 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const clickDraw = (e: any) => {
@@ -751,8 +765,8 @@ class GridSystem {
         const moveDraw = () => {
             rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
         }
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
-        document.addEventListener(Events.MOUSE_MOVE, moveDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
+        this.on(Events.MOUSE_MOVE, moveDraw)
         return clear;
     }
     continuousClickToFeature(line: Line, fn?: Function) { // 鼠标点一下添加一个点去画折线
@@ -762,9 +776,9 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.RIGHT_CLICK, overDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
+            this.off(Events.RIGHT_CLICK, overDraw)
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const moveDraw = (e: any) => {
@@ -777,7 +791,7 @@ class GridSystem {
                     line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
                 this.addFeature(line, false);
-                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
+                this.on(Events.MOUSE_MOVE, moveDraw)
             } else {
                 throw "请用左键绘制!"
             }
@@ -786,8 +800,8 @@ class GridSystem {
             clear(false);
             fn && fn();
         }
-        document.addEventListener(Events.RIGHT_CLICK, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
+        this.on(Events.RIGHT_CLICK, overDraw)
         return clear;
     }
     downMoveToFeature(line: Line, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
@@ -799,9 +813,9 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
-            document.removeEventListener(Events.MOUSE_UP, overDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
+            this.off(Events.MOUSE_UP, overDraw)
             !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const moveDraw = () => {
@@ -849,15 +863,14 @@ class GridSystem {
             if (e.detail.button === 0) {
                 const { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
                 line.addPoint({ x, y });
-                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
-                document.addEventListener(Events.MOUSE_UP, overDraw);
+                this.on(Events.MOUSE_MOVE, moveDraw)
+                this.on(Events.MOUSE_UP, overDraw)
                 this.addFeature(line, false);
             } else {
                 throw "请用左键绘制!"
             }
         }
-        // document.addEventListener(Events.MOUSE_UP, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
         return clear;
     }
 
@@ -1552,6 +1565,30 @@ class GridSystem {
             this.removeFeature(f, false);
         })
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    }
+
+    on(type: string, callback: Function) {
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
+        }
+        this.listeners[type].push(callback);
+    }
+    // 取消订阅事件
+    off(type: string, callback: Function) {
+        if (this.listeners[type]) 1
+        console.log(this.listeners[type], "this.listeners[type]");
+        const index = this.listeners[type].indexOf(callback);
+        if (index != -1) {
+            this.listeners[type].splice(index, 1);
+        }
+    }
+    // 触发事件
+    dispatch(event: CustomEvent) {
+        if (this.listeners[event.type]) {
+            this.listeners[event.type].forEach(callback => {
+                callback(event);
+            });
+        }
     }
 
 }

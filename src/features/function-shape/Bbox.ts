@@ -549,7 +549,6 @@ export default class Bbox extends Rect {
             }
 
             let link: Link | null;
-            console.log(anchorPnts, "anchorPnts");
             anchorPnts.forEach(ap => {
                 ap.on('mousedown', (e: any) => {
                     if (!link) {

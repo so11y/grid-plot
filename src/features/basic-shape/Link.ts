@@ -1,6 +1,6 @@
 import { ClassName, FontFamily, LinkMark, LinkStyle } from "../../Constants";
 import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
-import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier, getPntsOf2Bezier } from "../../utils";
+import { createVctor, getAngleOfTwoPnts, getNearNodes, getPntInVct, getRectPoint, getPntsOf3Bezier, getPntsOf2Bezier, isPntInPolygon, getUnitSize } from "../../utils";
 import Feature from "../Feature";
 import Line from "./Line";
 
@@ -79,14 +79,17 @@ export default class Link extends Line {
             case LinkStyle.CURVE:
                 newPnts = this.getCurvePoints(pointArr[0], pointArr[1]);
                 break;
+            case LinkStyle.AUTOBROKEN:
+                newPnts = this.getAutoBrokenPoints(pointArr[0], pointArr[1]);
+                break;
             default:
                 newPnts = pointArr;
                 break;
         }
         this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, lineDashArr, radius);
-        this.drawTriangle(ctx, newPnts);
         const flowIndex = this.getFlowIndex(newPnts.length);
+        this.drawTriangle(ctx, newPnts);
         this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);
         return path;
     }
@@ -114,7 +117,7 @@ export default class Link extends Line {
         ctx.restore();
     }
 
-    // 修改起点或终点的位置
+    // 修改起点或终点的位置,切换起始点或终点
     modifyTarget(feature: Feature | IRelativePos, type: LinkMark = LinkMark.START) {
         switch (type) {
             case LinkMark.START: {
@@ -144,7 +147,7 @@ export default class Link extends Line {
         }
     }
 
-    getTwoPntByTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
+    getTwoPntOfTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
         if (pointArr.length < 2) throw new Error("数组长度必须大于1");
         switch (this.linkStyle) {
             case LinkStyle.BROKEN_TWO: {
@@ -156,7 +159,8 @@ export default class Link extends Line {
                 return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
             }
             case LinkStyle.CURVE: // CURVE_V或CURVE_H
-            case LinkStyle.CURVE_V: // CURVE_V或CURVE_H
+            case LinkStyle.CURVE_V:
+            case LinkStyle.AUTOBROKEN: 
             case LinkStyle.CURVE_H: {
                 const mid = pointArr.length / 2
                 return [pointArr[mid - 1], pointArr[mid + 1]]
@@ -207,21 +211,34 @@ export default class Link extends Line {
         return points;
     }
 
-    // getAutoSearchPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
-    //     // const vct = [100, 0] as IVctor;
-    //     // const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
-    //     // this.gls.test = cp;
-    //     // const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
-    //     return points;
-    // }
+    getAutoBrokenPoints(startPos: IPixelPos, endPos: IPixelPos) {
+        let width = getUnitSize();
+        let coordList: IPixelPos[] = [];
+        var getCoordList = (): IPixelPos[] => {
+            let nearNodeArr = getNearNodes(startPos, endPos, width);
+            let minFNode = nearNodeArr.sort((a, b) => a.f - b.f)[0]; // 离目标最近的点
+            if (minFNode) {
+                coordList.push({ x: minFNode.x, y: minFNode.y });
+                startPos = minFNode;
+                if (isPntInPolygon(minFNode, getRectPoint(endPos, { width, height: width }))) {  // 判断有没有到终点
+                    coordList.push({ x: Math.ceil(endPos.x), y: Math.ceil(endPos.y) });
+                    return coordList;
+                } else {
+                    return getCoordList();
+                }
+            }
+            return []
+        }
+        return getCoordList();
+    }
 
-    // 流光
-    getFlowIndex(endIndex = 0) {
+    // 一个流动的点
+    getFlowIndex(endIndex = 0, speed = .3) {
         if (!this.isFlowSegment) return
         if (flowIndex >= (endIndex)) {
             flowIndex = 0;
         } else {
-            flowIndex += .3;
+            flowIndex += speed;
         }
         return Math.floor(flowIndex);
     }

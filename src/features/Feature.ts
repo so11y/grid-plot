@@ -98,6 +98,7 @@ class Feature {
     isHorizonalRevert = false;  // 元素是否水平翻转了(用于确定元素左上角的点)
     isVerticalRevert = false;  // 元素是否垂直翻转了(用于确定元素左上角的点)
     isFlowLineDash = false; // 虚线位移
+    isRmoveChild = true; // 是否删除时连带着删除子元素
 
     // 节点功能
     cbCapture: boolean = true;  // 元素是否可被鼠标捕获
@@ -466,9 +467,11 @@ class Feature {
     }
 
     destroy() {
-        this.children.forEach(cf => {
-            this.gls.removeFeature(cf, false);
-        })
+        if (this.isRmoveChild) {
+            this.children.forEach(cf => {
+                this.gls.removeFeature(cf, false);
+            })
+        }
     };
 
 }

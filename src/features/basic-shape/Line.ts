@@ -101,20 +101,22 @@ class Line extends Feature {
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        this.drawTip(ctx, this.getTwoPntOfTip(pointArr), lineWidth);
         this.flowLineDash();
         ctx.restore()
         return path;
     }
 
-    getTwoPntByTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
+    getTwoPntOfTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
+        console.log(pointArr, "pointArr");
+        
         return [pointArr[0], pointArr[pointArr.length - 1]]
     }
 
     drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
-        if (pointArr.length == 2 && this.tipInfo.txt) {  // 只接受起点和终点, 文本
-            const startP = pointArr[0];
-            const endP = pointArr[1];
+        const startP = pointArr[0];
+        const endP = pointArr[1];
+        if (startP && endP && this.tipInfo.txt) {  // 只接受起点和终点, 文本
             const center = getMidOfTwoPnts(startP, endP);
             let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
             if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
@@ -195,7 +197,7 @@ class Line extends Feature {
         } else {
             let path = super.getSvg(pointArr, lineWidth);
             if (this.tipInfo.txt) {
-                const [startP, endP] = this.getTwoPntByTip(pointArr);
+                const [startP, endP] = this.getTwoPntOfTip(pointArr);
                 const center = getMidOfTwoPnts(startP, endP);
                 let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
                 if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {

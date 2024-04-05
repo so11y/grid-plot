@@ -429,13 +429,6 @@ const env = import.meta.env;
 onMounted(() => {
     reset();
     gl = new GridLine();
-    // document.addEventListener(Events.RIGHT_CLICK, (e: any) => {
-    //     isShowRightClickPanel.value = true;
-    //     nextTick(()=>{
-    //         rPanel.value.style.left = e.detail.clientX + "px";
-    //         rPanel.value.style.top = e.detail.clientY + "px";
-    //     })
-    // })
 })
 
 let cb: any;

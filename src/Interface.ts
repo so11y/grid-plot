@@ -65,4 +65,13 @@ interface Listeners {
     [key: string]: Function[]
 }
 
-export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners };
+interface NearNode {
+    x: number,  // 坐标,以网格为单元的值
+    y: number,
+    name?: string,
+    g?: number,  // 当前点与附近点的距离,写死
+    h?: number,  // 当前点与终点水平垂直方向距离之和
+    f?: number // g+h之和
+}
+
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners, NearNode };

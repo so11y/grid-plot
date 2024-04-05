@@ -1,6 +1,6 @@
 
 import { AlignType, ClassName, CoordinateSystem } from "./Constants";
-import { IPoint, ISize, IVctor } from "./Interface";
+import { IPoint, ISize, IVctor, NearNode } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
@@ -465,6 +465,60 @@ function getNearestPoint(target: IPoint, points: IPoint[]) {
     return nearestPoint;
 }
 
+// 获取当前节点附近的6个点,分别是 左, 上, 右, 下, 左上, 右上, 右下, 左下
+function getNearNodes(startPos: IPoint, endPos: IPoint, unitLen = 1) {
+    let leftNode = {
+        name: "left",
+        x: startPos.x - unitLen,
+        y: startPos.y,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(leftNode);
+
+    let topNode = {
+        name: "top",
+        x: startPos.x,
+        y: startPos.y - unitLen,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(topNode);
+
+
+    let rightNode = {
+        name: "right",
+        x: startPos.x + unitLen,
+        y: startPos.y,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(rightNode);
+
+    let bottomNode = {
+        name: "bottom",
+        x: startPos.x,
+        y: startPos.y + unitLen,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(bottomNode);
+
+    return [leftNode, topNode, rightNode, bottomNode,]
+
+    function setDistProp(startPos: NearNode) {
+        if (!startPos.g) {
+            startPos.g = 0;
+        }
+        startPos.h = Math.abs(endPos.x - startPos.x) + Math.abs(endPos.y - startPos.y);
+        startPos.f = startPos.g + startPos.h;
+    }
+}
+
 export {
     getMousePos,
     getUnitSize,
@@ -506,4 +560,6 @@ export {
 
     getRoundedRect,
     getCirclePoints,
+
+    getNearNodes,
 }

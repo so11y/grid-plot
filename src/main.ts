@@ -10,7 +10,7 @@ import Antd from 'ant-design-vue';
 
 // var app = createApp(MuchNode)
 // var app = createApp(App)
-// var app = createApp(Excalidraw)
-var app = createApp(Tree)
+var app = createApp(Excalidraw)
+// var app = createApp(Tree)
 app.use(Antd);
 app.mount('#app')

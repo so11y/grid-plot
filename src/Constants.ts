@@ -74,7 +74,8 @@ enum LinkStyle {
     BROKEN_TWO = 'broken_two', // 折线
     CURVE_H = 'curve_h',  // 曲线
     CURVE_V = 'curve_v',  // 曲线
-    CURVE = 'curve'  // 曲线
+    CURVE = 'curve',  // 曲线
+    AUTOBROKEN = 'autobroken'  // 自动寻路
 }
 
 // 对齐方向

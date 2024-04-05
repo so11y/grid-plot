@@ -54,7 +54,7 @@ class AdsorbPnt extends Pnt {
             y: ry
         };
         if (this.cbAdsorption) {
-            const { x: x1, y: y1 } = this.adsorbType == AdsorbType.POINT ?  gls.getAdsorb2Point({ x: rx, y: ry }) : this.adsorbType == AdsorbType.GRID ?  gls.getAdsorb2Grid({ x: rx, y: ry }) : gls.getAdsorb2Grid({ x: rx, y: ry });
+            const { x: x1, y: y1 } = this.adsorbType == AdsorbType.POINT ? gls.getAdsorb2Point({ x: rx, y: ry }) : this.adsorbType == AdsorbType.GRID ? gls.getAdsorb2Grid({ x: rx, y: ry }) : gls.getAdsorb2Grid({ x: rx, y: ry });
             this.position.x += x1;
             this.position.y += y1;
         }
@@ -62,7 +62,7 @@ class AdsorbPnt extends Pnt {
     }
 
     destory() {
-        document.removeEventListener(Events.MOUSE_MOVE, this.setPos);
+        this.off(Events.MOUSE_DOWN, this.setPos)
     }
 }
 
