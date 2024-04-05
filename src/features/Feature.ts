@@ -72,7 +72,7 @@ class Feature {
     parent: Feature | null = null;  // 元素的父元素
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
-    adsorbTypes = [AdsorbType.GRID, AdsorbType.FEATURE];  // 移动时吸附规则  "grid", "feature"
+    adsorbTypes = [AdsorbType.GRID];  // 移动时吸附规则  "grid", "feature"
     ctrlTypes = [CtrlType.WIDTH_CTRL, CtrlType.HEIGHT_CTRL, CtrlType.SIZE_CTRL, CtrlType.ANGLE_CTRL, CtrlType.ANCHOR_CTRL];  // 可用的控制点类型有哪些
     pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
@@ -92,7 +92,7 @@ class Feature {
     isOutScreen: boolean = false;  // 元素是否超出了画布范围
     isOverflowHidden: boolean = false;  // 子元素超出元素范围,是否隐藏(裁剪掉)
     isStroke: boolean = true;  // 元素是否绘制边框
-    isOnlyCenterAdsorb: boolean = true;  // 元素吸附是否只以包围盒的中心点对其
+    isOnlyCenterAdsorb: boolean = false;  // 元素吸附是否只以包围盒的中心点对其
     isOnlyHorizonalMove: boolean = false;  // 元素是否只能水平方向拖拽(移动)
     isOnlyVerticalMove: boolean = false;  // 元素是否只能垂直方向拖拽(移动)
     isHorizonalRevert = false;  // 元素是否水平翻转了(用于确定元素左上角的点)
@@ -215,7 +215,7 @@ class Feature {
                     this.dispatch(new CustomEvent('mouseleave', { detail: '' }))
                 }
                 this.isPointIn = isPointIn;
-                    this.isPointIn &&  this.dispatch(new CustomEvent('mousemove', { detail: '' }));
+                this.isPointIn && this.dispatch(new CustomEvent('mousemove', { detail: '' }));
             }
         }
     }
@@ -406,11 +406,22 @@ class Feature {
         })
     }
 
-    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint) { // 一个点围绕某个点旋转angle角度, 返回旋转后的pointArr
+    /**
+     * 
+     * @param pointArr 元素的点集合
+     * @param angle 旋转多少度
+     * @param O 围绕那个点旋转,默认元素中心点
+     * @param isPixel 是否获取像素坐标
+     * @returns poitnArr
+     */
+    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint = Feature.getCenterPos(this.pointArr), isPixel = false) { // 一个点围绕某个点旋转angle角度, 返回旋转后的pointArr(相对坐标)
         if (angle === 0) {
             return pointArr;
         }
         return pointArr.map(p => {
+            if (isPixel) {
+                return getRotatePnt(O, this.gls.getPixelPos(p), angle)
+            }
             return getRotatePnt(O, p, angle)
         })
     }

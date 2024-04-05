@@ -1510,7 +1510,7 @@ class GridSystem {
     }
 
     initAnchorPnts(feature: Feature) {
-        if (isBasicFeature(feature) && !(feature instanceof Line)) {
+        if (isBasicFeature(feature) && !(feature instanceof Line)) {  // 非基础元素或线性元素不添加锚点
             let pnt = new ACtrlPnt(feature as IBasicFeature, () => {
                 const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
                 return getMidOfTwoPnts(leftTop, leftBottom);

@@ -1,6 +1,7 @@
 import { AlignType, ClassName, CtrlType, LinkMark } from "@/Constants";
 import { IBasicFeature, IPoint, IVctor } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
+import Line from "../basic-shape/Line";
 import Link from "../basic-shape/Link";
 import Rect from "../basic-shape/Rect";
 import Feature from "../Feature";
@@ -488,6 +489,7 @@ export default class Bbox extends Rect {
     }
 
     enableAnchorPnts(bool = true) {
+        if (!isBasicFeature(this.target) || (this.target instanceof Line)) return  // 非基础元素或线性元素不添加锚点
         if (bool) {
             const anchorPnts: ACtrlPnt[] = []
             for (let index = 0; index < 4; index++) {
@@ -546,7 +548,7 @@ export default class Bbox extends Rect {
                 }
             }
 
-            let link: Link;
+            let link: Link | null;
             console.log(anchorPnts, "anchorPnts");
             anchorPnts.forEach(ap => {
                 ap.on('mousedown', (e: any) => {
@@ -559,12 +561,13 @@ export default class Bbox extends Rect {
                 ap.on('mouseup', (e: any) => {
                     const mousePos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e.detail));
                     const endFeature = this.gls.features.filter(f => (f instanceof ACtrlPnt) && f != ap).find(f => isPntInPolygon(mousePos, Feature.getRectWrapPoints(f.pointArr)));
-                    this.gls.removeFeature(link, false)
+                    link && this.gls.removeFeature(link, false)
                     this.gls.features.filter(f => (f instanceof ACtrlPnt) && isBasicFeature(f.parent) && (f.hidden = true))
                     if (endFeature) {
                         const startFeature = this.target.children.find(cf => cf.name === ap.name);
                         if (startFeature) {
                             this.gls.addFeature(new Link(startFeature, endFeature), false);
+                            link = null;
                         }
                     }
                 })

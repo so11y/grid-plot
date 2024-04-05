@@ -207,6 +207,14 @@ export default class Link extends Line {
         return points;
     }
 
+    // getAutoSearchPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+    //     // const vct = [100, 0] as IVctor;
+    //     // const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
+    //     // this.gls.test = cp;
+    //     // const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
+    //     return points;
+    // }
+
     // 流光
     getFlowIndex(endIndex = 0) {
         if (!this.isFlowSegment) return
