@@ -34,6 +34,7 @@ interface IVctor {
 }
 
 interface ITxt {
+    hidden: boolean,
     txt: string,
     fontSize: number,
     color: string,
@@ -74,4 +75,13 @@ interface NearNode {
     f?: number // g+h之和
 }
 
-export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners, NearNode };
+interface Itree {
+    label: string,
+    children: Itree[],
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number,
+}
+
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners, NearNode, Itree };

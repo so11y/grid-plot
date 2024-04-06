@@ -10,10 +10,10 @@ let flowIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 50  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.BROKEN_TWO;
+    linkStyle: LinkStyle = LinkStyle.DEFAULT;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
-    isFlowSegment = false;
+    isFlowSegment = true;
     triangleInfo: ITriangle = {
         hidden: true,
         width: .8,
@@ -88,7 +88,7 @@ export default class Link extends Line {
         }
         this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, lineDashArr, radius);
-        const flowIndex = this.getFlowIndex(newPnts.length);
+        const flowIndex = this.getFlowIndex(newPnts.length, .1);
         this.drawTriangle(ctx, newPnts);
         this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);
         return path;
@@ -206,7 +206,6 @@ export default class Link extends Line {
     getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
         const vct = [100, 0] as IVctor;
         const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
-        this.gls.test = cp;
         const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
         return points;
     }
@@ -244,6 +243,7 @@ export default class Link extends Line {
     }
 
     drawFlowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPixelPos[], lineWidth = 0, flowIndex = 0) {
+        if (!this.isFlowSegment) return
         const path = new Path2D();
         let endIndex = flowIndex + Math.ceil(curvePnts.length * .2)
         if (endIndex > curvePnts.length - 1) {

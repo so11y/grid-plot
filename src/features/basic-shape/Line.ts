@@ -20,8 +20,9 @@ class Line extends Feature {
     actualPointArr: IPixelPos[] | null = null;   // 实际渲染到画布上的点集合
 
     tipInfo: ITxt = {
+        hidden: true,
         txt: '',
-        fontSize: 2,
+        fontSize: 1.5,
         color: "rgba(174, 253, 181)",
         offset: { x: 0, y: 0 },
         fontFamily: FontFamily.HEITI,
@@ -116,7 +117,7 @@ class Line extends Feature {
     drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
         const startP = pointArr[0];
         const endP = pointArr[1];
-        if (startP && endP && this.tipInfo.txt) {  // 只接受起点和终点, 文本
+        if (startP && endP && !this.tipInfo.hidden) {  // 只接受起点和终点, 文本
             const center = getMidOfTwoPnts(startP, endP);
             let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
             if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {

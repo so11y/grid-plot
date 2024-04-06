@@ -404,8 +404,8 @@ import { onMounted, ref } from "vue";
 import { DrawAreaMode, FontFamily } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
-import { IBasicFeature } from "@/Interface";
-import { getUnitSize, getMousePos } from "../utils"
+import { IBasicFeature, Itree } from "@/Interface";
+import { getUnitSize, getTreeLayout } from "../utils"
 import Pnt from "@/features/function-shape/Pnt";
 
 const cvs = ref(null);
@@ -611,32 +611,24 @@ function reset(clear = false) {
 
     let width = getUnitSize();
 
-    interface Itree {
-        name: string,
-        children: Itree[],
-        x: number,
-        y: number,
-    }
-
     const treeNodes = {
-        name: "根节点",
-        x: 50, y: 50,
+        label: "根节点",
         children: [
             {
-                name: "子节点1",
+                label: "子节点1",
                 children: [
                     {
-                        name: "孙节点1",
+                        label: "孙节点1",
                         children: [
                             {
-                                name: "曾孙节点1",
+                                label: "曾孙节点1",
                                 children: []
                             },
                             {
-                                name: "曾孙节点2",
+                                label: "曾孙节点2",
                                 children: [
                                     {
-                                        name: "玄孙节点1",
+                                        label: "玄孙节点1",
                                         children: []
                                     }
                                 ]
@@ -644,25 +636,25 @@ function reset(clear = false) {
                         ]
                     },
                     {
-                        name: "孙节点2",
+                        label: "孙节点2",
                         children: []
                     }
                 ]
             },
             {
-                name: "子节点2",
+                label: "子节点2",
                 // children: [
                 //     {
-                //         name: "孙节点3",
+                //         label: "孙节点3",
                 //         children: [
                 //             {
-                //                 name: "曾孙节点3",
+                //                 label: "曾孙节点3",
                 //                 children: [
                 //                     {
-                //                         name: "玄孙节点2",
+                //                         label: "玄孙节点2",
                 //                         children: [
                 //                             {
-                //                                 name: "来孙节点1",
+                //                                 label: "来孙节点1",
                 //                                 children: []
                 //                             }
                 //                         ]
@@ -670,16 +662,16 @@ function reset(clear = false) {
                 //                 ]
                 //             },
                 //             {
-                //                 name: "曾孙节点4",
+                //                 label: "曾孙节点4",
                 //                 children: []
                 //             }
                 //         ]
                 //     },
                 //     {
-                //         name: "孙节点4",
+                //         label: "孙节点4",
                 //         children: [
                 //             {
-                //                 name: "曾孙节点5",
+                //                 label: "曾孙节点5",
                 //                 children: []
                 //             }
                 //         ]
@@ -687,70 +679,35 @@ function reset(clear = false) {
                 // ]
             },
             {
-                name: "子节点3",
+                label: "子节点3",
                 // children: []
             }
         ]
     }
 
-    function getTreeData(root: Itree, ydist = 50) {
-        let xdist = 150;
-        if (root.children && root.children.length > 1) {
-            let count = 0;
-            root.children.forEach(item => {
-                item.x = root.x;
-                item.y = root.y + ydist;
-                if (root.children.length % 2 != 0) {
-                    if (count != 0) {
-                        if (count % 2) {
-                            item.x += xdist
-                        } else {
-                            item.x -= xdist
-                        }
-                    }
-                } else {
-                    if (count % 2) {
-                        item.x += xdist
-                    } else {
-                        item.x -= xdist
-                    }
-                }
-                count++;
-                // if (bool) {
-                //     xdist += 50
-                // }
-                if (item.children) {
-                    getTreeData(item, item.y);
-                }
-            })
-        } else if (root.children.length == 1) {
-            root.children[0].x = root.x;
-            root.children[0].y = root.y + ydist / 2;
-        }
-        return root;
-    }
+    const newNode = getTreeLayout(treeNodes, 300, 50, 70);
+    console.log(newNode, "newNode");
 
-    function setTreeData(root: Itree, gls: GridSystem) {
-        const rect1 = new Rect(root.x, root.y, width, width);
-        gls.addFeature(rect1, false);
+    const glsss = gls.value as GridSystem;
+    function setTreeData(root: Itree, parent: Feature) {
         if (root.children) {
             root.children.forEach(cd => {
-                const rect2 = new Rect(cd.x, cd.y, width, width);
-                gls.addFeature(rect2, false);
-                let link = new Link(rect1, rect2);
-                gls.addFeature(link, false);
+                const child = new Rect(cd.x, cd.y, width, width);
+                glsss.addFeature(child, false);
+                let link = new Link(parent, child);
+                glsss.addFeature(link, false);
                 if (cd.children) {
-                    setTreeData(cd, gls)
+                    setTreeData(cd, child)
                 }
             })
         }
     }
-    // console.log(getTreeData(treeNodes));
 
+    const rootFeature = new Rect(newNode.x, newNode.y, width, width);
+    glsss.addFeature(rootFeature, false);
+    setTreeData(newNode, rootFeature)
 
-    setTreeData(getTreeData(treeNodes), gls.value)
-
-    gls.value.enableStack();
+    // gls.enableStack();
 }
 
 function linkTo(url: string) {

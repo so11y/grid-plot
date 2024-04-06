@@ -1,6 +1,6 @@
 
 import { AlignType, ClassName, CoordinateSystem } from "./Constants";
-import { IPoint, ISize, IVctor, NearNode } from "./Interface";
+import { IPoint, ISize, Itree, IVctor, NearNode } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
@@ -387,7 +387,7 @@ function beautifyHTML(html: string, indentSize = 2) {
 function isBasicFeature(f?: any, hasGroup = true) {  //  hasGroup 是否包括Group类元素
     if (!f) return false;
     if (!hasGroup && f.className === ClassName.GROUP) return
-    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.LINK || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO
+    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any, hasAnchor = true) {
@@ -519,6 +519,58 @@ function getNearNodes(startPos: IPoint, endPos: IPoint, unitLen = 1) {
     }
 }
 
+function getTreeLayout(node: Itree, x = 0, y = 0, padding = 50, paddingX = 50) {
+
+    if (!node.children) {
+        node.children = []
+    }
+
+    let bool = false;
+
+    // 计算当前节点的起始x坐标，使其居中对齐  
+    node.x = x;
+    node.y = y;
+
+    const childY = y + padding; // 子节点的y坐标  
+    const childX = x; // 子节点的起始x坐标与当前节点相同（为了居中对齐）  
+
+    // 遍历子节点  
+    if (node.children.length % 2 === 0) {  // 子节点是偶数,中间空着
+        node.children.forEach((cd, i) => {
+            if (bool) {
+                cd.x = childX + paddingX
+            } else {
+                cd.x = childX - paddingX
+            }
+            if (i % 2 === 0) {
+                paddingX * 2
+            }
+            bool = !bool
+            getTreeLayout(cd, cd.x, childY, padding);
+        })
+    } else {
+        node.children.forEach((cd, i) => {
+            if (i > 0) {
+                if (bool) {
+                    cd.x = childX + paddingX
+                } else {
+                    cd.x = childX - paddingX
+                }
+                if (i % 2 === 0) {
+                    paddingX * 2
+                }
+                bool = !bool
+            }else {
+                cd.x = childX
+            }
+            getTreeLayout(cd, cd.x, childY, padding);
+        })
+    }
+
+    return node;
+}
+
+
 export {
     getMousePos,
     getUnitSize,
@@ -562,4 +614,5 @@ export {
     getCirclePoints,
 
     getNearNodes,
+    getTreeLayout,
 }
