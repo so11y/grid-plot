@@ -1,4 +1,4 @@
-import { ClassName } from "@/Constants";
+import { ClassName, Events } from "@/Constants";
 import { getMousePos } from "../../../utils";
 import Pnt from "../Pnt";
 
@@ -28,9 +28,9 @@ class EraserPnt extends Pnt {
         this.isFixedSize = true;
         this.cbCapture = false;
         this.cbSelect = false;
-        document.addEventListener("mousemove", this.removeTarget.bind(this));
-        document.addEventListener("mousedown", this.mousedown.bind(this));
-        document.addEventListener("mouseup", this.mouseup.bind(this));
+        document.addEventListener(Events.MOUSE_MOVE, this.removeTarget.bind(this));
+        document.addEventListener(Events.MOUSE_DOWN, this.mousedown.bind(this));
+        document.addEventListener(Events.MOUSE_UP, this.mouseup.bind(this));
     }
 
     mousedown() {
@@ -51,9 +51,9 @@ class EraserPnt extends Pnt {
     }
 
     destory() {
-        document.removeEventListener("mousemove", this.removeTarget);
-        document.removeEventListener("mousedown", this.mousedown);
-        document.removeEventListener("mouseup", this.mouseup);
+        document.removeEventListener(Events.MOUSE_MOVE, this.removeTarget);
+        document.removeEventListener(Events.MOUSE_DOWN, this.mousedown);
+        document.removeEventListener(Events.MOUSE_UP, this.mouseup);
     }
 }
 

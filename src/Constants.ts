@@ -12,7 +12,7 @@ enum CoordinateSystem {
     SCALE_SHOW_MIN_SIZE = 10  // 显示元素的最小size,太小的元素不显示
 }
 
-// 控制点方位
+// 字体family
 enum FontFamily {
     HEITI = "黑体",
     SONGTI = "宋体",
@@ -41,30 +41,23 @@ enum LinkMark {
 
 // 自定义事件名称
 enum Events {
-    DRAW_LINK = 'draw-link', // 绘制连线
-    MOUSE_DOWN = 'mouse-down', // 鼠标按下时
-    MOUSE_UP = 'mouse-up', // 鼠标按下时
-    MOUSE_WHEEL = 'mouse-wheel',  // 滚轮滚动时
-    MOUSE_MOVE = 'mouse-move',  // 滚轮滚动时
+    MOUSE_DOWN = 'mousedown', // 鼠标按下时
+    MOUSE_UP = 'mouseup', // 鼠标松开时
+    MOUSE_WHEEL = 'mousewheel',  // 滚轮滚动时
+    MOUSE_MOVE = 'mousemove',  // 鼠标在目标上移动时
+    MOUSE_OVER = 'mouseover',  // 鼠标进入时
+    MOUSE_LEAVE = 'mouseleave',  // 鼠标移开时
+    CONTEXTMENU = 'contextmenu',  // 鼠标移开时
     DRAW = 'draw',   // 绘制画布所有元素时
-    BLUR = 'blur',  // 元素失去焦点时
-    FOCUS = 'focus',  // 元素获取焦点时
-    DRAW_AREA = 'draw-area',  // 绘制区域时
+    BLUR = 'blur',  // 失去焦点时
+    FOCUS = 'focus',  // 获取焦点时
     DB_CLICK = 'db-click',   // 双击时
     RIGHT_CLICK = 'right-click',   // 双击时
-    FEATURE_GRAG = 'feature-drag',
-    FEATURE_GRAG_END = 'feature-drag-end',
-    FEATURE_MOUSEOVER = 'feature-mouseover',
-    FEATURE_MOUSEMOVE = 'feature-mousemove',
-    FEATURE_MOUSEDOWN = 'feature-mousedown',
-    FEATURE_MOUSEUP = 'feature-mouseup',
-
-    GRAG_CTRL = 'drag-ctrl',
-    ANGLE_CTRL_END = 'rotate-ctrl-end',
-    ANGLE_CTRL = 'rotate-ctrl',
-    SIZE_CTRL = 'ctrl-ctrl',
-    SIZE_CTRL_END = 'ctrl-ctrl-end',
-    DRAW_ALL = 'draw-all'
+    DRAG_END = 'drag-end',  // 拖拽结束时
+    DELETE = 'delete', // 元素删除时
+    RESIZE = 'resize', // 元素形变时
+    ROTATE = 'rotate', // 元素旋转时
+    TRANSLATE = 'translate', //画布或元素移动时
 }
 
 // 线段样式
@@ -100,12 +93,12 @@ enum SelectMode {
     ONE_P = 'one',
 }
 
-// 选中模式
-enum DrawAreaMode {
-    RECT = 'rect',
-    IRREGULAR = 'irregular',
+// SelectArea选中模式
+enum AreaSelectMode {
+    RECT = 'rect',  // 矩形范围
+    IRREGULAR = 'irregular',  // 不规则几何形范围
 }
-
+// group内对齐方式
 enum AlignType {
     TOP = 'top',
     LEFT = 'left',
@@ -115,7 +108,7 @@ enum AlignType {
     HORIZONAL = 'horizonal',
     VERTICAL = 'vertical',
 }
-
+// 类名, 为什么不用constructor.className?因为打包后会乱码,无法判断
 enum ClassName {
     IMG = 'img',
     VIDEO = 'video',
@@ -148,7 +141,7 @@ export {
     Orientation,
     AdsorbType,
     SelectMode,
-    DrawAreaMode,
+    AreaSelectMode,
     AlignType,
     ClassName,
 }

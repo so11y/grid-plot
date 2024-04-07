@@ -1,3 +1,4 @@
+import { Events } from "./Constants";
 import GridSystem from "./GridSystem";
 import { IBasicFeature, IProps } from "./Interface";
 import { isBasicFeature } from "./utils";
@@ -62,7 +63,7 @@ class Stack {
         this.pointer--;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.dispatch(new CustomEvent('resize', {})))
+        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.dispatch(new CustomEvent(Events.RESIZE, {})))
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 
@@ -94,7 +95,7 @@ class Stack {
         this.pointer++;
         this.gls.enableBbox(null)
         this.gls.enableSelectArea(false)
-        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.dispatch(new CustomEvent('resize', {})))
+        this.gls.features.filter(f => isBasicFeature(f)).forEach(f => f.dispatch(new CustomEvent(Events.RESIZE, {})))
         if (this.isLocal) { this.gls.save(this.statusList[this.pointer]) }
     }
 

@@ -1,4 +1,4 @@
-import { AlignType, ClassName, CtrlType, LinkMark } from "@/Constants";
+import { AlignType, ClassName, CtrlType, Events, LinkMark } from "@/Constants";
 import { IBasicFeature, IPoint, IVctor } from "../../Interface";
 import { createVctor, getLenOfPntToLine, getLenOfTwoPnts, getMidOfTwoPnts, getMousePos, getPntInVct, getRotateAng, getRotateVct, isBasicFeature, isPntInPolygon } from "../../utils";
 import Line from "../basic-shape/Line";
@@ -88,7 +88,7 @@ export default class Bbox extends Rect {
             pointArr.forEach((p, i) => {
                 const ctrlP = new SCtrlPnt(this, i, Bbox.ctrlPSize);
                 ctrlP.name = CtrlType.SIZE_CTRL;
-                ctrlP.on('translate', this.onSizeChange.bind(ctrlP))
+                ctrlP.on(Events.TRANSLATE, this.onSizeChange.bind(ctrlP))
             })
         }
         // 旋转点
@@ -102,7 +102,7 @@ export default class Bbox extends Rect {
             }, Bbox.ctrlPSize);
             rCtrlP.name = CtrlType.ANGLE_CTRL;
             rCtrlP.adsorbTypes = []
-            rCtrlP.on('translate', () => {
+            rCtrlP.on(Events.TRANSLATE, () => {
                 const bboxPos = Feature.getCenterPos(this.pointArr); // bbox的中心点
                 const bctrlPos = Feature.getCenterPos(rCtrlP.pointArr); // 旋转控制点的中心点
                 const vct1: IVctor = [0, -100];
@@ -156,7 +156,7 @@ export default class Bbox extends Rect {
                 return widthCtrlPnt;
             }, Bbox.ctrlPSize);
             bCtrlP2.name = CtrlType.WIDTH_CTRL;
-            bCtrlP2.on('translate', () => {
+            bCtrlP2.on(Events.TRANSLATE, () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP2.pointArr);  // 当前控制点的中心点
                 const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2], true); // 控制点到vct的距离， 移动的距离
@@ -174,7 +174,7 @@ export default class Bbox extends Rect {
                             p.x = newPntX.x;
                             p.y = newPntX.y;
                         })
-                        feature.dispatch(new CustomEvent('resize', { detail: CtrlType.WIDTH_CTRL }))
+                        feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.WIDTH_CTRL }))
                         if (feature.cbTransformChild) {
                             feature.children.forEach(f => {
                                 setTranform(f);
@@ -194,7 +194,7 @@ export default class Bbox extends Rect {
                 return widthCtrlPnt;
             }, Bbox.ctrlPSize);
             bCtrlP3.name = CtrlType.WIDTH_CTRL;
-            bCtrlP3.on('translate', () => {
+            bCtrlP3.on(Events.TRANSLATE, () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP3.pointArr);  // 当前控制点的中心点
                 const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3], true); // 控制点到vct的距离， 移动的距离
@@ -212,7 +212,7 @@ export default class Bbox extends Rect {
                             p.x = newPntX.x;
                             p.y = newPntX.y;
                         })
-                        feature.dispatch(new CustomEvent('resize', { detail: CtrlType.WIDTH_CTRL }))
+                        feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.WIDTH_CTRL }))
                         if (feature.cbTransformChild) {
                             feature.children.forEach(f => {
                                 setTranform(f);
@@ -235,7 +235,7 @@ export default class Bbox extends Rect {
                 return heightCtrlPnt;
             }, Bbox.ctrlPSize);
             bCtrlP4.name = CtrlType.HEIGHT_CTRL;
-            bCtrlP4.on('translate', () => {
+            bCtrlP4.on(Events.TRANSLATE, () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP4.pointArr);  // 当前控制点的中心点
                 const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3], true); // 控制点到vct的距离， 移动的距离
@@ -253,7 +253,7 @@ export default class Bbox extends Rect {
                             p.x = newPntX.x;
                             p.y = newPntX.y;
                         })
-                        feature.dispatch(new CustomEvent('resize', { detail: CtrlType.HEIGHT_CTRL }))
+                        feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.HEIGHT_CTRL }))
                         if (feature.cbTransformChild) {
                             feature.children.forEach(f => {
                                 setTranform(f);
@@ -273,7 +273,7 @@ export default class Bbox extends Rect {
                 return heightCtrlPnt;
             }, Bbox.ctrlPSize);
             bCtrlP5.name = CtrlType.HEIGHT_CTRL;
-            bCtrlP5.on('translate', () => {
+            bCtrlP5.on(Events.TRANSLATE, () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP5.pointArr);  // 当前控制点的中心点
                 const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1], true); // 控制点到vct的距离， 移动的距离
@@ -291,7 +291,7 @@ export default class Bbox extends Rect {
                             p.x = newPntX.x;
                             p.y = newPntX.y;
                         })
-                        feature.dispatch(new CustomEvent('resize', { detail: CtrlType.HEIGHT_CTRL }))
+                        feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.HEIGHT_CTRL }))
                         if (feature.cbTransformChild) {
                             feature.children.forEach(f => {
                                 setTranform(f);
@@ -344,7 +344,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.dispatch(new CustomEvent('resize', { detail: CtrlType.SIZE_CTRL }))
+                            feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.SIZE_CTRL }))
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -390,7 +390,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.dispatch(new CustomEvent('resize', { detail: CtrlType.SIZE_CTRL }))
+                            feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.SIZE_CTRL }))
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -436,7 +436,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.dispatch(new CustomEvent('resize', { detail: CtrlType.SIZE_CTRL }))
+                            feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.SIZE_CTRL }))
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -482,7 +482,7 @@ export default class Bbox extends Rect {
                                 p.x = newPntY.x;
                                 p.y = newPntY.y;
                             })
-                            feature.dispatch(new CustomEvent('resize', { detail: CtrlType.SIZE_CTRL }))
+                            feature.dispatch(new CustomEvent(Events.RESIZE, { detail: CtrlType.SIZE_CTRL }))
                             if (feature.cbTransformChild) {
                                 feature.children.forEach(f => {
                                     setTranform(f);
@@ -562,14 +562,14 @@ export default class Bbox extends Rect {
 
             let link: Link | null;
             anchorPnts.forEach(ap => {
-                ap.on('mousedown', (e: any) => {
+                ap.on(Events.MOUSE_DOWN, (e: any) => {
                     if (!link) {
                         link = new Link(this.target, ap);
                         this.gls.addFeature(link, false);
                         this.gls.features.filter(f => (f instanceof ACtrlPnt) && isBasicFeature(f.parent) && (f.hidden = false))
                     }
                 })
-                ap.on('mouseup', (e: any) => {
+                ap.on(Events.MOUSE_UP, (e: any) => {
                     const mousePos = this.gls.getRelativePos(getMousePos(this.gls.domElement, e.detail));
                     const endFeature = this.gls.features.filter(f => (f instanceof ACtrlPnt) && f != ap).find(f => isPntInPolygon(mousePos, Feature.getRectWrapPoints(f.pointArr)));
                     link && this.gls.removeFeature(link, false)

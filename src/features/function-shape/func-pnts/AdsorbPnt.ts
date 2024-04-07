@@ -23,7 +23,7 @@ class AdsorbPnt extends Pnt {
         this.cbCrossLine = cbCrossLine;
         this.cbCapture = false;
         this.cbSelect = false;
-        document.addEventListener("mousemove", this.setPos.bind(this));
+        document.addEventListener(Events.MOUSE_MOVE, this.setPos.bind(this));
     }
 
 

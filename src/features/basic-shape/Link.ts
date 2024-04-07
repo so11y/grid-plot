@@ -1,4 +1,4 @@
-import { ClassName, FontFamily, LinkMark, LinkStyle } from "../../Constants";
+import { ClassName, Events, FontFamily, LinkMark, LinkStyle } from "../../Constants";
 import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
 import { createVctor, getAngleOfTwoPnts, getNearNodes, getPntInVct, getRectPoint, getPntsOf3Bezier, getPntsOf2Bezier, isPntInPolygon, getUnitSize } from "../../utils";
 import Feature from "../Feature";
@@ -51,13 +51,13 @@ export default class Link extends Line {
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
-            startFeature.on('translate', this.onTranslateStart.bind(this))
-            startFeature.on('delete', this.onDelete.bind(this))
+            startFeature.on(Events.TRANSLATE, this.onTranslateStart.bind(this))
+            startFeature.on(Events.DELETE, this.onDelete.bind(this))
         }
         if (endFeature instanceof Feature) {
             this.endFeature = endFeature;
-            endFeature.on('translate', this.onTranslateEnd.bind(this))
-            endFeature.on('delete', this.onDelete.bind(this))
+            endFeature.on(Events.TRANSLATE, this.onTranslateEnd.bind(this))
+            endFeature.on(Events.DELETE, this.onDelete.bind(this))
         }
     }
 
@@ -125,7 +125,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.startFeature = feature;
                     this.pointArr[0] = center;
-                    feature.on('translate', () => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on(Events.TRANSLATE, () => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[0] = feature;
                 }
@@ -136,7 +136,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.endFeature = feature;
                     this.pointArr[1] = center;
-                    feature.on('translate', () => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on(Events.TRANSLATE, () => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[1] = feature;
                 }

@@ -401,7 +401,7 @@ import Group from "@/features/function-shape/Group";
 import GridLine from "@/GridLine";
 import { message } from "ant-design-vue";
 import { onMounted, ref } from "vue";
-import { DrawAreaMode, FontFamily } from "../Constants";
+import { AreaSelectMode, FontFamily } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 import { IBasicFeature, Itree } from "@/Interface";
@@ -442,7 +442,7 @@ function onSelectTool(index = 0, param?: any) {
         case 0: // 选择区域
             message.info("按住左键移动吧!")
             let sa = gls.value?.enableSelectArea() as SelectArea;
-            sa && (sa.drawMode = DrawAreaMode.RECT);
+            sa && (sa.drawMode = AreaSelectMode.RECT);
             // console.log(111);
             break;
         case 1: // 单击创建Rect

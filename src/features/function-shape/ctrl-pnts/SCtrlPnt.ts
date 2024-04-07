@@ -1,4 +1,4 @@
-import { ClassName } from "@/Constants";
+import { ClassName, Events } from "@/Constants";
 import Feature from "../../Feature";
 import Pnt from "../Pnt";
 
@@ -20,8 +20,8 @@ class SCtrlPnt extends Pnt {
         this.lineWidth = 0;
         this.zIndex = Infinity;
         this.isStroke = false;
-        this.on('translate', this.onUpdateParentPos.bind(this))
-        this.on('draw', this.onUpdatePosByParent.bind(this))
+        this.on(Events.TRANSLATE, this.onUpdateParentPos.bind(this))
+        this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }
 
     onUpdateParentPos() {  // 控制点拖拽时修改主元素对应的点位置

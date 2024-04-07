@@ -1,4 +1,4 @@
-import { AdsorbType, ClassName } from "@/Constants";
+import { AdsorbType, ClassName, Events } from "@/Constants";
 import { IBasicFeature, IPoint } from "../../../Interface";
 import Pnt from "../Pnt";
 
@@ -24,7 +24,7 @@ class ACtrlPnt extends Pnt {
         this.isStroke = false;
         this.adsorbTypes = [AdsorbType.POINT];
         this.isOnlyCenterAdsorb = true;
-        this.on('draw', this.onUpdatePosByParent.bind(this))
+        this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }
 
     onUpdatePosByParent() {
