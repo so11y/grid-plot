@@ -43,11 +43,11 @@ class GridSystem {
         y: this.pageSlicePos.y
     });  // 首次渲染时候的pagePos
     extent: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
+    // extent: [number, number, number, number] = [175, 180, 175, 180]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
     mousePos = {
         x: 0,
         y: 0
     }
-
     domElement: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
@@ -59,26 +59,18 @@ class GridSystem {
 
     dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ 3
     friction = .93;  // 摩擦力
-    lastClickTime: number = 0;  // 用于双击
+    lastClickTime: number = 0;  // 用于判断双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
 
-    cbOverlap: boolean = true;  // 元素间是否可重叠
+    // cbOverlap: boolean = true;  // 元素间是否可重叠
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
     cbSelectFeature: boolean = true;  // 画布中的元素是否可被选中
     cbAdsorption: boolean = true;  // 元素拖拽是否启用吸附
-    cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
-    isShowAdsorbLine: boolean = false;
 
     // 提供的事件
-    ondrag: Function = () => { };
-    onzoom: Function = () => { }  // 画布缩放时，触发
-    onmousedown: Function = () => { };
-    onmousemove: Function = () => { };
-    onmouseup: Function = () => { };
-    ondbclick: Function = () => { };
     listeners: Listeners = {};
 
     test: IPoint = { x: 0, y: 0 }
@@ -122,23 +114,6 @@ class GridSystem {
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
-        // GridSystem.Shortcuts.addEvent('del', () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
-        //         if (feature.cursorIndex < feature.text.length) {
-        //             feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
-        //         }
-        //     } else {
-        //         this.removeFeature(feature, true);
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
-        //         feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
-        //         feature.cursorIndex--;
-        //     }
-        // })
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboardToFeature.bind(this))
@@ -158,37 +133,9 @@ class GridSystem {
             const focusNode = this.getFocusNode();
             this.removeFeature(focusNode)
         })
-        // GridSystem.Shortcuts.addEvent("left", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         feature.cursorIndex > 0 && feature.cursorIndex--;
-        //         console.log(feature.cursorIndex, "feature.cursorIndex");
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("right", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         feature.cursorIndex < feature.text.length && feature.cursorIndex++;
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("up", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         Text.mousePos.y -= this.getRatioSize(feature.fontSize);
-        //         feature.cursorIndex = -1;
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("down", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         Text.mousePos.y += this.getRatioSize(feature.fontSize)
-        //         feature.cursorIndex = -1;
-        //     }
-        // })
     }
 
     private mouseMove = (e: any) => {
-        this.onmousemove && this.onmousemove(e);
         const pos = getMousePos(this.domElement, e);
         this.mousePos.x = pos.x;
         this.mousePos.y = pos.y;
@@ -202,7 +149,6 @@ class GridSystem {
         const velocity = { x: 0, y: 0 }; // 速度分量
         const lastMove = { x: 0, y: 0 } // 上一次鼠标位置
         this.dispatch(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }))
-        this.onmousedown && this.onmousedown(ev);
         this.features.forEach(f => f.isFocused = false);
         const focusNodes = this.features.slice().reverse().filter(f => f.cbSelect && f.isPointIn)
         let focusNode = this.focusNode = focusNodes[0];  // 寻找鼠标悬浮元素
@@ -268,7 +214,7 @@ class GridSystem {
                 this.domElement.style.cursor = "grabbing"
                 mousemove = (e: any) => {
                     const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
-                    this.ondrag && this.ondrag(e);
+                    this.dispatch(new CustomEvent('drag', { detail: e }))
                     if (lastMove.x && lastMove.y) {
                         this.translate((moveX - lastMove.x) * this.dragingSensitivity, (moveY - lastMove.y) * this.dragingSensitivity)
                     }
@@ -285,7 +231,7 @@ class GridSystem {
         const mouseup = (e: any) => {
             this.domElement.style.cursor = "auto"
             this.cbSelectFeature = true;
-            this.onmouseup && this.onmouseup(e);
+            this.dispatch(new CustomEvent('mouseup', { detail: e }))
             this.dispatch(new CustomEvent(Events.MOUSE_UP, { detail: e }))
             if (focusNode) {
                 focusNode._orientations = null;
@@ -322,7 +268,6 @@ class GridSystem {
         document.addEventListener("mousemove", mousemove)
         // 判断双击事件
         if (new Date().getTime() - this.lastClickTime < CoordinateSystem.DB_CLICK_DURATION) {  // 如果是双击
-            this.ondbclick && this.ondbclick(ev);
             if (focusNode) {
                 focusNode.dispatch(new CustomEvent('dbclick', { detail: ev }))
             }
@@ -527,7 +472,7 @@ class GridSystem {
     private mouseWheel = (e: any, scale?: number) => {
         if (!this.cbScale) return;
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
-        this.onzoom && this.onzoom(e);
+        this.dispatch(new CustomEvent('zoom', { detail: e }))
         e.preventDefault();
         const { x, y } = getMousePos(this.domElement, e);
         if (e.wheelDelta > 0) {
@@ -560,10 +505,10 @@ class GridSystem {
 
     setPageSlicePosByExtent(extent: number[] = []) { // 限制拖拽范围
         if (extent?.length > 0) {
-            const topExtent = extent[0];
-            const rightExtent = extent[1];
-            const bottomExtent = extent[2];
-            const leftExtent = extent[3];
+            const topExtent = this.getRatioSize(extent[0]);
+            const rightExtent = this.getRatioSize(extent[1]);
+            const bottomExtent = this.getRatioSize(extent[2]);
+            const leftExtent = this.getRatioSize(extent[3]);
 
             if (this.pageSlicePos.x > this.firstPageSlicePos.x + leftExtent) {
                 this.pageSlicePos.x = this.firstPageSlicePos.x + leftExtent;
@@ -583,6 +528,7 @@ class GridSystem {
     // --------------------以下是暴露的方法----------------------------
     // --------------------画布内元素的增删查API----------------------------
     drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
+        Feature.TargetRender = this;
         features.forEach(f => {
             const isBasic = isBasicFeature(f);
             if (f.hidden) return;
@@ -594,18 +540,15 @@ class GridSystem {
                     return
                 }
             }
-            if (!this.cbDragOutScreen) { // 是否渲染屏幕外的元素
+            if (!this.cbDrawOutScreen) { // 是否渲染屏幕外的元素
                 if (pointArr.every(p => {
                     return p.x < 0 || p.x > this.ctx.canvas.width || p.y < 0 || p.y > this.ctx.canvas.height
                 })) return
             }
-            Feature.TargetRender = this;
             const lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
-            let path;
             const radius = this.getRatioSize(f.radius, f.isFixedSize);
             const lineDashArr = f.lineDashArr.length == 2 ? [this.getRatioSize(f.lineDashArr[0], f.isFixedSize), this.getRatioSize(f.lineDashArr[1], f.isFixedSize)] : [];
-            path = f.draw(this.ctx, pointArr, lineWidth, lineDashArr as [number, number], radius);
-            f.dispatch(new CustomEvent('draw', { detail: '' }))
+            const path = f.draw(this.ctx, pointArr, lineWidth, lineDashArr as [number, number], radius);
             this.ctx.save();
             f.isOverflowHidden && this.ctx.clip(path);
             if (isBasic) {
@@ -613,6 +556,7 @@ class GridSystem {
                 if (children.length > 0) this.drawFeatures(children, true);
             }
             this.ctx.restore();
+            f.dispatch(new CustomEvent('draw', { detail: '' }))
         })
     }
 

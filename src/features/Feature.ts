@@ -44,6 +44,7 @@ class Feature {
             y: (minY + maxY) / 2,
         }
     }
+    static isShowAdsorbLine = false;
 
     listeners: Listeners = {};
     pointArr: IRelativePos[] = [];
@@ -177,6 +178,7 @@ class Feature {
         ctx.globalAlpha = this.opacity;
         ctx.lineDashOffset = this.lineDashOffset;
         ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = lineWidth;
         if (this.isPointIn) {
             ctx.fillStyle = this.hoverStyle;
             if (this.gls.focusNode === this) {
@@ -185,7 +187,6 @@ class Feature {
         } else {
             ctx.fillStyle = this.fillStyle;
         }
-        ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
         this.drawAdsorbLine(ctx, pointArr)
@@ -359,7 +360,7 @@ class Feature {
     }
 
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
+        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && Feature.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {

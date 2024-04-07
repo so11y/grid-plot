@@ -10,10 +10,10 @@ let flowIndex = 0;
 export default class Link extends Line {
 
     pntsLimit = 50  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.DEFAULT;
+    linkStyle: LinkStyle = LinkStyle.CURVE_V;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
-    isFlowSegment = true;
+    isFlowSegment = false;
     triangleInfo: ITriangle = {
         hidden: true,
         width: .8,
@@ -88,7 +88,7 @@ export default class Link extends Line {
         }
         this.actualPointArr = newPnts;
         const path = super.draw(ctx, newPnts, lineWidth, lineDashArr, radius);
-        const flowIndex = this.getFlowIndex(newPnts.length, .1);
+        const flowIndex = this.getFlowIndex(newPnts.length, .01);
         this.drawTriangle(ctx, newPnts);
         this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);
         return path;

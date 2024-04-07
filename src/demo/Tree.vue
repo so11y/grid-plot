@@ -407,6 +407,7 @@ import GridSystem from "../GridSystem";
 import { IBasicFeature, Itree } from "@/Interface";
 import { getUnitSize, getTreeLayout } from "../utils"
 import Pnt from "@/features/function-shape/Pnt";
+import MiniMap from "@/MiniMap";
 
 const cvs = ref(null);
 const activeI = ref(-1);
@@ -591,9 +592,10 @@ function onImportFile() {
     });
 }
 
-function startTime(gls: GridSystem) {
+function startTime(gls: GridSystem, mp:MiniMap) {
     gls.draw(true, () => {
         gl && gl.draw(gls)
+        mp.draw()
     });
 }
 
@@ -607,7 +609,9 @@ function reset(clear = false) {
     gls.value = new GridSystem(canvasDom);
     gls.value.loadFont(FontFamily.SHISHANG)
     setSize(canvasDom);
-    startTime(gls.value as GridSystem);
+    const mp = new MiniMap(gls.value);
+    startTime(gls.value as GridSystem, mp);
+
 
     let width = getUnitSize();
 
@@ -616,76 +620,76 @@ function reset(clear = false) {
         children: [
             {
                 label: "子节点1",
-                children: [
-                    {
-                        label: "孙节点1",
-                        children: [
-                            {
-                                label: "曾孙节点1",
-                                children: []
-                            },
-                            {
-                                label: "曾孙节点2",
-                                children: [
-                                    {
-                                        label: "玄孙节点1",
-                                        children: []
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        label: "孙节点2",
-                        children: []
-                    }
-                ]
-            },
-            {
-                label: "子节点2",
                 // children: [
                 //     {
-                //         label: "孙节点3",
+                //         label: "孙节点1",
                 //         children: [
                 //             {
-                //                 label: "曾孙节点3",
-                //                 children: [
-                //                     {
-                //                         label: "玄孙节点2",
-                //                         children: [
-                //                             {
-                //                                 label: "来孙节点1",
-                //                                 children: []
-                //                             }
-                //                         ]
-                //                     }
-                //                 ]
+                //                 label: "曾孙节点1",
+                //                 children: []
                 //             },
                 //             {
-                //                 label: "曾孙节点4",
-                //                 children: []
+                //                 label: "曾孙节点2",
+                //                 children: [
+                //                     {
+                //                         label: "玄孙节点1",
+                //                         children: []
+                //                     }
+                //                 ]
                 //             }
                 //         ]
                 //     },
                 //     {
-                //         label: "孙节点4",
-                //         children: [
-                //             {
-                //                 label: "曾孙节点5",
-                //                 children: []
-                //             }
-                //         ]
+                //         label: "孙节点2",
+                //         children: []
                 //     }
                 // ]
             },
-            {
-                label: "子节点3",
-                // children: []
-            }
+            // {
+            //     label: "子节点2",
+            //     children: [
+            //         {
+            //             label: "孙节点3",
+            //             children: [
+            //                 {
+            //                     label: "曾孙节点3",
+            //                     children: [
+            //                         {
+            //                             label: "玄孙节点2",
+            //                             children: [
+            //                                 {
+            //                                     label: "来孙节点1",
+            //                                     children: []
+            //                                 }
+            //                             ]
+            //                         }
+            //                     ]
+            //                 },
+            //                 {
+            //                     label: "曾孙节点4",
+            //                     children: []
+            //                 }
+            //             ]
+            //         },
+            //         {
+            //             label: "孙节点4",
+            //             children: [
+            //                 {
+            //                     label: "曾孙节点5",
+            //                     children: []
+            //                 }
+            //             ]
+            //         }
+            //     ]
+            // },
+            // {
+            //     label: "子节点3",
+            //     children: []
+            // }
         ]
     }
 
-    const newNode = getTreeLayout(treeNodes, 300, 50, 70);
+    const newNode = getTreeLayout(treeNodes, 300, 180, 70);
     console.log(newNode, "newNode");
 
     const glsss = gls.value as GridSystem;

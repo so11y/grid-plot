@@ -519,7 +519,7 @@ function getNearNodes(startPos: IPoint, endPos: IPoint, unitLen = 1) {
     }
 }
 
-function getTreeLayout(node: Itree, x = 0, y = 0, padding = 50, paddingX = 50) {
+function getTreeLayout(node: Itree, x = 0, y = 0, paddingY = 50, paddingX = 150) {
 
     if (!node.children) {
         node.children = []
@@ -531,7 +531,7 @@ function getTreeLayout(node: Itree, x = 0, y = 0, padding = 50, paddingX = 50) {
     node.x = x;
     node.y = y;
 
-    const childY = y + padding; // 子节点的y坐标  
+    const childY = y + paddingY; // 子节点的y坐标  
     const childX = x; // 子节点的起始x坐标与当前节点相同（为了居中对齐）  
 
     // 遍历子节点  
@@ -546,7 +546,7 @@ function getTreeLayout(node: Itree, x = 0, y = 0, padding = 50, paddingX = 50) {
                 paddingX * 2
             }
             bool = !bool
-            getTreeLayout(cd, cd.x, childY, padding);
+            getTreeLayout(cd, cd.x, childY, paddingY, paddingX);
         })
     } else {
         node.children.forEach((cd, i) => {
@@ -563,7 +563,7 @@ function getTreeLayout(node: Itree, x = 0, y = 0, padding = 50, paddingX = 50) {
             }else {
                 cd.x = childX
             }
-            getTreeLayout(cd, cd.x, childY, padding);
+            getTreeLayout(cd, cd.x, childY, paddingY, paddingX);
         })
     }
 

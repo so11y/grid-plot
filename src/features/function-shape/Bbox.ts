@@ -159,7 +159,8 @@ export default class Bbox extends Rect {
             bCtrlP2.on('translate', () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP2.pointArr);  // 当前控制点的中心点
-                const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
+                const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2], true); // 控制点到vct的距离， 移动的距离
+                if (lenX < 1) return
                 const pnt = getPntInVct(pointArr[1], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
                 const pnt2 = getPntInVct(pointArr[2], getRotateVct(this.vctX, 180), lenX)  // 关联点长度同步移动
                 pointArr[0].x = pnt.x;
@@ -196,7 +197,8 @@ export default class Bbox extends Rect {
             bCtrlP3.on('translate', () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP3.pointArr);  // 当前控制点的中心点
-                const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
+                const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3], true); // 控制点到vct的距离， 移动的距离
+                if (lenX < 1) return
                 const pnt = getPntInVct(pointArr[0], this.vctX, lenX)  // 关联点长度同步移动
                 const pnt2 = getPntInVct(pointArr[3], this.vctX, lenX)  // 关联点长度同步移动
                 pointArr[1].x = pnt.x;
@@ -236,7 +238,8 @@ export default class Bbox extends Rect {
             bCtrlP4.on('translate', () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP4.pointArr);  // 当前控制点的中心点
-                const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
+                const lenY = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3], true); // 控制点到vct的距离， 移动的距离
+                if (lenY < 1) return
                 const pnt = getPntInVct(pointArr[2], this.vctY, -lenY)  // 关联点长度同步移动
                 const pnt2 = getPntInVct(pointArr[3], this.vctY, -lenY)  // 关联点长度同步移动
                 pointArr[1].x = pnt.x;
@@ -273,7 +276,8 @@ export default class Bbox extends Rect {
             bCtrlP5.on('translate', () => {
                 const pointArr = this.pointArr;
                 const ctrlPos = Feature.getCenterPos(bCtrlP5.pointArr);  // 当前控制点的中心点
-                const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
+                const lenY = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1], true); // 控制点到vct的距离， 移动的距离
+                if (lenY < 1) return
                 const pnt = getPntInVct(pointArr[0], this.vctY, lenY)  // 关联点长度同步移动
                 const pnt2 = getPntInVct(pointArr[1], this.vctY, lenY)  // 关联点长度同步移动
                 pointArr[3].x = pnt.x;
@@ -309,10 +313,12 @@ export default class Bbox extends Rect {
         switch (this.index) {
             case 0:  // 左上角
                 {
-                    const lenX = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[1]); // 控制点到vct的距离， 移动的距离
+                    let lenX = getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[1], true); // 控制点到vct的距离， 移动的距离
+                    if (lenX < 1) { lenX = 1 }
                     const pnt = getPntInVct(pointArr[2], bbox.vctX, -lenX)  // 关联点长度同步移动
 
-                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3]); // 控制点到vct的距离， 移动的距离
+                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[2], pointArr[3], true); // 控制点到vct的距离， 移动的距离
+                    if (lenY < 1) { lenX = 1 }
                     const pnt2 = getPntInVct(pointArr[2], bbox.vctY, -lenY)  // 关联点长度同步移动
 
                     pointArr[3].x = pnt.x;
@@ -353,10 +359,12 @@ export default class Bbox extends Rect {
                 }
             case 1:  // 右上角
                 {
-                    const lenX = getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[0]); // 控制点到vct的距离， 移动的距离
+                    let lenX = getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[0], true); // 控制点到vct的距离， 移动的距离
+                    if (lenX < 1) { lenX = 1 }
                     const pnt = getPntInVct(pointArr[3], bbox.vctX, lenX)  // 关联点长度同步移动
 
-                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[2]); // 控制点到vct的距离， 移动的距离
+                    let lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[3], pointArr[2], true); // 控制点到vct的距离， 移动的距离
+                    if (lenY < 1) { lenY = 1 }
                     const pnt2 = getPntInVct(pointArr[3], bbox.vctY, -lenY)  // 关联点长度同步移动
 
                     pointArr[2].x = pnt.x;
@@ -397,10 +405,12 @@ export default class Bbox extends Rect {
                 }
             case 2:  // 右下角
                 {
-                    const lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3]); // 控制点到vct的距离， 移动的距离
+                    let lenX = getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[3], true); // 控制点到vct的距离， 移动的距离
+                    if (lenX < 1) { lenX = 1 }
                     const pnt = getPntInVct(pointArr[0], bbox.vctX, lenX)  // 关联点长度同步移动
 
-                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1]); // 控制点到vct的距离， 移动的距离
+                    let lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[0], pointArr[1], true); // 控制点到vct的距离， 移动的距离
+                    if (lenY < 1) { lenY = 1 }
                     const pnt2 = getPntInVct(pointArr[0], bbox.vctY, lenY)  // 关联点长度同步移动
 
                     pointArr[1].x = pnt.x;
@@ -441,10 +451,12 @@ export default class Bbox extends Rect {
                 }
             case 3:  // 左下角
                 {
-                    const lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2]); // 控制点到vct的距离， 移动的距离
+                    let lenX = getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[2], true); // 控制点到vct的距离， 移动的距离
+                    if (lenX < 1) { lenX = 1 }
                     const pnt = getPntInVct(pointArr[1], bbox.vctX, -lenX)  // 关联点长度同步移动
 
-                    const lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[0]); // 控制点到vct的距离， 移动的距离
+                    let lenY = Bbox.isKeepRatio ? lenX / bbox.ratio : getLenOfPntToLine(ctrlPos, pointArr[1], pointArr[0], true); // 控制点到vct的距离， 移动的距离
+                    if (lenY < 1) { lenY = 1 }
                     const pnt2 = getPntInVct(pointArr[1], bbox.vctY, lenY)  // 关联点长度同步移动
 
                     pointArr[0].x = pnt.x;

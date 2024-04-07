@@ -1,6 +1,7 @@
 import { ClassName } from "@/Constants";
+import MiniMap from "@/MiniMap";
 import { IPoint, IPixelPos } from "../../Interface";
-import { getLenOfTwoPnts, getMidOfTwoPnts, getRectPoint, getRoundedRect } from "../../utils";
+import { getLenOfTwoPnts, getRectPoint, getRoundedRect } from "../../utils";
 import Feature from "../Feature";
 
 // 矩形元素
@@ -18,53 +19,28 @@ class Rect extends Feature {
     }
 
     draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
-        // if (radius == 0) {
-        // pointArr.forEach((p, i) => {
-        //     if (i == 0) {  // 第一个点
-        //         if (this.isClosePath) {
-        //             const nextPnt = pointArr[i + 1];
-        //             const prevPnt = pointArr[pointArr.length - 1];
-        //             if (nextPnt && prevPnt) {
-        //                 const midPnt = getMidOfTwoPnts(prevPnt, p)
-        //                 path.moveTo(midPnt.x, midPnt.y)
-        //                 path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-        //             }
-        //         } else {
-        //             path.moveTo(p.x, p.y)
-        //         }
-        //     } else if (i != pointArr.length - 1) {  // 中间点
-        //         const nextPnt = pointArr[i + 1];
-        //         if (nextPnt) {
-        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-        //         }
-        //     } else {   // 最后一个点
-        //         if (this.isClosePath) {
-        //             const nextPnt = pointArr[0];
-        //             path.arcTo(p.x, p.y, nextPnt.x, nextPnt.y, r)
-        //         } else {
-        //             path.lineTo(p.x, p.y)
-        //         }
-        //     }
-        // })
-        // } else {
         const { width, height, leftTop } = this.getSize(pointArr);
-        let path;
+        let path:Path2D;
         if (this.isFixedSize) {
             const { x: x1, y: y1 } = this.gls.getPixelPos(this.position)
-            // path.roundRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, r);
             path = getRoundedRect(x1 - this.size.width / 2, y1 - this.size.height / 2, this.size.width, this.size.height, radius);
         } else {
-            // path.roundRect(leftTop.x, leftTop.y, width, height, r);
             path = getRoundedRect(leftTop.x, leftTop.y, width, height, radius);
         }
+        // ctx.fillStyle = "#fff"
+        // ctx.fillRect(0,0,10,10)
+        // if(Feature.TargetRender?.className === 'minimap'){
+        //     console.log(leftTop, "pointArr");
+        // }
         ctx.save()
         this.isClosePath && path.closePath()
+        lineDashArr.length > 0 && ctx.setLineDash(lineDashArr)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
-        lineDashArr.length > 0 && ctx.setLineDash(lineDashArr)
         ctx.lineDashOffset = this.lineDashOffset;
         ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = lineWidth;
         if (this.isPointIn) {
             ctx.fillStyle = this.hoverStyle;
             if (this.gls.focusNode === this) {
@@ -73,11 +49,10 @@ class Rect extends Feature {
         } else {
             ctx.fillStyle = this.fillStyle;
         }
-        ctx.lineWidth = lineWidth;
-        this.drawAdsorbLine(ctx, pointArr)  // 放在旋转前面
         this.rotateCtx(ctx, leftTop)
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
+        this.drawAdsorbLine(ctx, pointArr)
         this.setPointIn(ctx, path)
         this.flowLineDash();
         ctx.restore();
