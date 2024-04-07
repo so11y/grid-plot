@@ -20,8 +20,9 @@ class Line extends Feature {
     actualPointArr: IPixelPos[] | null = null;   // 实际渲染到画布上的点集合
 
     tipInfo: ITxt = {
+        hidden: true,
         txt: '',
-        fontSize: 2,
+        fontSize: 1.5,
         color: "rgba(174, 253, 181)",
         offset: { x: 0, y: 0 },
         fontFamily: FontFamily.HEITI,
@@ -35,7 +36,7 @@ class Line extends Feature {
         this.hoverStyle = '#F8EA7A'
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius: number) {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
@@ -95,26 +96,28 @@ class Line extends Feature {
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.lineDashOffset = this.lineDashOffset;
-        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr);
+        lineDashArr.length > 0 && ctx.setLineDash(lineDashArr);
         ctx.lineWidth = lineWidth;
         ctx.stroke(path);
         ctx.fillStyle = this.fillStyle
         this.isClosePath && ctx.fill(path);
         this.setPointIn(ctx, path);
-        this.drawTip(ctx, this.getTwoPntByTip(pointArr), lineWidth);
+        this.drawTip(ctx, this.getTwoPntOfTip(pointArr), lineWidth);
         this.flowLineDash();
         ctx.restore()
         return path;
     }
 
-    getTwoPntByTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
+    getTwoPntOfTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
+        console.log(pointArr, "pointArr");
+        
         return [pointArr[0], pointArr[pointArr.length - 1]]
     }
 
     drawTip(ctx: CanvasRenderingContext2D, pointArr: [IPoint, IPoint], lineWidth = 0) {
-        if (pointArr.length == 2 && this.tipInfo.txt) {  // 只接受起点和终点, 文本
-            const startP = pointArr[0];
-            const endP = pointArr[1];
+        const startP = pointArr[0];
+        const endP = pointArr[1];
+        if (startP && endP && !this.tipInfo.hidden) {  // 只接受起点和终点, 文本
             const center = getMidOfTwoPnts(startP, endP);
             let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
             if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
@@ -141,7 +144,6 @@ class Line extends Feature {
             this.clearCtrlPos();
         }
     }
-
     clearCtrlPos() {
         const ctrlPnts = this.getCtrlPnts();
         ctrlPnts.forEach(cp => {
@@ -149,9 +151,27 @@ class Line extends Feature {
         })
     }
 
-    getCtrlPnts() {
-        const ctrlPnts = this.gls.features.filter(f => (f instanceof SCtrlPnt || f instanceof SCtrlPnt) && f.parent === this);
-        return ctrlPnts;
+    // 每两点插入一个中点
+    insertMidpoints(pointArr = this.pointArr) {
+        // 结果数组，用来存放插入中点后的坐标  
+        let newPointArr = [];
+        // 遍历坐标数组  
+        for (let i = 0; i < pointArr.length - 1; i++) {
+            // 获取当前点和下一点  
+            const current = pointArr[i];
+            const next = pointArr[i + 1];
+            // 计算中间点  
+            const midpoint = {
+                x: (current.x + next.x) / 2,
+                y: (current.y + next.y) / 2
+            };
+            // 将当前点和中点加入结果数组  
+            newPointArr.push(current);
+            newPointArr.push(midpoint);
+        }
+        // 最后一个点不需要再计算中点，直接添加到结果数组  
+        newPointArr.push(pointArr[pointArr.length - 1]);
+        this.pointArr = newPointArr;
     }
 
     getPointOfPer(per: number) {  // 获取选段百分之多少处的点 per: 0~1
@@ -178,7 +198,7 @@ class Line extends Feature {
         } else {
             let path = super.getSvg(pointArr, lineWidth);
             if (this.tipInfo.txt) {
-                const [startP, endP] = this.getTwoPntByTip(pointArr);
+                const [startP, endP] = this.getTwoPntOfTip(pointArr);
                 const center = getMidOfTwoPnts(startP, endP);
                 let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
                 if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {

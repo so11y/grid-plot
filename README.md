@@ -208,7 +208,7 @@
 ```
 > 获取某个点周围可吸附的点的距离
 ```
-   gls.getAdsorbPos(point) // 相对坐标点
+   gls.getAdsorb2Grid(point) // 相对坐标点
 ```
 
 **Feature 类**

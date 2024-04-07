@@ -8,7 +8,8 @@ enum CoordinateSystem {
     NATIVE_SCALE = 10,  // 原始缩放大小
     AREA_FILL_COLOR = "rgba(145,202,255, .5)",  // 区域选择的rect填充色
     DB_CLICK_DURATION = 250,  // 双击间隔的时间
-    DRAG_TRANSITION_MIN_DIST = 5  // 拖拽滑动最小距离
+    DRAG_TRANSITION_MIN_DIST = 10,  // 拖拽滑动最小距离
+    SCALE_SHOW_MIN_SIZE = 10  // 显示元素的最小size,太小的元素不显示
 }
 
 // 控制点方位
@@ -69,9 +70,12 @@ enum Events {
 // 线段样式
 enum LinkStyle {
     DEFAULT = 'default',  // 直线
-    BROKEN = 'broken', // 折线
+    BROKEN_ONE = 'broken_one', // 折线
+    BROKEN_TWO = 'broken_two', // 折线
     CURVE_H = 'curve_h',  // 曲线
-    CURVE_V = 'curve_v'  // 曲线
+    CURVE_V = 'curve_v',  // 曲线
+    CURVE = 'curve',  // 曲线
+    AUTOBROKEN = 'autobroken'  // 自动寻路
 }
 
 // 对齐方向
@@ -87,6 +91,7 @@ enum Orientation {
 enum AdsorbType {
     GRID = 'grid',
     FEATURE = 'feature',
+    POINT = 'point',
 }
 
 // 选中模式

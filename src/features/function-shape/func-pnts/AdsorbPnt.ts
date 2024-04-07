@@ -1,4 +1,5 @@
-import { ClassName, Events } from "../../../Constants";
+import { IPixelPos } from "@/Interface";
+import { AdsorbType, ClassName, Events } from "../../../Constants";
 import { getMousePos } from "../../../utils";
 import Pnt from "../Pnt";
 
@@ -8,6 +9,7 @@ class AdsorbPnt extends Pnt {
     cbAdsorption: boolean = true;  // 是否吸附
     cbCrossLine: boolean = true;
     crossLineStrokeStyle = "#2471A3";
+    adsorbType = AdsorbType.POINT;
 
     constructor(width: number = 14, cbAdsorption = false, cbCrossLine = true) {   // 相对坐标
         super(0, 0, width, width);
@@ -21,13 +23,12 @@ class AdsorbPnt extends Pnt {
         this.cbCrossLine = cbCrossLine;
         this.cbCapture = false;
         this.cbSelect = false;
-        this.gls.addFeature(this, false)
         document.addEventListener("mousemove", this.setPos.bind(this));
     }
 
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius?: number): Path2D {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius?: number): Path2D {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         // const center = this.getCenterPos(pointArr);
         // if (this.cbCrossLine) {
         //     ctx.save();
@@ -53,7 +54,7 @@ class AdsorbPnt extends Pnt {
             y: ry
         };
         if (this.cbAdsorption) {
-            const { x: x1, y: y1 } = gls.getAdsorbPos({ x: rx, y: ry });
+            const { x: x1, y: y1 } = this.adsorbType == AdsorbType.POINT ? gls.getAdsorb2Point({ x: rx, y: ry }) : this.adsorbType == AdsorbType.GRID ? gls.getAdsorb2Grid({ x: rx, y: ry }) : gls.getAdsorb2Grid({ x: rx, y: ry });
             this.position.x += x1;
             this.position.y += y1;
         }
@@ -61,7 +62,7 @@ class AdsorbPnt extends Pnt {
     }
 
     destory() {
-        document.removeEventListener(Events.MOUSE_MOVE, this.setPos);
+        this.off(Events.MOUSE_DOWN, this.setPos)
     }
 }
 

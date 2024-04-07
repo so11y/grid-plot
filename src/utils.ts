@@ -1,6 +1,6 @@
 
 import { AlignType, ClassName, CoordinateSystem } from "./Constants";
-import { IPoint, ISize, IVctor } from "./Interface";
+import { IPoint, ISize, Itree, IVctor, NearNode } from "./Interface";
 
 /**
  * 获取鼠标点击后相对于canvas左上角的坐标
@@ -51,23 +51,23 @@ function getUuid(): string {
  * @returns 
  */
 function calculateBezierPointForCubic(t: number, p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint): IPoint {
-    var point: IPoint = { x: 0, y: 0 };
+    var p: IPoint = { x: 0, y: 0 };
     var temp = 1 - t;
-    point.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
-    point.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
-    return point;
+    p.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
+    p.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
+    return p;
 }
 
 // 根据两点获取向量
-function getVector(point1: IPoint, point2: IPoint) {
+function getVector(p1: IPoint, p2: IPoint) {
     return {
-        x: point1.x - point2.x,
-        y: point1.y - point2.y
+        x: p1.x - p2.x,
+        y: p1.y - p2.y
     }
 }
 
-function crossMul(point1: IPoint, point2: IPoint) {
-    return point1.x * point2.y - point1.y * point2.x;
+function crossMul(p1: IPoint, p2: IPoint) {
+    return p1.x * p2.y - p1.y * p2.x;
 }
 
 //  求两个向量之间的夹角
@@ -77,10 +77,10 @@ function getAngleOfTwoVct(vector1: IVctor, vector2: IVctor) {
     return angle;
 }
 
-function getCenterOfTwoPnts(point1: IPoint, point2: IPoint): IPoint {
+function getCenterOfTwoPnts(p1: IPoint, p2: IPoint): IPoint {
     return {
-        x: (point2.x + point1.x) / 2,
-        y: (point2.y + point1.y) / 2
+        x: (p2.x + p1.x) / 2,
+        y: (p2.y + p1.y) / 2
     }
 }
 
@@ -204,13 +204,15 @@ function getMidOfTwoPnts(p1: IPoint, p2: IPoint) {
 /**
  * 获取O点到直线PQ的垂直距离
  */
-function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint) {
+function getLenOfPntToLine(O: IPoint, P: IPoint, Q: IPoint, absolute = false) {
     if ((O.x == P.x && O.y == P.y) || (P.x == Q.x && P.y == Q.y)) {
         return 0;
     }
     let rotateAng = getRotateAng([O.x - P.x, O.y - P.y], [Q.x - P.x, Q.y - P.y]);
     let len = getLenOfTwoPnts(O, P) * Math.sin(rotateAng * Math.PI / 180);
-    len = len < 0 ? -len : len;  // 不要打开方向有问题
+    if (!absolute) {
+        len = len < 0 ? -len : len;  // 不要打开方向有问题
+    }
     return len;
 };
 
@@ -253,13 +255,28 @@ function getPntsOf3Bezier(p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint, counts
  * 获取三次贝塞尔曲线上的一点，t∈[0,1]
  * @param t 介于0 ~ 1, 表示点在曲线中的相对位置
  */
-function getPntIn3Bezier(p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint, t: number): IPoint {
+function getPntIn3Bezier(p1: IPoint, cp1: IPoint, cp2: IPoint, p2: IPoint, t: number): IPoint {
     let t_ = 1 - t;
-    let x = p0.x * t_ * t_ * t_ + 3 * p1.x * t * t_ * t_ + 3 * p2.x * t * t * t_ + p3.x * t * t * t,
-        y = p0.y * t_ * t_ * t_ + 3 * p1.y * t * t_ * t_ + 3 * p2.y * t * t * t_ + p3.y * t * t * t;
+    let x = p1.x * t_ * t_ * t_ + 3 * cp1.x * t * t_ * t_ + 3 * cp2.x * t * t * t_ + p2.x * t * t * t,
+        y = p1.y * t_ * t_ * t_ + 3 * cp1.y * t * t_ * t_ + 3 * cp2.y * t * t * t_ + p2.y * t * t * t;
     return { x, y };
 };
 
+function getPntsOf2Bezier(p1: IPoint, cp: IPoint, p2: IPoint, counts: number): IPoint[] {
+    let per = counts && counts != 0 ? 1 / counts : 0.02;    //取点间隔
+    let points: IPoint[] = [];
+    for (let t = 0; t <= 0.999999; t += per) {
+        points.push(getPntIn2Bezier(p1, cp, p2, t));
+    }
+    return points;
+};
+
+function getPntIn2Bezier(p1: IPoint, cp: IPoint, p2: IPoint, t: number): IPoint {
+    // 计算曲线上的点  
+    var x = Math.pow(1 - t, 2) * p1.x + 2 * (1 - t) * t * cp.x + Math.pow(t, 2) * p2.x;
+    var y = Math.pow(1 - t, 2) * p1.y + 2 * (1 - t) * t * cp.y + Math.pow(t, 2) * p2.y;
+    return { x, y };
+}
 /**
  * 在一段椭圆弧上均匀取点，rotateAngle是椭圆绕中心点逆时针旋转的角度
  * endAngle必须大于startAngle, ~[-360, 360]
@@ -300,15 +317,15 @@ function getPntsInEllipse(center: IVctor, majorRadius: number, minorRadius: numb
 };
 
 // 判断点是否在多边形内
-function isPntInPolygon(point: IPoint, polygon: IPoint[]) {
+function isPntInPolygon(p: IPoint, polygon: IPoint[]) {
     var j = polygon.length - 1;
     var isInside = false;
 
     for (var i = 0; i < polygon.length; i++) {
         if (
-            ((polygon[i].y < point.y && polygon[j].y >= point.y) || (polygon[j].y < point.y && polygon[i].y >= point.y))
+            ((polygon[i].y < p.y && polygon[j].y >= p.y) || (polygon[j].y < p.y && polygon[i].y >= p.y))
             &&
-            (polygon[i].x + (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) * (polygon[j].x - polygon[i].x) < point.x)
+            (polygon[i].x + (p.y - polygon[i].y) / (polygon[j].y - polygon[i].y) * (polygon[j].x - polygon[i].x) < p.x)
         ) {
             isInside = !isInside;
         }
@@ -370,7 +387,7 @@ function beautifyHTML(html: string, indentSize = 2) {
 function isBasicFeature(f?: any, hasGroup = true) {  //  hasGroup 是否包括Group类元素
     if (!f) return false;
     if (!hasGroup && f.className === ClassName.GROUP) return
-    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.LINK || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO
+    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any, hasAnchor = true) {
@@ -379,9 +396,9 @@ function isCtrlFeature(f?: any, hasAnchor = true) {
     return f.className === ClassName.SCTRLPNT || f.className === ClassName.RCTRLPNT || f.className === ClassName.ANCHORPNT
 }
 
-function getAngleOfTwoPnts(point1: IPoint, point2: IPoint) {
-    var deltaX = point2.x - point1.x;
-    var deltaY = point2.y - point1.y;
+function getAngleOfTwoPnts(p1: IPoint, p2: IPoint) {
+    var deltaX = p2.x - p1.x;
+    var deltaY = p2.y - p1.y;
     return Math.atan2(deltaY, deltaX) * 180 / Math.PI;
 }
 
@@ -428,6 +445,132 @@ function getCirclePoints(x: number, y: number, width: number, height: number, an
     return points;
 }
 
+function getNearestPoint(target: IPoint, points: IPoint[]) {
+    let nearestPoint = null;
+    let minDistance = Infinity;
+    for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+        // 跳过目标点自身  
+        if (point.x === target.x && point.y === target.y) {
+            continue;
+        }
+        // 计算当前点到目标点的距离  
+        const distance = Math.sqrt(Math.pow(point.x - target.x, 2) + Math.pow(point.y - target.y, 2));
+        // 如果当前点距离更近，则更新最近点和最小距离  
+        if (distance < minDistance) {
+            nearestPoint = point;
+            minDistance = distance;
+        }
+    }
+    return nearestPoint;
+}
+
+// 获取当前节点附近的6个点,分别是 左, 上, 右, 下, 左上, 右上, 右下, 左下
+function getNearNodes(startPos: IPoint, endPos: IPoint, unitLen = 1) {
+    let leftNode = {
+        name: "left",
+        x: startPos.x - unitLen,
+        y: startPos.y,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(leftNode);
+
+    let topNode = {
+        name: "top",
+        x: startPos.x,
+        y: startPos.y - unitLen,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(topNode);
+
+
+    let rightNode = {
+        name: "right",
+        x: startPos.x + unitLen,
+        y: startPos.y,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(rightNode);
+
+    let bottomNode = {
+        name: "bottom",
+        x: startPos.x,
+        y: startPos.y + unitLen,
+        g: 1,
+        h: 0,
+        f: 0,
+    };
+    setDistProp(bottomNode);
+
+    return [leftNode, topNode, rightNode, bottomNode,]
+
+    function setDistProp(startPos: NearNode) {
+        if (!startPos.g) {
+            startPos.g = 0;
+        }
+        startPos.h = Math.abs(endPos.x - startPos.x) + Math.abs(endPos.y - startPos.y);
+        startPos.f = startPos.g + startPos.h;
+    }
+}
+
+function getTreeLayout(node: Itree, x = 0, y = 0, paddingY = 50, paddingX = 150) {
+
+    if (!node.children) {
+        node.children = []
+    }
+
+    let bool = false;
+
+    // 计算当前节点的起始x坐标，使其居中对齐  
+    node.x = x;
+    node.y = y;
+
+    const childY = y + paddingY; // 子节点的y坐标  
+    const childX = x; // 子节点的起始x坐标与当前节点相同（为了居中对齐）  
+
+    // 遍历子节点  
+    if (node.children.length % 2 === 0) {  // 子节点是偶数,中间空着
+        node.children.forEach((cd, i) => {
+            if (bool) {
+                cd.x = childX + paddingX
+            } else {
+                cd.x = childX - paddingX
+            }
+            if (i % 2 === 0) {
+                paddingX * 2
+            }
+            bool = !bool
+            getTreeLayout(cd, cd.x, childY, paddingY, paddingX);
+        })
+    } else {
+        node.children.forEach((cd, i) => {
+            if (i > 0) {
+                if (bool) {
+                    cd.x = childX + paddingX
+                } else {
+                    cd.x = childX - paddingX
+                }
+                if (i % 2 === 0) {
+                    paddingX * 2
+                }
+                bool = !bool
+            }else {
+                cd.x = childX
+            }
+            getTreeLayout(cd, cd.x, childY, paddingY, paddingX);
+        })
+    }
+
+    return node;
+}
+
+
 export {
     getMousePos,
     getUnitSize,
@@ -436,6 +579,7 @@ export {
     randomNum,
     hex2Rgba,
     rgb2Hex,
+    getNearestPoint,
 
     determinePosition,
     calculateBezierPointForCubic,
@@ -453,6 +597,7 @@ export {
     createVctor,
     getRotatePnt,
     getPntsOf3Bezier,
+    getPntsOf2Bezier,
     getRectPoint,
     getPntsInEllipse,
 
@@ -467,4 +612,7 @@ export {
 
     getRoundedRect,
     getCirclePoints,
+
+    getNearNodes,
+    getTreeLayout,
 }

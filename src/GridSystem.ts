@@ -1,11 +1,11 @@
-import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle, AdsorbType } from "./Constants";
+import { CoordinateSystem, FontFamily, Events, Orientation, ClassName, LinkStyle, AdsorbType, AlignType } from "./Constants";
 import Feature from "./features/Feature";
 import Line from "./features/basic-shape/Line";
 import Rect from "./features/basic-shape/Rect";
 import AdsorbPnt from "./features/function-shape/func-pnts/AdsorbPnt";
-import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos } from "./Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, Listeners } from "./Interface";
 import Stack from "./Stack";
-import { beautifyHTML, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements } from "./utils";
+import { beautifyHTML, getNearestPoint, getLenOfTwoPnts, getMousePos, getUnitSize, isBasicFeature, isCtrlFeature, swapElements, getMidOfTwoPnts } from "./utils";
 import gsap from "gsap";
 import { fontMap } from "./Maps";
 import Shortcuts from "./Shortcuts";
@@ -19,6 +19,8 @@ import EraserPnt from "./features/function-shape/func-pnts/EraserPnt";
 import Link from "./features/basic-shape/Link";
 import RCtrlPnt from "./features/function-shape/ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
+import Pnt from "./features/function-shape/Pnt";
+import ACtrlPnt from "./features/function-shape/ctrl-pnts/ACtrlPnt";
 
 class GridSystem {
 
@@ -27,6 +29,7 @@ class GridSystem {
     static Bbox: Bbox | null;
     static Shortcuts: Shortcuts | null;
     static Eraser: EraserPnt | null;
+    static MultipleSelect: Group | null;
 
     className: string = ClassName.GRIDSYSTEM;
     scale: number = 10;
@@ -40,11 +43,11 @@ class GridSystem {
         y: this.pageSlicePos.y
     });  // 首次渲染时候的pagePos
     extent: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
+    // extent: [number, number, number, number] = [175, 80, 75, 180]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
     mousePos = {
         x: 0,
         y: 0
     }
-
     domElement: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     timer: number = 0;
@@ -54,28 +57,21 @@ class GridSystem {
     focusNode: Feature | null | undefined;  // 获取焦点的元素, 如果是null ，那就是画布
     features: Feature[] = [];  // 所有元素的集合
 
-    dragingSensitivity: number = 1.2;   // 拖拽时候的灵敏度, 建议 0 ~ 3
+    dragingSensitivity: number = 1;   // 拖拽时候的灵敏度, 建议 0 ~ 3
     friction = .93;  // 摩擦力
-    lastClickTime: number = 0;  // 用于双击
+    lastClickTime: number = 0;  // 用于判断双击
     focusedTransform = true;   // 获取焦点时就增加包围盒形变
 
-    cbOverlap: boolean = true;  // 元素间是否可重叠
+    // cbOverlap: boolean = true;  // 元素间是否可重叠
     cbScale: boolean = true; // 画布是否可调节缩放
     cbDragBackground: boolean = true;  // 画布是否可被拖拽
     cbSelectFeature: boolean = true;  // 画布中的元素是否可被选中
     cbAdsorption: boolean = true;  // 元素拖拽是否启用吸附
-    cbDragOutScreen: boolean = true; // 是否可被移动到屏幕外
     cbDrawMiniFeature: boolean = true; // 是否渲染太小的元素，因为画布缩放的原因, 提升渲染效率
     cbDrawOutScreen: boolean = true;  // 元素在屏幕外时是否绘制， 因为画布拖拽, 提升渲染效率
-    isShowAdsorbLine: boolean = false;
 
     // 提供的事件
-    ondrag: Function = () => { };
-    onzoom: Function = () => { }  // 画布缩放时，触发
-    onmousedown: Function = () => { };
-    onmousemove: Function = () => { };
-    onmouseup: Function = () => { };
-    ondbclick: Function = () => { };
+    listeners: Listeners = {};
 
     test: IPoint = { x: 0, y: 0 }
 
@@ -107,44 +103,6 @@ class GridSystem {
     };
 
     // --------------------以下是私有的方法----------------------------
-    // --------------------绘制元素，以及鼠标事件监听----------------------------
-    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
-        features.forEach(f => {
-            const isBasic = isBasicFeature(f);
-            if (f.hidden) return;
-            if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
-            const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
-            if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因
-                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
-                if (Math.abs(maxX - minX) < 30 && Math.abs(maxY - minY) < 30) {
-                    return
-                }
-            }
-            if (!this.cbDragOutScreen) { // 是否渲染屏幕外的元素
-                if (pointArr.every(p => {
-                    return p.x < 0 || p.x > this.ctx.canvas.width || p.y < 0 || p.y > this.ctx.canvas.height
-                })) return
-            }
-            Feature.TargetRender = this;
-            const lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
-            let path;
-            // if (f instanceof Rect) {
-            const radius = this.getRatioSize(f.radius, f.isFixedSize);
-            //     path = f.draw(this.ctx, pointArr, lineWidth, radius)
-            // } else {
-            path = f.draw(this.ctx, pointArr, lineWidth, radius);
-            // }
-            f.ondraw && f.ondraw()
-            this.ctx.save();
-            f.isOverflowHidden && this.ctx.clip(path);
-            if (isBasic) {
-                const children = this.features.filter(cf => cf.parent === f && isBasicFeature(cf));  // 找出子元素
-                if (children.length > 0) this.drawFeatures(children, true);
-            }
-            this.ctx.restore();
-        })
-    }
-
     initEventListener() {
         this.domElement.addEventListener("mousemove", this.mouseMove);
         this.domElement.addEventListener("mousedown", this.mouseDown);
@@ -156,23 +114,6 @@ class GridSystem {
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };
         GridSystem.Shortcuts = new Shortcuts();
-        // GridSystem.Shortcuts.addEvent('del', () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text && feature.editble) {  // 文本光标向右删除
-        //         if (feature.cursorIndex < feature.text.length) {
-        //             feature.text = feature.text.slice(0, feature.cursorIndex) + feature.text.slice(feature.cursorIndex + 1);
-        //         }
-        //     } else {
-        //         this.removeFeature(feature, true);
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent('backspace', () => { // 文本光标向左删除
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text && feature.editble && feature.cursorIndex > 0) {
-        //         feature.text = feature.text.slice(0, feature.cursorIndex - 1) + feature.text.slice(feature.cursorIndex);
-        //         feature.cursorIndex--;
-        //     }
-        // })
         GridSystem.Shortcuts.addEvent(["ctrl", "z"], () => GridSystem.Stack && GridSystem.Stack.undo())
         GridSystem.Shortcuts.addEvent(["ctrl", "y"], () => GridSystem.Stack && GridSystem.Stack.restore())
         GridSystem.Shortcuts.addEvent(["ctrl", "v"], this.clipboardToFeature.bind(this))
@@ -192,41 +133,13 @@ class GridSystem {
             const focusNode = this.getFocusNode();
             this.removeFeature(focusNode)
         })
-        // GridSystem.Shortcuts.addEvent("left", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         feature.cursorIndex > 0 && feature.cursorIndex--;
-        //         console.log(feature.cursorIndex, "feature.cursorIndex");
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("right", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         feature.cursorIndex < feature.text.length && feature.cursorIndex++;
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("up", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         Text.mousePos.y -= this.getRatioSize(feature.fontSize);
-        //         feature.cursorIndex = -1;
-        //     }
-        // })
-        // GridSystem.Shortcuts.addEvent("down", () => {
-        //     const feature = this.getFocusNode();
-        //     if (feature instanceof Text) {
-        //         Text.mousePos.y += this.getRatioSize(feature.fontSize)
-        //         feature.cursorIndex = -1;
-        //     }
-        // })
     }
 
     private mouseMove = (e: any) => {
-        this.onmousemove && this.onmousemove(e);
         const pos = getMousePos(this.domElement, e);
         this.mousePos.x = pos.x;
         this.mousePos.y = pos.y;
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_MOVE, { detail: e }));
+        this.dispatch(new CustomEvent(Events.MOUSE_MOVE, { detail: e }))
     }
 
     private mouseDown = (ev: any) => {
@@ -235,30 +148,38 @@ class GridSystem {
         const curPageSlicePos = { x: this.pageSlicePos.x, y: this.pageSlicePos.y }
         const velocity = { x: 0, y: 0 }; // 速度分量
         const lastMove = { x: 0, y: 0 } // 上一次鼠标位置
-
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }));
-        this.onmousedown && this.onmousedown(ev);
-        const { x: downX, y: downY } = getMousePos(this.domElement, ev);
-        const { x: px, y: py } = this.pageSlicePos;
+        this.dispatch(new CustomEvent(Events.MOUSE_DOWN, { detail: ev }))
         this.features.forEach(f => f.isFocused = false);
-        let focusNode = this.focusNode = this.features.slice().reverse().find(f => f.cbSelect && f.isPointIn);  // 寻找鼠标悬浮元素
+        const focusNodes = this.features.slice().reverse().filter(f => f.cbSelect && f.isPointIn)
+        let focusNode = this.focusNode = focusNodes[0];  // 寻找鼠标悬浮元素
         let moveFlag = false;
         let mousemove = (e: any) => { };
         if (this.cbSelectFeature) {
-            if (ev.buttons != 1) {
+            if (ev.buttons != 1) {  // 1是左键,2是右键
                 this.focusNode = focusNode;
             } else {  // 左键点击
-                focusNode?.onmousedown && focusNode.onmousedown(ev);
+                const basicFocusNode = this.getFocusNode();  // 获取focusNode中的基础元素
+                focusNodes.forEach(f => f.dispatch(new CustomEvent('mousedown', { detail: ev })))
                 if (!(focusNode instanceof Bbox) && this.focusedTransform && !(isCtrlFeature(focusNode))) {  // 点击了就加控制点,没点击就去除所有控制点
                     this.enableBbox(null);
-                    if ((isBasicFeature(focusNode) || this.getFocusNode() instanceof SelectArea)) {
+                    if ((isBasicFeature(focusNode) || basicFocusNode instanceof SelectArea)) {
                         const bbox = this.enableBbox(focusNode as IBasicFeature | SelectArea);
                         bbox && (focusNode = bbox);
                     }
                 };
                 // 如果有区域选择,那么选择其他元素或者点击空白就清除SelectArea
-                if (!(this.getFocusNode() instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
-                if (lastFocusNode && this.getFocusNode() !== lastFocusNode) lastFocusNode.onblur();
+                if (!(basicFocusNode instanceof SelectArea) && !isCtrlFeature(this.focusNode)) { this.enableSelectArea(false) }
+                if (lastFocusNode && basicFocusNode !== lastFocusNode) { lastFocusNode.dispatch(new CustomEvent('blur', { detail: ev })) };
+                if (Shortcuts.isCtrlKey && basicFocusNode) {
+                    if (!GridSystem.MultipleSelect) {
+                        GridSystem.MultipleSelect = new Group([basicFocusNode])
+                        GridSystem.MultipleSelect.isRmoveChild = false;
+                        this.addFeature(GridSystem.MultipleSelect, false)
+                    } else {
+                        GridSystem.MultipleSelect.add(basicFocusNode);
+                    }
+                    console.log(GridSystem.MultipleSelect, "GridSystem.MultipleSelect");
+                }
             }
             if (focusNode && ev.buttons == 1) {  // 拖拽元素
                 focusNode.isFocused = true;
@@ -274,6 +195,7 @@ class GridSystem {
                                 const { x: offsetX, y: offsetY, orientations } = this.getAdsorbOffsetDist(focusNode, {
                                     gridCompute: focusNode.adsorbTypes.includes(AdsorbType.GRID),
                                     featureCompute: focusNode.adsorbTypes.includes(AdsorbType.FEATURE),
+                                    pointCompute: focusNode.adsorbTypes.includes(AdsorbType.POINT),
                                     onlyCenter: focusNode.isOnlyCenterAdsorb
                                 });
                                 focusNode.translate(offsetX, offsetY)
@@ -285,32 +207,36 @@ class GridSystem {
                         }
                         lastMove.x = mx;
                         lastMove.y = my;
-                        focusNode.ondrag && focusNode.ondrag(e);
+                        focusNode.dispatch(new CustomEvent('drag', { detail: e }))
                     }
                 }
             } else if (this.cbDragBackground && ev.buttons == 2) {  // 判断是否左键拖拽画布
+                this.domElement.style.cursor = "grabbing"
                 mousemove = (e: any) => {
                     const { x: moveX, y: moveY } = getMousePos(this.domElement, e);
-                    this.ondrag && this.ondrag(e);
-                    this.pageSlicePos.x = px + (moveX - downX) * this.dragingSensitivity;
-                    this.pageSlicePos.y = py + (moveY - downY) * this.dragingSensitivity;
+                    this.dispatch(new CustomEvent('drag', { detail: e }))
+                    if (lastMove.x && lastMove.y) {
+                        this.translate((moveX - lastMove.x) * this.dragingSensitivity, (moveY - lastMove.y) * this.dragingSensitivity)
+                    }
                     this.setPageSlicePosByExtent(this.extent);
-
                     velocity.x = moveX - lastMove.x; // 计算dx
                     velocity.y = moveY - lastMove.y; // 计算dy
                     lastMove.x = moveX;
                     lastMove.y = moveY;
                 }
+            } else {
+                this.removeFeature(GridSystem.MultipleSelect, false)
             }
         }
         const mouseup = (e: any) => {
+            this.domElement.style.cursor = "auto"
             this.cbSelectFeature = true;
-            this.onmouseup && this.onmouseup(e);
-            document.dispatchEvent(new CustomEvent(Events.MOUSE_UP, { detail: e }));
+            this.dispatch(new CustomEvent('mouseup', { detail: e }))
+            this.dispatch(new CustomEvent(Events.MOUSE_UP, { detail: e }))
             if (focusNode) {
                 focusNode._orientations = null;
-                focusNode.onmouseup && focusNode.onmouseup(e);
-                focusNode.ondragend && focusNode.ondragend(e);
+                focusNode.dispatch(new CustomEvent('mouseup', { detail: e }))
+                focusNode.dispatch(new CustomEvent('dragend', { detail: e }))
                 if ((isBasicFeature(this.getFocusNode()) || this.getFocusNode() instanceof SelectArea) && moveFlag) {  // 鼠标抬起后,记录一下
                     GridSystem.Stack && GridSystem.Stack.record(); // 移动时候记录,没移动的不记录
                 }
@@ -318,7 +244,7 @@ class GridSystem {
             document.removeEventListener("mousemove", mousemove)
             document.removeEventListener("mouseup", mouseup);
             if (ev.buttons === 2 && this.pageSlicePos.x === curPageSlicePos.x && this.pageSlicePos.y === curPageSlicePos.y) {  // 判断右击
-                document.dispatchEvent(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }));
+                this.dispatch(new CustomEvent(Events.RIGHT_CLICK, { detail: ev }))
             }
 
             // 摩擦力过渡停止
@@ -342,11 +268,10 @@ class GridSystem {
         document.addEventListener("mousemove", mousemove)
         // 判断双击事件
         if (new Date().getTime() - this.lastClickTime < CoordinateSystem.DB_CLICK_DURATION) {  // 如果是双击
-            this.ondbclick && this.ondbclick(ev);
             if (focusNode) {
-                focusNode.ondbclick && focusNode.ondbclick(ev);
+                focusNode.dispatch(new CustomEvent('dbclick', { detail: ev }))
             }
-            document.dispatchEvent(new CustomEvent(Events.DB_CLICK, { detail: ev }));
+            this.dispatch(new CustomEvent(Events.DB_CLICK, { detail: ev }))
         }
         this.lastClickTime = new Date().getTime();
     }
@@ -358,7 +283,7 @@ class GridSystem {
      * @returns 
      */
     private getAdsorbOffsetDist(feature: Feature, options = {
-        gridCompute: false, featureCompute: false, onlyCenter: false
+        gridCompute: false, featureCompute: false, onlyCenter: false, pointCompute: false,
     }) {
         const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
@@ -369,6 +294,7 @@ class GridSystem {
         // 吸附的约束，灵敏度
         let min = gridSize * .2;
         let max = gridSize * .8;
+        const minD = 5;
 
         function getDeviation(num: number): number {   // 附近可吸附的位置
             const gridSize = CoordinateSystem.GRID_SIZE;
@@ -450,7 +376,7 @@ class GridSystem {
             // 元素间对其
             for (let index = 0; index < this.features.length; index++) {
                 const f = this.features[index];
-                if (f === feature) {
+                if (f === feature || !isBasicFeature(feature)) {
                     continue
                 }
                 const [left, right, top, bottom] = Feature.getRectWrapExtent(f.pointArr);
@@ -521,6 +447,20 @@ class GridSystem {
                 }
             }
         }
+        if (options.pointCompute) {
+            if (offsetX == 0 || offsetY == 0) {
+                const center = { x: centerX, y: centerY }
+                const points = this.features.filter(f => f instanceof Pnt).map(f => Feature.getCenterPos(f.pointArr));
+                const nearP = getNearestPoint(center, points) as IRelativePos;
+                if (nearP) {
+                    const d = getLenOfTwoPnts(nearP, center);
+                    if (d < minD) {
+                        offsetX = nearP.x - center.x;
+                        offsetY = nearP.y - center.y;
+                    }
+                }
+            }
+        }
         return { x: offsetX, y: offsetY, orientations };
     }
 
@@ -532,7 +472,7 @@ class GridSystem {
     private mouseWheel = (e: any, scale?: number) => {
         if (!this.cbScale) return;
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
-        this.onzoom && this.onzoom(e);
+        this.dispatch(new CustomEvent('zoom', { detail: e }))
         e.preventDefault();
         const { x, y } = getMousePos(this.domElement, e);
         if (e.wheelDelta > 0) {
@@ -552,7 +492,7 @@ class GridSystem {
                 this.back2center(x, y, lastGirdSize);
             }
         }
-        document.dispatchEvent(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }));
+        this.dispatch(new CustomEvent(Events.MOUSE_WHEEL, { detail: e }))
     };
 
     // 以鼠标中心点位置去放大
@@ -565,10 +505,10 @@ class GridSystem {
 
     setPageSlicePosByExtent(extent: number[] = []) { // 限制拖拽范围
         if (extent?.length > 0) {
-            const topExtent = extent[0];
-            const rightExtent = extent[1];
-            const bottomExtent = extent[2];
-            const leftExtent = extent[3];
+            const topExtent = this.getRatioSize(extent[0]);
+            const rightExtent = this.getRatioSize(extent[1]);
+            const bottomExtent = this.getRatioSize(extent[2]);
+            const leftExtent = this.getRatioSize(extent[3]);
 
             if (this.pageSlicePos.x > this.firstPageSlicePos.x + leftExtent) {
                 this.pageSlicePos.x = this.firstPageSlicePos.x + leftExtent;
@@ -587,7 +527,40 @@ class GridSystem {
 
     // --------------------以下是暴露的方法----------------------------
     // --------------------画布内元素的增删查API----------------------------
-    removeFeature(f: Feature | string | undefined, isRecord = true) {
+    drawFeatures(features: Feature[] = this.features, isChild: boolean = false) {
+        Feature.TargetRender = this;
+        features.forEach(f => {
+            const isBasic = isBasicFeature(f);
+            if (f.hidden) return;
+            if (isBasic && f.parent && isBasicFeature(f.parent) && !isChild) return
+            const pointArr = f.pointArr.map(p => this.getPixelPos(p, f.isFixedPos))
+            if (!this.cbDrawMiniFeature) {  // 是否渲染太小的元素，因为画布缩放的原因(也有元素本身很小)
+                const [minX, maxX, minY, maxY] = Feature.getRectWrapExtent(f.pointArr);
+                if (Math.abs(maxX - minX) < CoordinateSystem.SCALE_SHOW_MIN_SIZE && Math.abs(maxY - minY) < CoordinateSystem.SCALE_SHOW_MIN_SIZE) {
+                    return
+                }
+            }
+            if (!this.cbDrawOutScreen) { // 是否渲染屏幕外的元素
+                if (pointArr.every(p => {
+                    return p.x < 0 || p.x > this.ctx.canvas.width || p.y < 0 || p.y > this.ctx.canvas.height
+                })) return
+            }
+            const lineWidth = this.getRatioSize(f.lineWidth, f.isFixedSize);
+            const radius = this.getRatioSize(f.radius, f.isFixedSize);
+            const lineDashArr = f.lineDashArr.length == 2 ? [this.getRatioSize(f.lineDashArr[0], f.isFixedSize), this.getRatioSize(f.lineDashArr[1], f.isFixedSize)] : [];
+            const path = f.draw(this.ctx, pointArr, lineWidth, lineDashArr as [number, number], radius);
+            this.ctx.save();
+            f.isOverflowHidden && this.ctx.clip(path);
+            if (isBasic) {
+                const children = this.features.filter(cf => cf.parent === f && isBasicFeature(cf));  // 找出子元素
+                if (children.length > 0) this.drawFeatures(children, true);
+            }
+            this.ctx.restore();
+            f.dispatch(new CustomEvent('draw', { detail: '' }))
+        })
+    }
+
+    removeFeature(f: Feature | string | undefined | null, isRecord = true) {
         if (!f) return;
         let feature: Feature | null | undefined = null;
         if (f instanceof Feature) {
@@ -603,7 +576,7 @@ class GridSystem {
                 }, 10);
             }
             feature.destroy();
-            feature.ondelete();
+            feature.dispatch(new CustomEvent('delete', { detail: '' }))
             this.features = this.features.filter(f => feature && (f.id != feature.id));
             feature = null;
             isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 删除元素记录
@@ -617,9 +590,10 @@ class GridSystem {
             if (!feature.zIndex) feature.zIndex = features.length;
             this.features.sort((a, b) => a.zIndex - b.zIndex);
         }
+        this.initAnchorPnts(feature);
         isRecord && GridSystem.Stack && GridSystem.Stack.record();  // 新增元素记录
     }
-    getFocusNode() { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
+    getFocusNode(): IBasicFeature | null { // 获取焦点元素, 但不是 SCtrlPnt, RCtrlPnt, ACtrlPnt Bbox
         if (this.focusNode) {
             if (this.focusNode instanceof Bbox) {
                 return this.focusNode.children[0] as IBasicFeature;
@@ -637,7 +611,7 @@ class GridSystem {
             }
             return this.focusNode as IBasicFeature;
         }
-        return;
+        return null;
     }
 
     // --------------------------调整元素上下层级相关--------------------------------
@@ -719,8 +693,8 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(rect, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const clickDraw = (e: any) => {
@@ -735,8 +709,8 @@ class GridSystem {
         const moveDraw = () => {
             rect.setPos(adsorbPnt.position.x, adsorbPnt.position.y)
         }
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
-        document.addEventListener(Events.MOUSE_MOVE, moveDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
+        this.on(Events.MOUSE_MOVE, moveDraw)
         return clear;
     }
     continuousClickToFeature(line: Line, fn?: Function) { // 鼠标点一下添加一个点去画折线
@@ -746,9 +720,9 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.RIGHT_CLICK, overDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
+            this.off(Events.RIGHT_CLICK, overDraw)
             !remove && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const moveDraw = (e: any) => {
@@ -761,7 +735,7 @@ class GridSystem {
                     line.addPoint({ x: adsorbPnt.position.x, y: adsorbPnt.position.y }, false);
                 }
                 this.addFeature(line, false);
-                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
+                this.on(Events.MOUSE_MOVE, moveDraw)
             } else {
                 throw "请用左键绘制!"
             }
@@ -770,8 +744,8 @@ class GridSystem {
             clear(false);
             fn && fn();
         }
-        document.addEventListener(Events.RIGHT_CLICK, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
+        this.on(Events.RIGHT_CLICK, overDraw)
         return clear;
     }
     downMoveToFeature(line: Line, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
@@ -783,9 +757,9 @@ class GridSystem {
             this.cbSelectFeature = true;
             remove && this.removeFeature(line, false);
             this.removeFeature(adsorbPnt, false);
-            document.removeEventListener(Events.MOUSE_DOWN, clickDraw);
-            document.removeEventListener(Events.MOUSE_MOVE, moveDraw);
-            document.removeEventListener(Events.MOUSE_UP, overDraw);
+            this.off(Events.MOUSE_DOWN, clickDraw)
+            this.off(Events.MOUSE_MOVE, moveDraw)
+            this.off(Events.MOUSE_UP, overDraw)
             !remove && !isLaserPen && GridSystem.Stack && GridSystem.Stack.record();   // 修改时候记录
         }
         const moveDraw = () => {
@@ -833,15 +807,14 @@ class GridSystem {
             if (e.detail.button === 0) {
                 const { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
                 line.addPoint({ x, y });
-                document.addEventListener(Events.MOUSE_MOVE, moveDraw);
-                document.addEventListener(Events.MOUSE_UP, overDraw);
+                this.on(Events.MOUSE_MOVE, moveDraw)
+                this.on(Events.MOUSE_UP, overDraw)
                 this.addFeature(line, false);
             } else {
                 throw "请用左键绘制!"
             }
         }
-        // document.addEventListener(Events.MOUSE_UP, overDraw);
-        document.addEventListener(Events.MOUSE_DOWN, clickDraw);
+        this.on(Events.MOUSE_DOWN, clickDraw)
         return clear;
     }
 
@@ -1035,7 +1008,7 @@ class GridSystem {
         props.isHorizonalRevert != undefined && (feature.isHorizonalRevert = props.isHorizonalRevert)
         props.isVerticalRevert != undefined && (feature.isVerticalRevert = props.isVerticalRevert)
         props.isFlowLineDash != undefined && (feature.isFlowLineDash = props.isFlowLineDash)
-        
+
         if (feature instanceof Rect) {
             props.isFixedSize != undefined && (feature.isFixedSize = props.isFixedSize);
             props.radius != undefined && (feature.radius = props.radius);
@@ -1211,7 +1184,8 @@ class GridSystem {
                         point.y -= offset.y; // 垂直方向移动到顶部边界  
                     });
                     const lineWidth = this.getRatioSize(cf.lineWidth);
-                    cf.draw(ctx, pointArr, lineWidth, this.getRatioSize(cf.radius));
+                    const lineDashArr = cf.lineDashArr.length == 2 ? [this.getRatioSize(cf.lineDashArr[0], cf.isFixedSize), this.getRatioSize(cf.lineDashArr[1], cf.isFixedSize)] : [];
+                    cf.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(cf.radius));
                     drawChildren(ctx, cf.children, offset)
                 }
             });
@@ -1233,7 +1207,8 @@ class GridSystem {
                 ctx.fillStyle = this.background
                 ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
                 if (isBasicFeature(feature, false)) {
-                    feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                    const lineDashArr = feature.lineDashArr.length == 2 ? [this.getRatioSize(feature.lineDashArr[0], feature.isFixedSize), this.getRatioSize(feature.lineDashArr[1], feature.isFixedSize)] : [];
+                    feature.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(feature.radius));
                 }
                 drawChildren(ctx, feature.children, { x: leftTop.x - padding / 2, y: leftTop.y - padding / 2 });
                 const url = offscreenCanvas.toDataURL("image/png");   // canvas 转 图片
@@ -1317,15 +1292,18 @@ class GridSystem {
     }
 
     // ----------------------------画布相关操作方法------------------------------
-    translate(offsetX: number = 0, offsetY: number = 0, duration = .25) {  // 移动画布
-        gsap.to(this.pageSlicePos, {
-            duration,
-            x: offsetX,
-            y: offsetY,
-            ease: "slow.out",
-        })
-        // this.pageSlicePos.x += offsetX;
-        // this.pageSlicePos.y += offsetY;
+    translate(offsetX: number = 0, offsetY: number = 0, duration = 0) {  // 移动画布
+        if (duration > 0) {
+            gsap.to(this.pageSlicePos, {
+                duration,
+                x: offsetX,
+                y: offsetY,
+                ease: "slow.out",
+            })
+        } else {
+            this.pageSlicePos.x += offsetX;
+            this.pageSlicePos.y += offsetY;
+        }
     }
     zoomTo(scale: number, point?: IRelativePos) { // 缩放至 
         const lastGirdSize = this.getRatioSize(CoordinateSystem.GRID_SIZE);  // 上一次的gridSize大小
@@ -1407,7 +1385,8 @@ class GridSystem {
                     p.x -= leftTop.x - padding / 2;  // 水平方向移动到左侧边界
                     p.y -= leftTop.y - padding / 2; // 垂直方向移动到顶部边界  
                 });
-                feature.draw(ctx, pointArr, lineWidth, this.getRatioSize(feature.radius));
+                const lineDashArr = feature.lineDashArr.length == 2 ? [this.getRatioSize(feature.lineDashArr[0], feature.isFixedSize), this.getRatioSize(feature.lineDashArr[1], feature.isFixedSize)] : [];
+                feature.draw(ctx, pointArr, lineWidth, lineDashArr, this.getRatioSize(feature.radius));
             })
             this.scale = scale;
             return offscreenCanvas.toDataURL("image/png");
@@ -1440,7 +1419,7 @@ class GridSystem {
  * @param point 
  * @returns 
  */
-    getAdsorbPos(point: IRelativePos) {
+    getAdsorb2Grid(point: IRelativePos) {
         const gridSize = CoordinateSystem.GRID_SIZE;
         let offsetX = 0, offsetY = 0;
         // 相对像素
@@ -1473,12 +1452,87 @@ class GridSystem {
         }
     }
 
+    getAdsorb2Point(point: IRelativePos) {
+        // 吸附的约束，灵敏度
+        const minD = 5;
+        const points = this.features.filter(f => f instanceof Pnt).map(f => Feature.getCenterPos(f.pointArr));
+        const nearP = getNearestPoint(point, points) as IRelativePos;
+        if (nearP) {
+            const d = getLenOfTwoPnts(nearP, point);
+            if (d < minD) {
+                return { x: nearP.x - point.x, y: nearP.y - point.y };
+            }
+        }
+        return { x: 0, y: 0 };
+    }
+
+    initAnchorPnts(feature: Feature) {
+        if (isBasicFeature(feature) && !(feature instanceof Line)) {  // 非基础元素或线性元素不添加锚点
+            let pnt = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftTop, leftBottom);
+            });
+            pnt.name = AlignType.LEFT
+            pnt.cbSelect = false;
+            pnt.hidden = true;
+            feature.addChild(pnt, {}, false)
+            let pnt2 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(rightTop, rightBottom);
+            });
+            pnt2.name = AlignType.RIGHT
+            pnt2.cbSelect = false;
+            pnt2.hidden = true;
+            feature.addChild(pnt2, {}, false)
+            let pnt3 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftTop, rightTop);
+            });
+            pnt3.name = AlignType.TOP
+            pnt3.cbSelect = false;
+            pnt3.hidden = true;
+            feature.addChild(pnt3, {}, false)
+            let pnt4 = new ACtrlPnt(feature as IBasicFeature, () => {
+                const [leftTop, rightTop, rightBottom, leftBottom] = Feature.getRectWrapPoints(feature.pointArr)
+                return getMidOfTwoPnts(leftBottom, rightBottom);
+            });
+            pnt4.name = AlignType.BOTTOM
+            pnt4.cbSelect = false;
+            pnt4.hidden = true;
+            feature.addChild(pnt4, {}, false)
+        }
+    }
+
     destroy() {
         cancelAnimationFrame(this.timer);
         this.features.forEach(f => {
             this.removeFeature(f, false);
         })
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    }
+
+    on(type: string, callback: Function) {
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
+        }
+        this.listeners[type].push(callback);
+    }
+    // 取消订阅事件
+    off(type: string, callback: Function) {
+        if (this.listeners[type]) 1
+        console.log(this.listeners[type], "this.listeners[type]");
+        const index = this.listeners[type].indexOf(callback);
+        if (index != -1) {
+            this.listeners[type].splice(index, 1);
+        }
+    }
+    // 触发事件
+    dispatch(event: CustomEvent) {
+        if (this.listeners[event.type]) {
+            this.listeners[event.type].forEach(callback => {
+                callback(event);
+            });
+        }
     }
 
 }

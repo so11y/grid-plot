@@ -1,6 +1,6 @@
 import { ClassName, FontFamily, LinkMark, LinkStyle } from "../../Constants";
 import { IPixelPos, IRelativePos, ITriangle, IVctor } from "../../Interface";
-import { createVctor, getAngleOfTwoPnts, getPntInVct, getPntsOf3Bezier } from "../../utils";
+import { createVctor, getAngleOfTwoPnts, getNearNodes, getPntInVct, getRectPoint, getPntsOf3Bezier, getPntsOf2Bezier, isPntInPolygon, getUnitSize } from "../../utils";
 import Feature from "../Feature";
 import Line from "./Line";
 
@@ -9,8 +9,8 @@ let flowIndex = 0;
 // 连接线
 export default class Link extends Line {
 
-    pntsLimit = 200  // 曲线生成的点的数量
-    linkStyle: LinkStyle = LinkStyle.CURVE_H;
+    pntsLimit = 50  // 曲线生成的点的数量
+    linkStyle: LinkStyle = LinkStyle.CURVE_V;
     startFeature: Feature | null = null;
     endFeature: Feature | null = null;
     isFlowSegment = false;
@@ -51,21 +51,24 @@ export default class Link extends Line {
 
         if (startFeature instanceof Feature) {
             this.startFeature = startFeature;
-            startFeature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(startFeature.pointArr) })
-            startFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
+            startFeature.on('translate', this.onTranslateStart.bind(this))
+            startFeature.on('delete', this.onDelete.bind(this))
         }
         if (endFeature instanceof Feature) {
             this.endFeature = endFeature;
-            endFeature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(endFeature.pointArr) })
-            endFeature.deleteEvents.push(() => { this.gls.removeFeature(this) })
+            endFeature.on('translate', this.onTranslateEnd.bind(this))
+            endFeature.on('delete', this.onDelete.bind(this))
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         let newPnts: IPixelPos[] = [];
         switch (this.linkStyle) {
-            case LinkStyle.BROKEN:
-                newPnts = this.getBrokenPoints(pointArr[0], pointArr[1]);
+            case LinkStyle.BROKEN_TWO:
+                newPnts = this.getBrokenPoints2(pointArr[0], pointArr[1]);
+                break;
+            case LinkStyle.BROKEN_ONE:
+                newPnts = this.getBrokenPoints1(pointArr[0], pointArr[1]);
                 break;
             case LinkStyle.CURVE_V:
                 newPnts = this.getCurveVPoints(pointArr[0], pointArr[1]);
@@ -73,14 +76,20 @@ export default class Link extends Line {
             case LinkStyle.CURVE_H:
                 newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
                 break;
+            case LinkStyle.CURVE:
+                newPnts = this.getCurvePoints(pointArr[0], pointArr[1]);
+                break;
+            case LinkStyle.AUTOBROKEN:
+                newPnts = this.getAutoBrokenPoints(pointArr[0], pointArr[1]);
+                break;
             default:
                 newPnts = pointArr;
                 break;
         }
         this.actualPointArr = newPnts;
-        const path = super.draw(ctx, newPnts, lineWidth, radius);
+        const path = super.draw(ctx, newPnts, lineWidth, lineDashArr, radius);
+        const flowIndex = this.getFlowIndex(newPnts.length, .01);
         this.drawTriangle(ctx, newPnts);
-        const flowIndex = this.getFlowIndex(newPnts.length);
         this.drawFlowSegment(ctx, newPnts, lineWidth, flowIndex);
         return path;
     }
@@ -108,7 +117,7 @@ export default class Link extends Line {
         ctx.restore();
     }
 
-    // 修改起点或终点的位置
+    // 修改起点或终点的位置,切换起始点或终点
     modifyTarget(feature: Feature | IRelativePos, type: LinkMark = LinkMark.START) {
         switch (type) {
             case LinkMark.START: {
@@ -116,7 +125,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.startFeature = feature;
                     this.pointArr[0] = center;
-                    feature.translateEvents.push(() => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on('translate', () => { this.pointArr[0] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[0] = feature;
                 }
@@ -127,7 +136,7 @@ export default class Link extends Line {
                     const center = Feature.getCenterPos(feature.pointArr);
                     this.endFeature = feature;
                     this.pointArr[1] = center;
-                    feature.translateEvents.push(() => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
+                    feature.on('translate', () => { this.pointArr[1] = Feature.getCenterPos(feature.pointArr) })
                 } else {
                     this.pointArr[1] = feature;
                 }
@@ -138,13 +147,20 @@ export default class Link extends Line {
         }
     }
 
-    getTwoPntByTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
+    getTwoPntOfTip(pointArr: IPixelPos[]): [IPixelPos, IPixelPos] {
         if (pointArr.length < 2) throw new Error("数组长度必须大于1");
         switch (this.linkStyle) {
-            case LinkStyle.BROKEN:
+            case LinkStyle.BROKEN_TWO: {
                 const pnts = [pointArr[1], pointArr[2]]
                 return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
-            case LinkStyle.CURVE_V: // CURVE_V或CURVE_H
+            }
+            case LinkStyle.BROKEN_ONE: {
+                const pnts = [pointArr[0], pointArr[2]]
+                return pnts.sort((a, b) => a.x - b.x) as [IPixelPos, IPixelPos]
+            }
+            case LinkStyle.CURVE: // CURVE_V或CURVE_H
+            case LinkStyle.CURVE_V:
+            case LinkStyle.AUTOBROKEN: 
             case LinkStyle.CURVE_H: {
                 const mid = pointArr.length / 2
                 return [pointArr[mid - 1], pointArr[mid + 1]]
@@ -173,25 +189,61 @@ export default class Link extends Line {
         return points;
     }
 
-    getBrokenPoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 2): IPixelPos[] {
+    getBrokenPoints2(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = .5): IPixelPos[] {
         const vct = createVctor(startPos, { x: startPos.x, y: -1000000 });
-        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) / ctrlExtent);
+        const cp = getPntInVct(startPos, vct, (startPos.y - endPos.y) * ctrlExtent);
         const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
         return points;
     }
 
-    // 流光
-    getFlowIndex(endIndex = 0) {
+    getBrokenPoints1(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+        const vct = [-100, 0] as IVctor;
+        const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
+        const points = [startPos, { x: startPos.x, y: cp.y }, { x: endPos.x, y: cp.y }, endPos];
+        return points;
+    }
+
+    getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+        const vct = [100, 0] as IVctor;
+        const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
+        const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
+        return points;
+    }
+
+    getAutoBrokenPoints(startPos: IPixelPos, endPos: IPixelPos) {
+        let width = getUnitSize();
+        let coordList: IPixelPos[] = [];
+        var getCoordList = (): IPixelPos[] => {
+            let nearNodeArr = getNearNodes(startPos, endPos, width);
+            let minFNode = nearNodeArr.sort((a, b) => a.f - b.f)[0]; // 离目标最近的点
+            if (minFNode) {
+                coordList.push({ x: minFNode.x, y: minFNode.y });
+                startPos = minFNode;
+                if (isPntInPolygon(minFNode, getRectPoint(endPos, { width, height: width }))) {  // 判断有没有到终点
+                    coordList.push({ x: Math.ceil(endPos.x), y: Math.ceil(endPos.y) });
+                    return coordList;
+                } else {
+                    return getCoordList();
+                }
+            }
+            return []
+        }
+        return getCoordList();
+    }
+
+    // 一个流动的点
+    getFlowIndex(endIndex = 0, speed = .3) {
         if (!this.isFlowSegment) return
         if (flowIndex >= (endIndex)) {
             flowIndex = 0;
         } else {
-            flowIndex += .3;
+            flowIndex += speed;
         }
         return Math.floor(flowIndex);
     }
 
     drawFlowSegment(ctx: CanvasRenderingContext2D, curvePnts: IPixelPos[], lineWidth = 0, flowIndex = 0) {
+        if (!this.isFlowSegment) return
         const path = new Path2D();
         let endIndex = flowIndex + Math.ceil(curvePnts.length * .2)
         if (endIndex > curvePnts.length - 1) {
@@ -219,4 +271,18 @@ export default class Link extends Line {
             ctx.stroke(path);
         }
     }
+
+    onTranslateStart() {
+        const feature = this.startFeature as Feature
+        this.pointArr[0] = Feature.getCenterPos(feature.pointArr)
+    }
+    onTranslateEnd() {
+        const feature = this.endFeature as Feature;
+        this.pointArr[1] = Feature.getCenterPos(feature.pointArr)
+    }
+
+    onDelete() {
+        this.gls.removeFeature(this)
+    }
+
 }

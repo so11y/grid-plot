@@ -19,7 +19,7 @@ class Pnt extends Rect {
         this.gls.addFeature(this, false);
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
         if (this.isPointIn) {
             ctx.fillStyle = this.hoverStyle;
             if (this.gls.focusNode === this) {
@@ -31,7 +31,7 @@ class Pnt extends Rect {
         ctx.globalAlpha = this.opacity;
         ctx.strokeStyle = this.strokeStyle;
         const center = Feature.getCenterPos(pointArr);
-        const path = getRoundedRect(center.x - this.size.width/2, center.y - this.size.height/2, this.size.width, this.size.height, radius) // pnt始终固定大小,不随画布缩放
+        const path = getRoundedRect(center.x - this.size.width / 2, center.y - this.size.height / 2, this.size.width, this.size.height, radius) // pnt始终固定大小,不随画布缩放
         ctx.fill(path);
         ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);

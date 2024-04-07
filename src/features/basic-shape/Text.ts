@@ -54,29 +54,18 @@ class Text extends Rect {
         this.textArr = [];
         this.contentHeight = 0;
         let lastWidth = this.getSize().width;
-        this.resizeEvents.push((e: CtrlType) => {  // 控制点改变大小触发的钩子
-            if (this.fitSize && e === CtrlType.SIZE_CTRL) {
+        this.on('resize', (e: any) => {  // 控制点改变大小触发的钩子
+            const ctrlType = e.detail as string;
+            if (this.fitSize && ctrlType === CtrlType.SIZE_CTRL) {
                 const { width } = this.getSize()
                 this.textInfo.fontSize *= (1 + (width - lastWidth) / width);   // 根据宽度变化的百分比,同步放大fontSize
                 lastWidth = width;
             }
-            if (e === CtrlType.WIDTH_CTRL) {
+            if (ctrlType === CtrlType.WIDTH_CTRL) {
                 lastWidth = this.getSize().width
                 this.textArr = this.getFormatStr(lastWidth, this.gls.getPixelLen(this.textInfo.fontSize));
             }
         })
-        // this.dbclickEvents.push((e: any) => {
-        //     this.cursorIndex = -1;
-        //     this.editble = true;
-        //     Text.mousePos = getMousePos(this.gls.domElement, e);
-        //     this.createInputDom(Text.mousePos)
-        // })
-        // this.blurEvents.push((e: any) => {
-        //     this.cursorIndex = -1;
-        //     this.editble = false;
-        //     Text.mousePos = { x: 0, y: 0 };
-        //     this.removeInputDom();
-        // })
         this.textArr = this.getFormatStr(width, this.gls.getPixelLen(this.textInfo.fontSize));
     }
 
@@ -123,8 +112,8 @@ class Text extends Rect {
         return textArr;
     }
 
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius = 0) {
-        const path = super.draw(ctx, pointArr, lineWidth, radius);
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius = 0) {
+        const path = super.draw(ctx, pointArr, lineWidth, lineDashArr, radius);
         if (Feature.TargetRender) {
             const { leftTop } = this.getSize(pointArr);
             ctx.save();

@@ -1,4 +1,4 @@
-import { ClassName } from "@/Constants";
+import { AdsorbType, ClassName } from "@/Constants";
 import { IBasicFeature, IPoint } from "../../../Interface";
 import Pnt from "../Pnt";
 
@@ -6,10 +6,9 @@ import Pnt from "../Pnt";
 class ACtrlPnt extends Pnt {
 
     getPoint: () => IPoint;
-    isBinding = false;  // 是否与link绑定了
     parent: IBasicFeature;
 
-    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 10) {   // 相对坐标
+    constructor(parent: IBasicFeature, fn: () => IPoint, width: number = 10) {
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
@@ -23,9 +22,9 @@ class ACtrlPnt extends Pnt {
         this.radius = .2;
         this.zIndex = Infinity;
         this.isStroke = false;
+        this.adsorbTypes = [AdsorbType.POINT];
         this.isOnlyCenterAdsorb = true;
-        this.gls.addFeature(this, false);
-        this.drawEvents.push(this.onUpdatePosByParent.bind(this))
+        this.on('draw', this.onUpdatePosByParent.bind(this))
     }
 
     onUpdatePosByParent() {

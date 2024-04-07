@@ -34,6 +34,7 @@ interface IVctor {
 }
 
 interface ITxt {
+    hidden: boolean,
     txt: string,
     fontSize: number,
     color: string,
@@ -61,4 +62,26 @@ type IProps = Partial<Feature & Text & Img & Link & Group & Line> & {
 
 type IBasicFeature = Line | Rect | Circle | Group | Link
 
-export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature };
+interface Listeners {
+    [key: string]: Function[]
+}
+
+interface NearNode {
+    x: number,  // 坐标,以网格为单元的值
+    y: number,
+    name?: string,
+    g?: number,  // 当前点与附近点的距离,写死
+    h?: number,  // 当前点与终点水平垂直方向距离之和
+    f?: number // g+h之和
+}
+
+interface Itree {
+    label: string,
+    children: Itree[],
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number,
+}
+
+export type { IPoint, IRelativePos, IPixelPos, ISize, IVctor, ITxt, ITriangle, IProps, IBasicFeature, Listeners, NearNode, Itree };

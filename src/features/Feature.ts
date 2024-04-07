@@ -1,9 +1,12 @@
 import { AdsorbType, AlignType, ClassName, CtrlType, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
-import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize } from "../Interface";
+import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize, Listeners } from "../Interface";
 import { getLenOfTwoPnts, getRotatePnt, getUuid, isBasicFeature } from "../utils";
 import gsap from "gsap";
+import ACtrlPnt from "./function-shape/ctrl-pnts/ACtrlPnt";
+import SCtrlPnt from "./function-shape/ctrl-pnts/SCtrlPnt";
+import RCtrlPnt from "./function-shape/ctrl-pnts/RCtrlPnt";
 
 class Feature {
 
@@ -41,7 +44,9 @@ class Feature {
             y: (minY + maxY) / 2,
         }
     }
+    static isShowAdsorbLine = false;
 
+    listeners: Listeners = {};
     pointArr: IRelativePos[] = [];
     fillStyle: string = 'transparent';
     strokeStyle: string = '#f08c00';
@@ -54,7 +59,7 @@ class Feature {
     opacity: number = 1; // 整体透明度
     lineDashArr: number[] = [];  // 虚线
     lineDashOffset: number = 0; // 虚线位移
-    
+
     className = ClassName.FEATURE  //类名
     id: string  // id,元素的唯一标识
     name: string = ''  // 元素的name, 给当前元素起个名字
@@ -68,7 +73,7 @@ class Feature {
     parent: Feature | null = null;  // 元素的父元素
     children: IBasicFeature[] = [];  // 元素的子元素们
     gls: GridSystem = Feature.Gls;  // GridSystem的实例
-    adsorbTypes = [AdsorbType.GRID, AdsorbType.FEATURE];  // 移动时吸附规则  "grid", "feature"
+    adsorbTypes = [AdsorbType.GRID];  // 移动时吸附规则  "grid", "feature"
     ctrlTypes = [CtrlType.WIDTH_CTRL, CtrlType.HEIGHT_CTRL, CtrlType.SIZE_CTRL, CtrlType.ANGLE_CTRL, CtrlType.ANCHOR_CTRL];  // 可用的控制点类型有哪些
     pntMinDistance = 1;  // 元素添加时,俩点之间太近就不添加,设置的最小距离参数
     pntExtentPerOfBBox: {  // 元素距离包围盒的上下左右边距的百分比
@@ -94,6 +99,7 @@ class Feature {
     isHorizonalRevert = false;  // 元素是否水平翻转了(用于确定元素左上角的点)
     isVerticalRevert = false;  // 元素是否垂直翻转了(用于确定元素左上角的点)
     isFlowLineDash = false; // 虚线位移
+    isRmoveChild = true; // 是否删除时连带着删除子元素
 
     // 节点功能
     cbCapture: boolean = true;  // 元素是否可被鼠标捕获
@@ -101,38 +107,6 @@ class Feature {
     cbTranslate: boolean = true;  // 元素是否可被移动
     cbTransform: boolean = true;  // 元素是否可被形变缩放
     cbTransformChild: boolean = true; // 元素的子元素是否可被形变缩放
-
-    // // 节点事件
-    // ondelete: Function | null = null;
-
-    onTranslate: Function | null = null;  // 移动时,包含draging时
-    translateEvents: Function[] = [];
-    onMouseover: Function | null = null;  // 鼠标悬浮后就会被调用
-    mouseoverEvents: Function[] = [];
-    onMousemove: Function | null = null;  // 在元素上移动触发
-    mousemoveEvents: Function[] = [];
-    onMousedown: Function | null = null;  // 鼠标点击后就会被调用
-    mousedownEvents: Function[] = [];
-    onMouseup: Function | null = null;  // 鼠标松开后就会被调用
-    mouseupEvents: Function[] = [];
-    onMouseleave: Function | null = null;  // 鼠标离开后就会被调用
-    mouseleaveEvents: Function[] = [];
-    onDbclick: Function | null = null;  // 鼠标双击后就会被调用
-    dbclickEvents: Function[] = [];
-    onDragend: Function | null = null;  // 拖拽中的事件
-    dragendEvents: Function[] = [];
-    onDrag: Function | null = null;  // 拖拽中的事件
-    dragEvents: Function[] = [];
-    onResize: Function | null = null;  // 宽高更新后触发的事件， 控制点控制的
-    resizeEvents: Function[] = [];
-    onDraw: Function | null = null;  // 每次绘制触发
-    drawEvents: Function[] = [];
-    onRotate: Function | null = null;  // 旋转时
-    rotateEvents: Function[] = [];
-    onDelete: Function | null = null;  // 删除的时候
-    deleteEvents: Function[] = [];
-    onBlur: Function | null = null;  // 删除的时候
-    blurEvents: Function[] = [];
 
     _orientations: Orientation[] | null = null;   // 对齐的方向， 上下左右
 
@@ -153,7 +127,7 @@ class Feature {
         this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
-        this.onrotate && this.onrotate();
+        this.dispatch(new CustomEvent('rotate', { detail: '' }))
     }
 
     /**
@@ -176,7 +150,7 @@ class Feature {
         if (this.children) {  // 子元素递归偏移
             this.children.forEach(cf => cf.translate(offsetX, offsetY))
         }
-        this.ontranslate();
+        this.dispatch(new CustomEvent('translate', { detail: '' }))
     }
 
     /**
@@ -187,7 +161,7 @@ class Feature {
      * @param r 元素的圆角 一般Rect用
      * @returns 
      */
-    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, radius: number) {
+    draw(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[], lineWidth: number, lineDashArr: number[], radius: number) {
         const path = new Path2D();
         pointArr.forEach((p, i) => {
             if (i == 0) {
@@ -198,12 +172,13 @@ class Feature {
         })
         ctx.save()
         this.isClosePath && path.closePath()
+        lineDashArr.length > 0 && ctx.setLineDash(lineDashArr)
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
         ctx.globalAlpha = this.opacity;
-        this.lineDashArr.length > 0 && ctx.setLineDash(this.lineDashArr)
         ctx.lineDashOffset = this.lineDashOffset;
         ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = lineWidth;
         if (this.isPointIn) {
             ctx.fillStyle = this.hoverStyle;
             if (this.gls.focusNode === this) {
@@ -212,7 +187,6 @@ class Feature {
         } else {
             ctx.fillStyle = this.fillStyle;
         }
-        ctx.lineWidth = lineWidth;
         this.isStroke && ctx.stroke(path);
         this.isClosePath && ctx.fill(path);
         this.drawAdsorbLine(ctx, pointArr)
@@ -238,12 +212,12 @@ class Feature {
                     isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
                 if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
-                    this.onmouseover && this.onmouseover();
+                    this.dispatch(new CustomEvent('mouseover', { detail: '' }))
                 } else if (this.isPointIn && !isPointIn) {
-                    this.onmouseleave && this.onmouseleave();
+                    this.dispatch(new CustomEvent('mouseleave', { detail: '' }))
                 }
                 this.isPointIn = isPointIn;
-                this.isPointIn && this.onmousemove && this.onmousemove();
+                this.isPointIn && this.dispatch(new CustomEvent('mousemove', { detail: '' }));
             }
         }
     }
@@ -375,105 +349,18 @@ class Feature {
         }
     }
 
-    flowLineDash(speed = 1, direction = true){
-        if(!this.isFlowLineDash || !this.lineDashArr || this.lineDashArr.length != 2) return
-        if(direction){
-            this.lineDashOffset-=speed;
-        }else {
-            this.lineDashOffset+=speed;
+    flowLineDash(speed = .1, direction = true) {
+        if (!this.isFlowLineDash || !this.lineDashArr || this.lineDashArr.length != 2) return
+        speed = this.gls.getRatioSize(speed);
+        if (direction) {
+            this.lineDashOffset -= speed;
+        } else {
+            this.lineDashOffset += speed;
         }
     }
 
-    // --------------------元素鼠标事件相关----------------
-    onmouseover(e?: any) {
-        this.mouseoverEvents.forEach(f => { f(e) })
-        this.onMouseover && this.onMouseover(e);
-    }
-    onmousemove(e?: any) {
-        this.mousemoveEvents.forEach(f => { f(e) })
-        this.onMousemove && this.onMousemove(e);
-    }
-    onmousedown(e?: any) {
-        this.mousedownEvents.forEach(f => { f(e) })
-        this.onMousedown && this.onMousedown(e);
-    }
-    onmouseup(e?: any) {
-        this.mouseupEvents.forEach(f => { f(e) })
-        this.onMouseup && this.onMouseup(e);
-    }
-    onmouseleave(e?: any) {
-        this.children.forEach(cf => {
-            cf.onmouseleave(e)
-        })
-        this.mouseleaveEvents.forEach(f => { f(e) })
-        this.onMouseleave && this.onMouseleave(e);
-    }
-    ondbclick(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondbclick(e)
-        })
-        this.dbclickEvents.forEach(f => { f(e) })
-        this.onDbclick && this.onDbclick(e);
-    }
-    // --------------------元素绘制相关----------------
-    ontranslate(e?: any) {
-        this.children.forEach(cf => {
-            cf.ontranslate(e)
-        })
-        this.translateEvents.forEach(f => { f(e) })
-        this.onTranslate && this.onTranslate(e);
-    }
-    onresize(type?: CtrlType) {
-        this.children.forEach(cf => {
-            cf.onresize(type)
-        })
-        this.resizeEvents.forEach(f => { f(type) })
-        this.onResize && this.onResize(type);
-    }
-    ondraw(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondraw(e)
-        })
-        this.drawEvents.forEach(f => { f(e) })
-        this.onDraw && this.onDraw(e);
-    }
-    onrotate(e?: any) {
-        this.children.forEach(cf => {
-            cf.onrotate(e)
-        })
-        this.rotateEvents.forEach(f => { f(e) })
-        this.onRotate && this.onRotate(e);
-    }
-    ondragend(e?: any) {
-        this.children.forEach(cf => {
-            cf.ondragend(e)
-        })
-        this.dragendEvents.forEach(f => { f(e) })
-        this.onDragend && this.onDragend(e);
-    }
-    ondrag(e?: any) {
-        this.dragEvents.forEach(f => { f(e) })
-        this.onDrag && this.onDrag(e);
-    }
-    // --------------------元素操作相关----------------
-    ondelete(e?: any) {
-        this.deleteEvents.forEach(f => { f(e) })
-        this.onDelete && this.onDelete(e);
-    }
-    // 只作用于基础元素
-    onblur(e?: any) {
-        this.blurEvents.forEach(f => { f(e) })
-        this.onBlur && this.onBlur(e);
-    }
-
-    destroy() {
-        this.children.forEach(cf => {
-            this.gls.removeFeature(cf, false);
-        })
-    };
-
     drawAdsorbLine(ctx: CanvasRenderingContext2D, pointArr: IPixelPos[]) {   // 吸附的对齐线
-        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && this.gls.isShowAdsorbLine) {
+        if (Feature.TargetRender && Feature.TargetRender.className === ClassName.GRIDSYSTEM && this.gls.cbAdsorption && this.adsorbTypes.length > 0 && Feature.isShowAdsorbLine) {
             const [leftX, rightX, topY, bottomY] = Feature.getRectWrapExtent(pointArr);
             const { x: centerX, y: centerY } = Feature.getCenterPos(pointArr);
             if (this._orientations) {
@@ -521,11 +408,22 @@ class Feature {
         })
     }
 
-    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint) { // 一个点围绕某个点旋转angle角度, 返回旋转后的pointArr
+    /**
+     * 
+     * @param pointArr 元素的点集合
+     * @param angle 旋转多少度
+     * @param O 围绕那个点旋转,默认元素中心点
+     * @param isPixel 是否获取像素坐标
+     * @returns poitnArr
+     */
+    getPointArr(pointArr = this.pointArr, angle = 0, O: IPoint = Feature.getCenterPos(this.pointArr), isPixel = false) { // 一个点围绕某个点旋转angle角度, 返回旋转后的pointArr(相对坐标)
         if (angle === 0) {
             return pointArr;
         }
         return pointArr.map(p => {
+            if (isPixel) {
+                return getRotatePnt(O, this.gls.getPixelPos(p), angle)
+            }
             return getRotatePnt(O, p, angle)
         })
     }
@@ -537,6 +435,45 @@ class Feature {
             ctx.translate(-O.x, -O.y)
         }
     }
+
+    on(type: string, callback: Function) {
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
+        }
+        this.listeners[type].push(callback);
+    }
+    // 取消订阅事件
+    off(type: string, callback: Function) {
+        if (this.listeners[type]) 1
+        const index = this.listeners[type].indexOf(callback);
+        if (index != -1) {
+            this.listeners[type].splice(index, 1);
+        }
+    }
+    // 触发事件
+    dispatch(event: CustomEvent) {
+        if (this.listeners[event.type]) {
+            this.listeners[event.type].forEach(callback => {
+                callback(event);
+            });
+        }
+    }
+
+    getCtrlPnts(): (SCtrlPnt | RCtrlPnt)[] {
+        return this.gls.features.filter(f => (f.className == ClassName.SCTRLPNT || f.className == ClassName.RCTRLPNT) && f.parent == this) as (SCtrlPnt | RCtrlPnt)[];
+    }
+
+    getACtrlPnts(): ACtrlPnt[] {
+        return this.gls.features.filter(f => f.className == ClassName.ANCHORPNT && f.parent == this) as ACtrlPnt[];
+    }
+
+    destroy() {
+        if (this.isRmoveChild) {
+            this.children.forEach(cf => {
+                this.gls.removeFeature(cf, false);
+            })
+        }
+    };
 
 }
 
