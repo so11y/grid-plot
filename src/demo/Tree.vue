@@ -620,30 +620,30 @@ function reset(clear = false) {
         children: [
             {
                 label: "子节点1",
-                // children: [
-                //     {
-                //         label: "孙节点1",
-                //         children: [
-                //             {
-                //                 label: "曾孙节点1",
-                //                 children: []
-                //             },
-                //             {
-                //                 label: "曾孙节点2",
-                //                 children: [
-                //                     {
-                //                         label: "玄孙节点1",
-                //                         children: []
-                //                     }
-                //                 ]
-                //             }
-                //         ]
-                //     },
-                //     {
-                //         label: "孙节点2",
-                //         children: []
-                //     }
-                // ]
+                children: [
+                    {
+                        label: "孙节点1",
+                        children: [
+                            {
+                                label: "曾孙节点1",
+                                children: []
+                            },
+                            {
+                                label: "曾孙节点2",
+                                children: [
+                                    {
+                                        label: "玄孙节点1",
+                                        children: []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        label: "孙节点2",
+                        children: []
+                    }
+                ]
             },
             // {
             //     label: "子节点2",

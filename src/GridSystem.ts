@@ -43,7 +43,7 @@ class GridSystem {
         y: this.pageSlicePos.y
     });  // 首次渲染时候的pagePos
     extent: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
-    // extent: [number, number, number, number] = [175, 180, 175, 180]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
+    // extent: [number, number, number, number] = [175, 80, 75, 180]  // 限制画布拖拽范围: 上右下左,顺时针  测试 750, 800, 750, 800;
     mousePos = {
         x: 0,
         y: 0

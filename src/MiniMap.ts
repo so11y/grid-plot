@@ -20,7 +20,7 @@ class MiniMap extends GridSystem {
     lastMove: IPixelPos = { x: 0, y: 0 };
     ratio = 1;
 
-    constructor(gls: GridSystem, width = 350) {
+    constructor(gls: GridSystem, width = 450) {
         const canvasDom = document.createElement("canvas");
         canvasDom.style.position = "fixed";
         canvasDom.style.border = "1px solid #ccc"
@@ -43,7 +43,7 @@ class MiniMap extends GridSystem {
             x: this.ctx.canvas.width / 2,
             y: this.ctx.canvas.height / 2
         };
-        this.scale = 1;
+        this.scale = .5;
         this.setViewRect();
         this.gls.on("drag", () => {
             this.setViewRect();
@@ -82,10 +82,10 @@ class MiniMap extends GridSystem {
         // 主页面区域总宽高
         const parent = this.gls;
         // 跟新小地图可视框
-        this.viewRect.width = parent.ctx.canvas.width / parent.scale
+        this.viewRect.width = parent.ctx.canvas.width / parent.scale * this.scale
         this.viewRect.height = this.viewRect.width * this.ratio
-        this.viewRect.x = this.pageSlicePos.x - parent.pageSlicePos.x / parent.scale
-        this.viewRect.y = this.pageSlicePos.y - parent.pageSlicePos.y / parent.scale
+        this.viewRect.x = this.pageSlicePos.x - parent.pageSlicePos.x / parent.scale  * this.scale
+        this.viewRect.y = this.pageSlicePos.y - parent.pageSlicePos.y / parent.scale  * this.scale
     }
 
     dragViewRect = (e: any) => {
@@ -101,8 +101,8 @@ class MiniMap extends GridSystem {
                 if (this.lastMove.x && this.lastMove.y) {
                     const dx = (x1 - this.lastMove.x);
                     const dy = (y1 - this.lastMove.y);
-                    this.viewRect.x += dx
-                    this.viewRect.y += dy
+                    this.viewRect.x += dx * this.scale
+                    this.viewRect.y += dy * this.scale
 
                     parent.pageSlicePos.x -= dx * parent.scale
                     parent.pageSlicePos.y -= dy * parent.scale
