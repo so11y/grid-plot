@@ -390,7 +390,7 @@
 import { AlignType } from "@/Constants";
 import Circle from "@/features/basic-shape/Circle";
 import Img from "@/features/basic-shape/Img";
-import Video from "@/features/basic-shape/Video";
+import Pen from "@/features/basic-shape/Pen";
 import Line from "@/features/basic-shape/Line";
 import Link from "@/features/basic-shape/Link";
 import Rect from "@/features/basic-shape/Rect";
@@ -468,13 +468,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
             function downMoveToFeature() {
-                let line = new Line();
-                line.isFreeStyle = true;
-                line.strokeStyle = globalStrokeColor.value || "red"
-                line.hoverStyle = "#666"
-                line.focusStyle = "#666"
-                cb = gls.value?.downMoveToFeature(line, !!param, () => {
-                    line.strokeStyle = globalStrokeColor.value || "red"
+                let pen = new Pen();
+                pen.strokeStyle = globalStrokeColor.value || "red"
+                pen.hoverStyle = "#666"
+                pen.focusStyle = "#666"
+                cb = gls.value?.downMoveToFeature(pen, !!param, () => {
+                    pen.strokeStyle = globalStrokeColor.value || "red"
                     downMoveToFeature();
                 })
             }
@@ -710,6 +709,14 @@ function reset(clear = false) {
     const rootFeature = new Rect(newNode.x, newNode.y, width, width);
     glsss.addFeature(rootFeature, false);
     setTreeData(newNode, rootFeature)
+
+    const line  = new Line([
+        {x: 100, y: 100},
+        {x: 150, y: 240},
+        {x: 50, y: 140},
+    ])
+    line.enableCtrlPnts();
+    glsss.addFeature(line, false);
 
     // gls.enableStack();
 }

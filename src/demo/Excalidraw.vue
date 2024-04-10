@@ -407,6 +407,7 @@ import GridSystem from "../GridSystem";
 import { IBasicFeature } from "@/Interface";
 import { getUnitSize, getMousePos } from "../utils"
 import Pnt from "@/features/function-shape/Pnt";
+import Pen from "@/features/basic-shape/Pen";
 
 const cvs = ref(null);
 const activeI = ref(-1);
@@ -467,13 +468,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
             function downMoveToFeature() {
-                let line = new Line();
-                line.isFreeStyle = true;
-                line.strokeStyle = globalStrokeColor.value || "red"
-                line.hoverStyle = "#666"
-                line.focusStyle = "#666"
-                cb = gls.value?.downMoveToFeature(line, !!param, () => {
-                    line.strokeStyle = globalStrokeColor.value || "red"
+                let pen = new Pen();
+                pen.strokeStyle = globalStrokeColor.value || "red"
+                pen.hoverStyle = "#666"
+                pen.focusStyle = "#666"
+                cb = gls.value?.downMoveToFeature(pen, !!param, () => {
+                    pen.strokeStyle = globalStrokeColor.value || "red"
                     downMoveToFeature();
                 })
             }

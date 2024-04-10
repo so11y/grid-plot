@@ -1,20 +1,13 @@
 import Feature from "../Feature";
 import { IPoint, IPixelPos, IRelativePos, ITxt } from "../../Interface";
 import SCtrlPnt from "../function-shape/ctrl-pnts/SCtrlPnt";
-import { getAngleOfTwoPnts, getMidOfTwoPnts } from "@/utils";
-import { ClassName, FontFamily } from "@/Constants";
+import { getAngleOfTwoPnts, getMidOfTwoPnts, getPntsOf2Bezier } from "@/utils";
+import { ClassName, Events, FontFamily } from "@/Constants";
+import BCtrlPnt from "../function-shape/ctrl-pnts/BCtrlPnt";
 
 // 线段元素
 class Line extends Feature {
 
-    static freeLineConfig = {  // 自由画笔线条粗细参数配置
-        maxWidth: .3,
-        minWidth: .03,
-        maxSpeed: 1.5,
-        minSpeed: 0.1,
-    }
-
-    isFreeStyle: boolean = false;
     lineWidthArr: number[] = [];
     curveCtrlPnt: SCtrlPnt[] = [];
     actualPointArr: IPixelPos[] | null = null;   // 实际渲染到画布上的点集合
@@ -40,58 +33,21 @@ class Line extends Feature {
         const path = new Path2D();
         ctx.save()
         ctx.globalAlpha = this.opacity;
-        if (this.isFreeStyle) {
-            pointArr.forEach((p, i) => {
-                if (i > 1) {
-                    ctx.beginPath();
-                    const { x: centerX, y: centerY } = pointArr[i - 1]
-                    const { x: endX, y: endY } = p;
-                    const { x: startX, y: startY } = pointArr[i - 2]
-                    const [lastX, lastY] = [(startX + centerX) / 2, (startY + centerY) / 2]
-                    const [x, y] = [(centerX + endX) / 2, (centerY + endY) / 2]
-                    ctx.beginPath();
-                    ctx.moveTo(lastX, lastY);
-                    ctx.quadraticCurveTo(centerX, centerY, x, y);
-                    ctx.lineWidth = this.gls.getRatioSize(this.lineWidthArr[i] || this.lineWidthArr[i - 1] || .2);
-                    if (this.isPointIn) {
-                        ctx.strokeStyle = this.hoverStyle;
-                        if (this.gls.focusNode === this) {
-                            ctx.strokeStyle = this.focusStyle;
-                        }
-                    } else {
-                        ctx.strokeStyle = this.strokeStyle;
-                    }
-                    // ctx.strokeStyle = this.strokeStyle;
-                    ctx.lineCap = this.lineCap;
-                    ctx.stroke();
-                }
-            });
-        }
-        ctx.beginPath();
         pointArr.forEach((p, i) => {
             if (i == 0) {
                 path.moveTo(p.x, p.y)
             } else {
-                // if (this.curveCtrlPnt[i]) {
-                //     const center = this.gls.getPixelPos(Feature.getCenterPos(this.curveCtrlPnt[i].pointArr));
-                //     path.quadraticCurveTo(center.x, center.y, p.x, p.y)
-                // } else {
                 path.lineTo(p.x, p.y)
-                // }
             }
         })
         this.isClosePath && path.closePath()
-        if (!this.isFreeStyle) {
-            if (this.isPointIn) {
-                ctx.strokeStyle = this.hoverStyle;
-                if (this.gls.focusNode === this) {
-                    ctx.strokeStyle = this.focusStyle;
-                }
-            } else {
-                ctx.strokeStyle = this.strokeStyle;
+        if (this.isPointIn) {
+            ctx.strokeStyle = this.hoverStyle;
+            if (this.gls.focusNode === this) {
+                ctx.strokeStyle = this.focusStyle;
             }
         } else {
-            ctx.strokeStyle = "transparent"
+            ctx.strokeStyle = this.strokeStyle;
         }
         ctx.lineCap = this.lineCap;
         ctx.lineJoin = this.lineJoin;
@@ -109,8 +65,6 @@ class Line extends Feature {
     }
 
     getTwoPntOfTip(pointArr: IPixelPos[]): [IPoint, IPoint] {
-        console.log(pointArr, "pointArr");
-        
         return [pointArr[0], pointArr[pointArr.length - 1]]
     }
 
@@ -134,10 +88,37 @@ class Line extends Feature {
         }
     }
 
+    getCurvePoints(originPointArr: IRelativePos[]) {
+        let pointArr: IRelativePos[] = []
+        let ctrlPnts = this.getBCtrlPnts();
+        originPointArr.forEach((p, i) => {
+            if (i > 0) {
+                const curvePoints = getPntsOf2Bezier(originPointArr[i - 1], Feature.getCenterPos(ctrlPnts[i].pointArr), p, 20);
+                pointArr.push(...curvePoints)
+                // originPointArr.splice(i, 0, ...curvePoints)
+            }
+            pointArr.push(p)
+        })
+        console.log(pointArr, ctrlP, "pointArr");
+        return pointArr;
+    }
     enableCtrlPnts(bool = true) {
         this.clearCtrlPos();
         if (bool) {
-            this.pointArr.forEach((p, i) => {
+            let originPointArr = this.pointArr.filter(p => p.flag);
+            originPointArr.forEach((p, i) => {
+                if (i > 0) {
+                    let pnt = new BCtrlPnt(this, () => {
+                        let prevPnt = originPointArr[i - 1];
+                        let curP = originPointArr[i];
+                        let mid = getMidOfTwoPnts(prevPnt, curP);
+                        return mid;
+                    });
+                    pnt.name = i+'';
+                    pnt.on(Events.TRANSLATE, () => {
+                        this.pointArr = this.getCurvePoints(originPointArr.slice());
+                    })
+                }
                 new SCtrlPnt(this, i);
             })
         } else {
@@ -149,6 +130,10 @@ class Line extends Feature {
         ctrlPnts.forEach(cp => {
             this.gls.removeFeature(cp, false);
         })
+    }
+
+    getBCtrlPnts(): BCtrlPnt[] {
+        return this.gls.features.filter(f => (f.className == ClassName.BCTRLPNT) && f.parent == this) as BCtrlPnt[];
     }
 
     // 每两点插入一个中点
@@ -181,39 +166,23 @@ class Line extends Feature {
     }
 
     getSvg(pointArr: IPixelPos[] = [], lineWidth: number = 1) {
-        let path = ''
-        if (this.isFreeStyle) {  // 自由画笔
-            pointArr.forEach((p, i) => {
-                if (i > 1) {
-                    const { x: centerX, y: centerY } = pointArr[i - 1]
-                    const { x: endX, y: endY } = p;
-                    const { x: startX, y: startY } = pointArr[i - 2]
-                    const [lastX, lastY] = [(startX + centerX) / 2, (startY + centerY) / 2]
-                    const [x, y] = [(centerX + endX) / 2, (centerY + endY) / 2]
-                    const lineWidth2 = this.lineWidthArr[i] * 2 || this.lineWidthArr[i - 1] || .2;
-                    path += `<path d="M ${lastX} ${lastY} Q ${centerX} ${centerY} ${x} ${y}" stroke="${this.strokeStyle}" stroke-width="${this.gls.getRatioSize(lineWidth2) * .8}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" stroke-dasharray="${this.lineDashArr}" stroke-dashoffset="${this.lineDashOffset}"/>`
-                }
-            })
-            return path;
-        } else {
-            let path = super.getSvg(pointArr, lineWidth);
-            if (this.tipInfo.txt) {
-                const [startP, endP] = this.getTwoPntOfTip(pointArr);
-                const center = getMidOfTwoPnts(startP, endP);
-                let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
-                if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
-                    angle += 180  // 镜像翻转,文字始终朝上
-                }
-                const fontSize = this.gls.getRatioSize(this.tipInfo.fontSize);
-                const width = fontSize * this.tipInfo.txt.length;
-                path += `
+        let path = super.getSvg(pointArr, lineWidth);
+        if (this.tipInfo.txt) {
+            const [startP, endP] = this.getTwoPntOfTip(pointArr);
+            const center = getMidOfTwoPnts(startP, endP);
+            let angle = getAngleOfTwoPnts(startP, endP);   // 获取两个点 水平方向上的角度
+            if (angle > 90 && angle < 180 || angle < -90 && angle > -180) {
+                angle += 180  // 镜像翻转,文字始终朝上
+            }
+            const fontSize = this.gls.getRatioSize(this.tipInfo.fontSize);
+            const width = fontSize * this.tipInfo.txt.length;
+            path += `
                 <g transform="rotate(${angle} ${center.x} ${center.y})">
                 <text x="${center.x - width / 2}" y="${center.y}" dominant-baseline="hanging" style="fill:${this.tipInfo.color}; font-family: '${this.tipInfo.fontFamily}'; font-size: ${fontSize}; font-weight:${this.tipInfo.bolder ? 'bolder' : ''};"
                 >${this.tipInfo.txt}</text>
                 </g>`
-            }
-            return path;
         }
+        return path;
     }
 
     destroy(): void {

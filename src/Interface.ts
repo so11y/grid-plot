@@ -11,16 +11,19 @@ import Group from "./features/function-shape/Group";
 interface IPoint {
     x: number,
     y: number,
+    flag?: boolean,
 }
 
 interface IRelativePos {
     x: number,
     y: number,
+    flag?: boolean,
 }
 
 interface IPixelPos {
     x: number,
     y: number,
+    flag?: boolean,
 }
 
 interface ISize {

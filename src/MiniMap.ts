@@ -45,7 +45,7 @@ class MiniMap extends GridSystem {
         };
         this.scale = 1;
         this.setViewRect();
-        this.gls.on("drag", () => {
+        this.gls.on(Events.TRANSLATE, () => {
             this.setViewRect();
         })
         this.gls.on(Events.MOUSE_WHEEL, () => {

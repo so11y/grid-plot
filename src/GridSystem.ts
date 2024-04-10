@@ -21,6 +21,7 @@ import RCtrlPnt from "./features/function-shape/ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./features/function-shape/ctrl-pnts/SCtrlPnt";
 import Pnt from "./features/function-shape/Pnt";
 import ACtrlPnt from "./features/function-shape/ctrl-pnts/ACtrlPnt";
+import Pen from "./features/basic-shape/Pen";
 
 class GridSystem {
 
@@ -79,7 +80,7 @@ class GridSystem {
 
     draw(loop = true, fn?: Function) {
         // console.log("clear");
-        console.time();
+        // console.time();
         this.ctx.fillStyle = this.background;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         // this.ctx.rotate(30 * Math.PI/180)
@@ -88,7 +89,7 @@ class GridSystem {
         this.ctx.fillStyle = "red"
         this.ctx.fillRect(this.test.x, this.test.y, 5, 5);
         // this.ctx.rotate(-30 * Math.PI/180)
-        console.timeEnd();
+        // console.timeEnd();
         if (loop) {  // 是否循环渲染
             // this.timerOfDraw = setInterval(() => { this.draw(loop, fn) })
             this.timerOfDraw = window.requestAnimationFrame(() => this.draw(loop, fn))
@@ -739,7 +740,7 @@ class GridSystem {
         this.on(Events.RIGHT_CLICK, overDraw)
         return clear;
     }
-    downMoveToFeature(line: Line, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
+    downMoveToFeature(line: Line | Pen, isLaserPen = false, fn?: Function) { // 鼠标按住不放持续画线
         this.cbSelectFeature = false;
         const adsorbPnt = new AdsorbPnt(8, false);
         let lastLineWidth = 0
@@ -756,7 +757,7 @@ class GridSystem {
         const moveDraw = () => {
             const { x, y } = { x: adsorbPnt.position.x, y: adsorbPnt.position.y };
             line.addPoint({ x, y });
-            if (line.pointArr.length > 1) {
+            if (line.pointArr.length > 1 && line instanceof Pen) {
                 // 自由画笔的宽度计算
                 let lineWidth = 0
                 const diffx = x - line.pointArr[line.pointArr.length - 2].x
@@ -764,12 +765,12 @@ class GridSystem {
                 const distance = Math.pow(diffx * diffx + diffy * diffy, 0.5);
 
                 const speed = distance / (Date.now() - lastTime) // 0.1 - 3
-                if (speed >= Line.freeLineConfig.maxSpeed) {
-                    lineWidth = Line.freeLineConfig.minWidth
-                } else if (speed <= Line.freeLineConfig.minSpeed) {
-                    lineWidth = Line.freeLineConfig.maxWidth
+                if (speed >= Pen.freeLineConfig.maxSpeed) {
+                    lineWidth = Pen.freeLineConfig.minWidth
+                } else if (speed <= Pen.freeLineConfig.minSpeed) {
+                    lineWidth = Pen.freeLineConfig.maxWidth
                 } else {
-                    lineWidth = Line.freeLineConfig.maxWidth - (speed / Line.freeLineConfig.maxSpeed) * Line.freeLineConfig.maxWidth
+                    lineWidth = Pen.freeLineConfig.maxWidth - (speed / Pen.freeLineConfig.maxSpeed) * Pen.freeLineConfig.maxWidth
                 }
                 lineWidth = lineWidth * (1 / 3) + lastLineWidth * (2.8 / 3)
                 lastLineWidth = lineWidth
@@ -1012,7 +1013,6 @@ class GridSystem {
             props.textInfo != undefined && (feature.textInfo = props.textInfo);
         }
         if (feature instanceof Line) {
-            props.isFreeStyle != undefined && (feature.isFreeStyle = props.isFreeStyle);
             props.lineWidthArr != undefined && (feature.lineWidthArr = props.lineWidthArr);
             props.tipInfo != undefined && (feature.tipInfo = props.tipInfo);
             props.actualPointArr != undefined && (feature.actualPointArr = props.actualPointArr)
@@ -1068,7 +1068,6 @@ class GridSystem {
                 pointArr: JSON.parse(JSON.stringify(f.pointArr)) as IRelativePos[],
 
                 src: f instanceof Img ? f.src : '',
-                isFreeStyle: f instanceof Line ? f.isFreeStyle : false,
                 lineWidthArr: f instanceof Line ? f.lineWidthArr : [],
                 actualPointArr: f instanceof Line ? f.actualPointArr : [],
                 startFeature: f instanceof Link ? f.startFeature ? this.recordFeature(f.startFeature as IBasicFeature) as Feature : null : null,

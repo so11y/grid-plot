@@ -8,7 +8,6 @@ import Feature from "../Feature";
 import ACtrlPnt from "./ctrl-pnts/ACtrlPnt";
 import RCtrlPnt from "./ctrl-pnts/RCtrlPnt";
 import SCtrlPnt from "./ctrl-pnts/SCtrlPnt";
-import Pnt from "./Pnt";
 import SelectArea from "./SelectArea";
 
 // 包围盒元素, 形变(放大,缩小)元素用

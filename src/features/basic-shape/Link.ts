@@ -77,7 +77,7 @@ export default class Link extends Line {
                 newPnts = this.getCurveHPoints(pointArr[0], pointArr[1]);
                 break;
             case LinkStyle.CURVE:
-                newPnts = this.getCurvePoints(pointArr[0], pointArr[1]);
+                newPnts = this.getCurve1Points(pointArr[0], pointArr[1]);
                 break;
             case LinkStyle.AUTOBROKEN:
                 newPnts = this.getAutoBrokenPoints(pointArr[0], pointArr[1]);
@@ -203,7 +203,7 @@ export default class Link extends Line {
         return points;
     }
 
-    getCurvePoints(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
+    getCurve1Points(startPos: IPixelPos, endPos: IPixelPos, ctrlExtent = 1): IPixelPos[] {
         const vct = [100, 0] as IVctor;
         const cp = getPntInVct(startPos, vct, -(startPos.x - endPos.x) * ctrlExtent);
         const points = getPntsOf2Bezier(startPos, cp, endPos, this.pntsLimit);
