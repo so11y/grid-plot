@@ -72,7 +72,7 @@ class MiniMap extends GridSystem {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.ctx.fillStyle = this.background;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        const features = this.gls.features.filter(f=>isBasicFeature(f));
+        const features = this.gls.features.filter(f=>isBasicFeature(f) || f.className === ClassName.LINK);
         this.drawFeatures(features);  // 绘制所有元素
         // 绘制当前显示区域的矩形框
         this.ctx.fillStyle = "rgba(255,251,143,.5)"

@@ -19,14 +19,6 @@ class RCtrlPnt extends Pnt {
         this.className = ClassName.RCTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.isFixedSize = true;
-
-        this.isOnlyCenterAdsorb = true;
-        this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
-        this.lineWidth = 0;
-        this.zIndex = Infinity;
-        this.isStroke = false;
-        this.radius = .2;
         this.on(Events.DRAG_END, this.onUpdateParentVct.bind(this))
         this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }

@@ -13,13 +13,7 @@ class SCtrlPnt extends Pnt {
         this.className = ClassName.SCTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.isFixedSize = true;
-        this.isOnlyCenterAdsorb = true;
         this.index = i;
-        this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
-        this.lineWidth = 0;
-        this.zIndex = Infinity;
-        this.isStroke = false;
         this.on(Events.TRANSLATE, this.onUpdateParentPos.bind(this))
         this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }

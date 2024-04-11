@@ -101,9 +101,7 @@ class GridSystem {
         this.domElement.addEventListener(Events.MOUSE_MOVE, this.mouseMove);
         this.domElement.addEventListener(Events.MOUSE_DOWN, this.mouseDown);
         this.domElement.addEventListener(Events.MOUSE_WHEEL, this.mouseWheel);
-        this.domElement.addEventListener(Events.CONTEXTMENU, (e) => { // 禁用右键上下文
-            e.preventDefault();
-        });
+        this.domElement.addEventListener(Events.CONTEXTMENU, (e) => { e.preventDefault(); });
         this.domElement.addEventListener("drop", e => this.dropToFeature(e));
         document.ondragover = function (e) { e.preventDefault(); };  // 阻止默认应为,不然浏览器会打开新的标签去预览
         document.ondrop = function (e) { e.preventDefault(); };

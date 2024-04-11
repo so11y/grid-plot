@@ -4,6 +4,7 @@ import SCtrlPnt from "../function-shape/ctrl-pnts/SCtrlPnt";
 import { getAngleOfTwoPnts, getMidOfTwoPnts, getPntsOf2Bezier } from "@/utils";
 import { ClassName, Events, FontFamily } from "@/Constants";
 import BCtrlPnt from "../function-shape/ctrl-pnts/BCtrlPnt";
+import ACtrlPnt from "../function-shape/ctrl-pnts/ACtrlPnt";
 
 // 线段元素
 class Line extends Feature {
@@ -88,38 +89,47 @@ class Line extends Feature {
         }
     }
 
-    getCurvePoints(originPointArr: IRelativePos[]) {
-        let pointArr: IRelativePos[] = []
-        let ctrlPnts = this.getBCtrlPnts();
-        originPointArr.forEach((p, i) => {
-            if (i > 0) {
-                const curvePoints = getPntsOf2Bezier(originPointArr[i - 1], Feature.getCenterPos(ctrlPnts[i].pointArr), p, 20);
-                pointArr.push(...curvePoints)
-                // originPointArr.splice(i, 0, ...curvePoints)
-            }
-            pointArr.push(p)
-        })
-        console.log(pointArr, ctrlP, "pointArr");
-        return pointArr;
+    getCurvePoints(pointArr: IRelativePos[]) {
+        const pointArrs = []
+        const bctrls = this.getBCtrlPnts();
+        for (let index = 0; index < bctrls.length; index++) {
+            pointArrs.push(pointArr[index])
+            const ctrl = bctrls[index];
+            const center = Feature.getCenterPos(ctrl.pointArr);
+            const prevP = pointArr[index];
+            const curP = pointArr[index + 1];
+            const points = getPntsOf2Bezier(prevP, center, curP, 20);
+            pointArrs.push(...points)
+        }
+        pointArrs.push(pointArr[pointArr.length - 1])
+        console.log(pointArrs);
+        return pointArrs;
     }
     enableCtrlPnts(bool = true) {
         this.clearCtrlPos();
         if (bool) {
-            let originPointArr = this.pointArr.filter(p => p.flag);
+            const originPointArr = this.pointArr.filter(p => p.flag);
             originPointArr.forEach((p, i) => {
                 if (i > 0) {
-                    let pnt = new BCtrlPnt(this, () => {
-                        let prevPnt = originPointArr[i - 1];
-                        let curP = originPointArr[i];
-                        let mid = getMidOfTwoPnts(prevPnt, curP);
+                    const bezierCtrl = new BCtrlPnt(this, () => {
+                        const prevPnt = originPointArr[i - 1];
+                        const curP = originPointArr[i];
+                        const mid = getMidOfTwoPnts(prevPnt, curP);
                         return mid;
                     });
-                    pnt.name = i+'';
-                    pnt.on(Events.TRANSLATE, () => {
-                        this.pointArr = this.getCurvePoints(originPointArr.slice());
+                    bezierCtrl.on(Events.TRANSLATE, () => {
+                        this.pointArr = this.getCurvePoints(originPointArr);
                     })
                 }
-                new SCtrlPnt(this, i);
+                const pntCtrl = new ACtrlPnt(this, () => {
+                    const originPointArrs = this.pointArr.filter(p => p.flag);
+                    return originPointArrs[i]
+                });
+                pntCtrl.on(Events.TRANSLATE, () => {
+                    originPointArr[i].x = Feature.getCenterPos(pntCtrl.pointArr).x;
+                    originPointArr[i].y = Feature.getCenterPos(pntCtrl.pointArr).y;
+                    this.pointArr = this.getCurvePoints(originPointArr);
+                })
             })
         } else {
             this.clearCtrlPos();
@@ -133,13 +143,13 @@ class Line extends Feature {
     }
 
     getBCtrlPnts(): BCtrlPnt[] {
-        return this.gls.features.filter(f => (f.className == ClassName.BCTRLPNT) && f.parent == this) as BCtrlPnt[];
+        return this.gls.features.filter(f => (f.className == ClassName.BCTRLPNT || f.className == ClassName.ACTRLPNT) && f.parent == this) as BCtrlPnt[];
     }
 
     // 每两点插入一个中点
     insertMidpoints(pointArr = this.pointArr) {
         // 结果数组，用来存放插入中点后的坐标  
-        let newPointArr = [];
+        const newPointArr = [];
         // 遍历坐标数组  
         for (let i = 0; i < pointArr.length - 1; i++) {
             // 获取当前点和下一点  

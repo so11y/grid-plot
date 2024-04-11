@@ -1,5 +1,18 @@
 # 网格系统文档
 
+#### 环境准备
+```
+1. 安装代码编辑器(vscode)
+
+2. 安装Nodejs
+
+3. 根目录下运行命令 npm i
+
+4. 运行命令 npm run dev
+
+5. (打包, 非必要) npm run build
+```
+
 #### 最基本使用
 ```
     let canvas = document.querySelector("#myCanvas");

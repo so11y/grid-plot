@@ -121,6 +121,7 @@ enum ClassName {
     RCTRLPNT = 'rctrlpnt',
     SCTRLPNT = 'sctrlpnt',
     BCTRLPNT = 'bctrlpnt',
+    ACTRLPNT = 'actrlpnt',
     ADSORBPNT = 'adsorbpnt',
     ANCHORPNT = 'anchorpnt',
     ERASERPNT = 'eraserpnt',

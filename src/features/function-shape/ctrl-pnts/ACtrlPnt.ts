@@ -12,18 +12,11 @@ class ACtrlPnt extends Pnt {
         const pos = fn();
         super(pos.x, pos.y, width, width);
         this.getPoint = fn;
-        this.className = ClassName.ANCHORPNT;
-        this.isFixedSize = true;
+        this.className = ClassName.ACTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.isOnlyCenterAdsorb = true;
-        this.fillStyle = this.hoverStyle = this.focusStyle = "#C4FFC9"
-        this.lineWidth = 0;
-        this.radius = .2;
-        this.zIndex = Infinity;
-        this.isStroke = false;
         this.adsorbTypes = [AdsorbType.POINT];
-        this.isOnlyCenterAdsorb = true;
+        this.fillStyle = this.hoverStyle = this.focusStyle = "#C4FFC9"
         this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }
 
