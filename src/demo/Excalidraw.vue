@@ -401,12 +401,13 @@ import Group from "@/features/function-shape/Group";
 import GridLine from "@/GridLine";
 import { message } from "ant-design-vue";
 import { onMounted, ref } from "vue";
-import { DrawAreaMode, FontFamily } from "../Constants";
+import { AreaSelectMode, FontFamily } from "../Constants";
 // import GridLine from "../GridLine";
 import GridSystem from "../GridSystem";
 import { IBasicFeature } from "@/Interface";
 import { getUnitSize, getMousePos } from "../utils"
 import Pnt from "@/features/function-shape/Pnt";
+import Pen from "@/features/basic-shape/Pen";
 
 const cvs = ref(null);
 const activeI = ref(-1);
@@ -441,7 +442,7 @@ function onSelectTool(index = 0, param?: any) {
         case 0: // 选择区域
             message.info("按住左键移动吧!")
             let sa = gls.value?.enableSelectArea() as SelectArea;
-            sa && (sa.drawMode = DrawAreaMode.RECT);
+            sa && (sa.drawMode = AreaSelectMode.RECT);
             // console.log(111);
             break;
         case 1: // 单击创建Rect
@@ -467,13 +468,12 @@ function onSelectTool(index = 0, param?: any) {
             message.info("点击移动绘制吧!")
             if (cb) { cb(); cb = null; return };
             function downMoveToFeature() {
-                let line = new Line();
-                line.isFreeStyle = true;
-                line.strokeStyle = globalStrokeColor.value || "red"
-                line.hoverStyle = "#666"
-                line.focusStyle = "#666"
-                cb = gls.value?.downMoveToFeature(line, !!param, () => {
-                    line.strokeStyle = globalStrokeColor.value || "red"
+                let pen = new Pen();
+                pen.strokeStyle = globalStrokeColor.value || "red"
+                pen.hoverStyle = "#666"
+                pen.focusStyle = "#666"
+                cb = gls.value?.downMoveToFeature(pen, !!param, () => {
+                    pen.strokeStyle = globalStrokeColor.value || "red"
                     downMoveToFeature();
                 })
             }
@@ -659,8 +659,8 @@ function reset(clear = false) {
     // // group.onMousemove = () => {
     // //     console.log(11);
     // // }
-    // group.on('resize', group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
-    // group.on('resize', group.toHorizonalAlign.bind(group, group.children))
+    // group.on(Events.RESIZE, group.toSpaceAroud.bind(group, group.children, AlignType.HORIZONAL))
+    // group.on(Events.RESIZE, group.toHorizonalAlign.bind(group, group.children))
 
     // // // 网格坐标
     // // let gpos = gls.value.getRelativePosByGridPos({x: 2, y: 1})

@@ -1,4 +1,4 @@
-import { AdsorbType, AlignType, ClassName, CtrlType, Orientation } from "../Constants";
+import { AdsorbType, AlignType, ClassName, CtrlType, Events, Orientation } from "../Constants";
 import GridSystem from "../GridSystem";
 import type MiniMap from "../MiniMap";
 import { IBasicFeature, IPoint, IPixelPos, IProps, IRelativePos, ISize, Listeners } from "../Interface";
@@ -112,7 +112,7 @@ class Feature {
 
     constructor(pointArr: IRelativePos[] = []) {
         // 相对坐标
-        this.pointArr = pointArr;
+        pointArr.forEach(p => this.addPoint(p))
         this.id = getUuid();
     }
 
@@ -127,7 +127,7 @@ class Feature {
         this.children.forEach(cf => {  // 子元素递归旋转
             cf.rotate(angle, O)
         })
-        this.dispatch(new CustomEvent('rotate', { detail: '' }))
+        this.dispatch(new CustomEvent(Events.ROTATE, { detail: '' }))
     }
 
     /**
@@ -141,7 +141,8 @@ class Feature {
         this.pointArr = this.pointArr.map(p => {
             return {
                 x: !this.isOnlyVerticalMove ? p.x += offsetX : p.x,
-                y: !this.isOnlyHorizonalMove ? p.y += offsetY : p.y
+                y: !this.isOnlyHorizonalMove ? p.y += offsetY : p.y,
+                flag: p.flag,
             }
         })
         // 照顾fixedSize元素
@@ -150,7 +151,7 @@ class Feature {
         if (this.children) {  // 子元素递归偏移
             this.children.forEach(cf => cf.translate(offsetX, offsetY))
         }
-        this.dispatch(new CustomEvent('translate', { detail: '' }))
+        this.dispatch(new CustomEvent(Events.TRANSLATE, { detail: '' }))
     }
 
     /**
@@ -212,12 +213,12 @@ class Feature {
                     isPointIn = path ? ctx.isPointInStroke(path, mousePos.x, mousePos.y) : ctx.isPointInStroke(mousePos.x, mousePos.y)
                 }
                 if (!this.isPointIn && isPointIn) {  // 判断是不是第一次进入，是就是mouseover
-                    this.dispatch(new CustomEvent('mouseover', { detail: '' }))
+                    this.dispatch(new CustomEvent(Events.MOUSE_OVER, { detail: '' }))
                 } else if (this.isPointIn && !isPointIn) {
-                    this.dispatch(new CustomEvent('mouseleave', { detail: '' }))
+                    this.dispatch(new CustomEvent(Events.MOUSE_LEAVE, { detail: '' }))
                 }
                 this.isPointIn = isPointIn;
-                this.isPointIn && this.dispatch(new CustomEvent('mousemove', { detail: '' }));
+                this.isPointIn && this.dispatch(new CustomEvent(Events.MOUSE_MOVE, { detail: '' }));
             }
         }
     }
@@ -236,6 +237,7 @@ class Feature {
                 return;
             }
         }
+        point.flag = true;
         this.pointArr.push(point);
     }
 
@@ -422,9 +424,15 @@ class Feature {
         }
         return pointArr.map(p => {
             if (isPixel) {
-                return getRotatePnt(O, this.gls.getPixelPos(p), angle)
+                return {
+                    ...getRotatePnt(O, this.gls.getPixelPos(p), angle),
+                    flag: p.flag
+                }
             }
-            return getRotatePnt(O, p, angle)
+            return {
+                ...getRotatePnt(O, p, angle),
+                flag: p.flag
+            }
         })
     }
 

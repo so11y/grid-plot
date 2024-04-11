@@ -1,4 +1,4 @@
-import { ClassName } from "@/Constants";
+import { ClassName, Events } from "@/Constants";
 import { IPoint } from "../../../Interface";
 import { createVctor } from "../../../utils";
 import Bbox from "../Bbox";
@@ -19,16 +19,8 @@ class RCtrlPnt extends Pnt {
         this.className = ClassName.RCTRLPNT;
         this.parent = parent;
         this.isFixedPos = parent.isFixedPos;
-        this.isFixedSize = true;
-
-        this.isOnlyCenterAdsorb = true;
-        this.fillStyle = this.hoverStyle = this.focusStyle = "#66ccff"
-        this.lineWidth = 0;
-        this.zIndex = Infinity;
-        this.isStroke = false;
-        this.radius = .2;
-        this.on('dragend', this.onUpdateParentVct.bind(this))
-        this.on('draw', this.onUpdatePosByParent.bind(this))
+        this.on(Events.DRAG_END, this.onUpdateParentVct.bind(this))
+        this.on(Events.DRAW, this.onUpdatePosByParent.bind(this))
     }
 
     // 更新bbox的水平与垂直向量

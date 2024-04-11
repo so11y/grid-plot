@@ -54,7 +54,7 @@ class Text extends Rect {
         this.textArr = [];
         this.contentHeight = 0;
         let lastWidth = this.getSize().width;
-        this.on('resize', (e: any) => {  // 控制点改变大小触发的钩子
+        this.on(Events.RESIZE, (e: any) => {  // 控制点改变大小触发的钩子
             const ctrlType = e.detail as string;
             if (this.fitSize && ctrlType === CtrlType.SIZE_CTRL) {
                 const { width } = this.getSize()

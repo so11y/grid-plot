@@ -1,7 +1,7 @@
 import { ClassName, Events } from "./Constants";
 import GridSystem from "./GridSystem";
 import { IPixelPos } from "./Interface";
-import { getMousePos } from "./utils"
+import { getMousePos, isBasicFeature } from "./utils"
 
 interface ViewRect {
     x: number,
@@ -43,9 +43,9 @@ class MiniMap extends GridSystem {
             x: this.ctx.canvas.width / 2,
             y: this.ctx.canvas.height / 2
         };
-        this.scale = .5;
+        this.scale = 1;
         this.setViewRect();
-        this.gls.on("drag", () => {
+        this.gls.on(Events.TRANSLATE, () => {
             this.setViewRect();
         })
         this.gls.on(Events.MOUSE_WHEEL, () => {
@@ -60,10 +60,10 @@ class MiniMap extends GridSystem {
     }
 
     initEventListener() {  // 重写
-        this.domElement.addEventListener("mousedown", (e) => {
+        this.domElement.addEventListener(Events.MOUSE_DOWN, (e) => {
             this.dragViewRect(e)
         })
-        this.domElement.addEventListener("contextmenu", (e) => { // 禁用右键上下文
+        this.domElement.addEventListener(Events.CONTEXTMENU, (e) => { // 禁用右键上下文
             e.preventDefault();
         });
     }
@@ -72,7 +72,8 @@ class MiniMap extends GridSystem {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.ctx.fillStyle = this.background;
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        this.drawFeatures(this.gls.features);  // 绘制所有元素
+        const features = this.gls.features.filter(f=>isBasicFeature(f) || f.className === ClassName.LINK);
+        this.drawFeatures(features);  // 绘制所有元素
         // 绘制当前显示区域的矩形框
         this.ctx.fillStyle = "rgba(255,251,143,.5)"
         this.ctx.fillRect(this.viewRect.x, this.viewRect.y, this.viewRect.width, this.viewRect.height)
@@ -112,11 +113,11 @@ class MiniMap extends GridSystem {
             const mouseup = (ev: any) => {
                 this.domElement.style.cursor = "default"
                 this.isDraging = false;
-                document.removeEventListener("mousemove", mousemove)
-                document.removeEventListener("mouseup", mouseup)
+                document.removeEventListener(Events.MOUSE_MOVE, mousemove)
+                document.removeEventListener(Events.MOUSE_UP, mouseup)
             }
-            document.addEventListener("mousemove", mousemove)
-            document.addEventListener("mouseup", mouseup)
+            document.addEventListener(Events.MOUSE_MOVE, mousemove)
+            document.addEventListener(Events.MOUSE_UP, mouseup)
         } else {
             this.domElement.style.cursor = "default";
         }
@@ -124,8 +125,8 @@ class MiniMap extends GridSystem {
 
     destory() {
         document.body.removeChild(this.domElement)
-        document.removeEventListener("draw", this.draw)
-        this.domElement.removeEventListener("mousedown", this.dragViewRect)
+        document.removeEventListener(Events.DRAW, this.draw)
+        this.domElement.removeEventListener(Events.MOUSE_DOWN, this.dragViewRect)
     }
 }
 

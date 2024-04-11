@@ -10,12 +10,13 @@ class Pnt extends Rect {
     constructor(x: number = 0, y: number = 0, width: number = 18, height: number = 18) {
         super(x, y, width, height);
         this.className = ClassName.PNT
-        this.isOnlyCenterAdsorb = true;
         this.fillStyle = this.hoverStyle = this.focusStyle = "#7AAAF8"
+        this.isOnlyCenterAdsorb = true;
         this.zIndex = Infinity;
         this.lineWidth = 0;
         this.radius = .5;
         this.isStroke = false;
+        this.isFixedSize = true;
         this.gls.addFeature(this, false);
     }
 

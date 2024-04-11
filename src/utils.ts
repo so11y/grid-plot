@@ -387,7 +387,7 @@ function beautifyHTML(html: string, indentSize = 2) {
 function isBasicFeature(f?: any, hasGroup = true) {  //  hasGroup 是否包括Group类元素
     if (!f) return false;
     if (!hasGroup && f.className === ClassName.GROUP) return
-    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO
+    return f.className == ClassName.IMG || f.className == ClassName.LINE || f.className == ClassName.RECT || f.className == ClassName.TEXT || f.className == ClassName.CIRCLE || f.className == ClassName.GROUP || f.className == ClassName.VIDEO || f.className === ClassName.PEN
 }
 // 判断是否时控制点元素
 function isCtrlFeature(f?: any, hasAnchor = true) {
